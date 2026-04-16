@@ -53,7 +53,7 @@ export async function GET(req, props) {
                     include: {
                         ports: {
                             include: {
-                                crossConnectsAsSideA: {
+                                crossConnectA: {
                                     include: {
                                         sideZPort: {
                                             include: {
@@ -64,7 +64,7 @@ export async function GET(req, props) {
                                         }
                                     }
                                 },
-                                crossConnectsAsSideZ: {
+                                crossConnectZ: {
                                     include: {
                                         sideAPort: {
                                             include: {
