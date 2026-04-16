@@ -220,10 +220,10 @@ model CrossConnect {
   
   // Pointing precisely to ports on specific equipment (e.g. OTB and Patch Panel)
   sideAPortId   Int
-  sideAPort     EquipmentPort  @relation("CrossConnectSideAPort", fields: [sideAPortId], references: [id])
+  sideAPort     EquipmentPort  @relation("CrossConnectSideAPort", fields: [sideAPortId], references: [id], onDelete: Cascade)
   
   sideZPortId   Int?
-  sideZPort     EquipmentPort?  @relation("CrossConnectSideZPort", fields: [sideZPortId], references: [id])
+  sideZPort     EquipmentPort?  @relation("CrossConnectSideZPort", fields: [sideZPortId], references: [id], onDelete: Cascade)
   
   targetType      String?  // 'Internal', 'IXP', 'Carrier', 'Cloud', 'Other'
   targetProvider  String?  // Exact name or note about destination
