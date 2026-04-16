@@ -51,11 +51,11 @@ sleep 10
 
 # 5. Execute Prisma Migrations & Seeding
 echo "🔐 Pushing Database Schema..."
-docker exec -it vms_web npx prisma db push --accept-data-loss || echo "⚠️  Schema push issue, please check DB."
+docker exec -it vms_mail_worker npx prisma db push --accept-data-loss || echo "⚠️  Schema push issue, please check DB."
 
 echo "🌱 Seeding initial Data and User Roles..."
-docker exec -it vms_web node seed.js || true
-docker exec -it vms_web node seed_tenant.js || true
+docker exec -it vms_mail_worker node seed.js || true
+docker exec -it vms_mail_worker node seed_tenant.js || true
 
 echo "=========================================================="
 echo "🎉 DEPLOYMENT COMPLETE!"
