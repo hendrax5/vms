@@ -44,7 +44,7 @@ services:
     depends_on:
       - db
     # Fixed from .js to .mjs and disabled default worker running until requested
-    command: sh -c "npm install && node scripts/mail-worker.mjs"
+    command: sh -c "apk add --no-cache openssl && npm install && node scripts/mail-worker.mjs"
     restart: unless-stopped
 
 volumes:
