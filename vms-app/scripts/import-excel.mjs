@@ -67,14 +67,21 @@ async function runImport() {
         const getFallbackRack = async () => {
             if(!currentRack) {
                  if(!currentCustomer) currentCustomer = await getOrCreateCustomer('Internal / Unknown');
-                 currentRack = await prisma.rack.create({
-                     data: {
-                         name: `${sheetName} Main Rack`,
-                         rowId: baseRow.id,
-                         uCapacity: 42
-                     }
-                 });
-                 console.log(`   🧱 Created Contextual Default Rack [${sheetName} Main Rack]`);
+                 const fallbackName = `${sheetName} Main Rack`;
+                 currentRack = await prisma.rack.findFirst({ where: { name: fallbackName, rowId: baseRow.id } });
+                 
+                 if (!currentRack) {
+                     currentRack = await prisma.rack.create({
+                         data: {
+                             name: fallbackName,
+                             rowId: baseRow.id,
+                             uCapacity: 42
+                         }
+                     });
+                     console.log(`   🧱 Created Contextual Default Rack [${fallbackName}]`);
+                 } else {
+                     console.log(`   ♻️ Using Existing Contextual Rack [${fallbackName}]`);
+                 }
             }
             return currentRack;
         };
@@ -110,20 +117,30 @@ async function runImport() {
                 continue;
             }
 
+            // Different sheet formats:
             const no = parseInt(firstCell);
-            if (!isNaN(no)) {
+            const isOtbSheet = sheetName === 'RACK MMR OTB';
+            const isValidRow = !isNaN(no) || (isOtbSheet && secondCell && secondCell.toUpperCase() !== 'BARANG' && firstCell.toUpperCase() !== 'NO RACK');
+
+            if (isValidRow) {
                 await getFallbackRack();
 
                 const barang = secondCell;
-                const qtyRaw = rowArr[2];
-                const dimensiRaw = rowArr[4];
-                const sn = String(rowArr[5] || '-');
-                const keterangan = String(rowArr[6] || '');
+                const qtyRaw = isOtbSheet ? rowArr[4] : rowArr[2];
+                const tujuanRaw = isOtbSheet ? String(rowArr[3] || '').trim() : '';
+                const dimensiRaw = isOtbSheet ? rowArr[6] : rowArr[4];
+                const sn = isOtbSheet ? String(rowArr[7] || '-') : String(rowArr[5] || '-');
+                const keterangan = isOtbSheet ? String(rowArr[8] || '') : String(rowArr[6] || '');
 
                 if(!barang) continue;
 
                 let uSpace = 1;
-                if(dimensiRaw && !isNaN(parseInt(dimensiRaw))) {
+                // Workaround for Excel Auto-increment bug when users dragged "u1" -> "u2", "u3" etc
+                if (barang.toUpperCase().includes('24C') || barang.toUpperCase().includes('24 C')) uSpace = 1;
+                else if (barang.toUpperCase().includes('96C') || barang.toUpperCase().includes('96 C')) uSpace = 2;
+                else if (barang.toUpperCase().includes('192C') || barang.toUpperCase().includes('192 C')) uSpace = 3;
+                else if (barang.toUpperCase().includes('288C') || barang.toUpperCase().includes('288 C')) uSpace = 4;
+                else if(dimensiRaw && !isNaN(parseInt(dimensiRaw))) {
                     uSpace = parseInt(dimensiRaw);
                 } else if (String(dimensiRaw).toLowerCase().includes('u')) {
                     uSpace = parseInt(String(dimensiRaw).toLowerCase().replace('u', '')) || 1;
@@ -132,11 +149,17 @@ async function runImport() {
                 const isOut = keterangan.toLowerCase().includes('out');
 
                 if(!isOut) {
+                    let finalName = barang;
+                    if (tujuanRaw && tujuanRaw !== '-' && tujuanRaw.toLowerCase() !== 'tujuan rack') {
+                        finalName += ` [Ke: ${tujuanRaw}]`;
+                    }
+                    if (sn !== '-') finalName += ` (SN: ${sn})`;
+
                     await prisma.rackEquipment.create({
                         data: {
                             rackId: currentRack.id,
                             customerId: currentCustomer.id,
-                            name: sn !== '-' ? `${barang} (SN: ${sn})` : barang,
+                            name: finalName,
                             equipmentType: barang.toLowerCase().includes('otb') ? 'OTB' : 
                                            barang.toLowerCase().includes('pdu') ? 'PDU' : 
                                            barang.toLowerCase().includes('switch') ? 'SWITCH' : 
@@ -145,7 +168,7 @@ async function runImport() {
                             uEnd: currentU + uSpace - 1
                         }
                     });
-                    
+                    console.log(`   🗄️ Imported Equipment [${barang}] into ${currentRack.name} U${currentU}`);
                     currentU += uSpace;
                 } else {
                     console.log(`   ⏩ Skipped Equipment [${barang}] because it is marked OUT`);
