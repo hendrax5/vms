@@ -15,10 +15,11 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const dcId = searchParams.get('datacenterId');
         
-        let targetDcId = session.datacenterId; 
+        const userRole = (session?.user as any)?.role || '';
+        let targetDcId = (session?.user as any)?.datacenterId; 
         
         // If super admin forces a specific DC
-        if (session.role === 'Super Admin' && dcId) {
+        if (userRole === 'Super Admin' && dcId) {
             targetDcId = parseInt(dcId);
         }
 
