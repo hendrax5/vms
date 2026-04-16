@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Server, Plus, Info, LayoutTemplate, Activity, X, Network, Share2, Map } from 'lucide-react';
+import { ArrowLeft, Server, Plus, Info, LayoutTemplate, Activity, X, Network, Share2, Map, ArrowRightLeft, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -11,11 +11,15 @@ export default function RackElevationPage() {
     const rackId = params.id as string;
 
     const [rack, setRack] = useState<any>(null);
+    const [auditLogs, setAuditLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedEquipment, setSelectedEquipment] = useState<any>(null);
+    const [perspective, setPerspective] = useState<'FRONT' | 'REAR'>('FRONT');
+    const [draggedEq, setDraggedEq] = useState<any>(null);
 
     useEffect(() => {
         fetchRackDetails();
+        fetchAuditLogs();
     }, [rackId]);
 
     const fetchRackDetails = async () => {
@@ -32,6 +36,18 @@ export default function RackElevationPage() {
         }
     };
 
+    const fetchAuditLogs = async () => {
+        try {
+            const res = await fetch(`/api/racks/${rackId}/audit`);
+            if (res.ok) {
+                const data = await res.json();
+                setAuditLogs(data);
+            }
+        } catch (error) {
+            console.error('Error fetching audit logs:', error);
+        }
+    };
+
     if (loading) {
         return <div className="text-center text-slate-400 py-12">Loading Rack Elevation...</div>;
     }
@@ -40,16 +56,95 @@ export default function RackElevationPage() {
         return <div className="text-center text-red-400 py-12">Failed to load rack data.</div>;
     }
 
-    // Logic to render U spaces from top (e.g. 42) down to 1
+    // U Space array (Top to Bottom)
     const totalU = rack.uCapacity || 42;
     const uArray = Array.from({ length: totalU }, (_, i) => totalU - i);
 
-    // Map gears
     const equipments = rack.equipments || [];
 
-    // Helper to check if a specific U is occupied
+    // Filter equipment by Perspective
+    const visibleEquipments = equipments.filter((eq: any) => {
+        const o = eq.orientation || 'FRONT';
+        if (o === 'BOTH') return true;
+        if (perspective === 'FRONT' && o === 'FRONT') return true;
+        if (perspective === 'REAR' && o === 'BACK') return true;
+        return false;
+    });
+
     const getEquipmentAtU = (u: number) => {
-        return equipments.find((eq: any) => u >= eq.uStart && u <= eq.uEnd);
+        return visibleEquipments.find((eq: any) => u >= eq.uStart && u <= eq.uEnd);
+    };
+
+    // Drag and Drop Handlers
+    const handleDragStart = (e: React.DragEvent, eq: any) => {
+        setDraggedEq(eq);
+        e.dataTransfer.effectAllowed = 'move';
+        // Provide visual payload
+        e.dataTransfer.setData('text/plain', eq.id.toString());
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault(); // allow drop
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = async (e: React.DragEvent, targetU: number) => {
+        e.preventDefault();
+        if (!draggedEq) return;
+
+        const size = draggedEq.uEnd - draggedEq.uStart + 1;
+        
+        // Calculate the new boundaries based on targetU (target is where they dropped it)
+        // If they drop on U20, and size is 2, it spans U20 and U21.
+        // So uEnd = targetU, uStart = targetU - size + 1. 
+        // Or if targetU is the bottom-most U, uStart = targetU, uEnd = targetU + size - 1.
+        // Usually, the U they hover over tends to be considered the top edge of the device (uEnd).
+        const newUEnd = targetU;
+        const newUStart = targetU - size + 1;
+
+        if (newUStart < 1 || newUEnd > totalU) {
+            alert("Insufficient U-Space to fit this equipment here.");
+            setDraggedEq(null);
+            return;
+        }
+
+        // Collision Check within the CURRENT perspective
+        const collided = visibleEquipments.some((eq: any) => {
+            if (eq.id === draggedEq.id) return false;
+            // Intersection check: max(start1, start2) <= min(end1, end2)
+            return Math.max(newUStart, eq.uStart) <= Math.min(newUEnd, eq.uEnd);
+        });
+
+        if (collided) {
+            alert("Collision detected with another device. Move it first.");
+            setDraggedEq(null);
+            return;
+        }
+
+        // Optimistic UI Update
+        const updatedEqs = equipments.map((eq: any) => 
+            eq.id === draggedEq.id ? { ...eq, uStart: newUStart, uEnd: newUEnd } : eq
+        );
+        setRack({ ...rack, equipments: updatedEqs });
+        setDraggedEq(null);
+
+        // API Call
+        try {
+            const res = await fetch(`/api/racks/equipments/${draggedEq.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uStart: newUStart, uEnd: newUEnd, rackId: rack.id })
+            });
+            if (res.ok) {
+                fetchAuditLogs(); // Refresh logs after move
+            } else {
+                fetchRackDetails(); // Revert on failure
+                alert('Failed to update equipment coordinates.');
+            }
+        } catch (err) {
+            fetchRackDetails(); // Revert on failure
+            console.error(err);
+        }
     };
 
     return (
@@ -78,6 +173,22 @@ export default function RackElevationPage() {
                 </button>
             </div>
 
+            {/* View Toggle */}
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-lg w-fit">
+                <button 
+                    onClick={() => setPerspective('FRONT')}
+                    className={`px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors ${perspective === 'FRONT' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                    <ArrowRightLeft className="w-4 h-4" /> Front View
+                </button>
+                <button 
+                    onClick={() => setPerspective('REAR')}
+                    className={`px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors ${perspective === 'REAR' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                    <ArrowRightLeft className="w-4 h-4" /> Rear View
+                </button>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Rack Visualizer */}
                 <div className="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex justify-center">
@@ -98,7 +209,7 @@ export default function RackElevationPage() {
                                     eqClasses += " rounded-b-md border-b border-x";
                                 } else if (isTop) {
                                     // Top
-                                    eqClasses += " rounded-t-md border-t border-x";
+                                    eqClasses += " rounded-t-md border-t border-x cursor-grab active:cursor-grabbing";
                                 } else {
                                     // Middle
                                     eqClasses += " border-x";
@@ -106,17 +217,26 @@ export default function RackElevationPage() {
                             }
 
                             return (
-                                <div key={u} className="flex items-center gap-2">
+                                <div 
+                                    key={u} 
+                                    className="flex items-center gap-2"
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, u)}
+                                >
                                     <div className="w-6 text-right text-[10px] font-mono text-slate-500">{u}</div>
-                                    <div className={`flex-1 h-6 flex items-center justify-center text-xs font-semibold overflow-hidden ${eq ? eqClasses : 'bg-slate-900/40 border border-slate-800/30 border-dashed rounded-sm text-slate-600'}`}>
+                                    <div 
+                                        draggable={isTop} // Only drag by the top edge to move whole block
+                                        onDragStart={(e) => eq && isTop ? handleDragStart(e, eq) : e.preventDefault()}
+                                        className={`flex-1 h-6 flex items-center justify-center text-xs font-semibold overflow-hidden transition-all ${eq ? eqClasses : 'bg-slate-900/40 border border-slate-800/30 border-dashed rounded-sm text-slate-600 hover:border-slate-500/50 hover:bg-slate-800/40'}`}
+                                    >
                                         {eq && isTop && (
-                                            <span className="truncate px-2 flex items-center gap-1.5">
+                                            <span className="truncate px-2 flex items-center gap-1.5 pointer-events-none">
                                                 {eq.equipmentType === 'SERVER' && <Server className="w-3 h-3" />}
                                                 {eq.equipmentType === 'NETWORK' && <Activity className="w-3 h-3" />}
                                                 {eq.name}
                                             </span>
                                         )}
-                                        {!eq && <span className="opacity-0 hover:opacity-100 transition-opacity cursor-pointer">Available</span>}
+                                        {!eq && <span className="opacity-0 hover:opacity-100 transition-opacity cursor-pointer">Available (Drop Here)</span>}
                                     </div>
                                     <div className="w-6 text-left text-[10px] font-mono text-slate-500">{u}</div>
                                 </div>
@@ -125,15 +245,16 @@ export default function RackElevationPage() {
                     </div>
                 </div>
 
-                {/* Equipment Details */}
+                {/* Details & Logs */}
                 <div className="lg:col-span-3 space-y-6">
-                    <h2 className="text-xl font-bold text-slate-200">Installed Equipment</h2>
+                    {/* Equipment Details */}
+                    <h2 className="text-xl font-bold text-slate-200">Installed Equipment ({perspective})</h2>
                     <div className="bg-card/50 border border-border/50 rounded-2xl p-6 backdrop-blur-xl">
-                        {equipments.length === 0 ? (
-                            <div className="text-center py-8 text-slate-500">No equipment installed in this rack.</div>
+                        {visibleEquipments.length === 0 ? (
+                            <div className="text-center py-8 text-slate-500">No equipment installed on this face.</div>
                         ) : (
-                            <div className="space-y-4">
-                                {equipments.map((eq: any) => (
+                            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                {visibleEquipments.map((eq: any) => (
                                     <motion.div 
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -148,6 +269,9 @@ export default function RackElevationPage() {
                                                 </span>
                                                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                                     U{eq.uStart} - U{eq.uEnd}
+                                                </span>
+                                                <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                                    {eq.orientation || 'FRONT'}
                                                 </span>
                                             </div>
                                             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mt-3">
@@ -191,6 +315,59 @@ export default function RackElevationPage() {
                             </div>
                         )}
                     </div>
+
+                    {/* Infrastructure Audit Timeline */}
+                    <div className="mt-8 pt-8 border-t border-slate-800">
+                        <h2 className="text-xl font-bold text-slate-200 mb-6 flex items-center gap-2">
+                            <History className="w-5 h-5 text-purple-400" /> Infrastructure Audit Trail
+                        </h2>
+                        
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                            {auditLogs.length === 0 ? (
+                                <p className="text-slate-500 text-sm text-center py-4">No relocation records found for this rack.</p>
+                            ) : (
+                                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-800 before:to-transparent">
+                                    {auditLogs.map((log: any, idx: number) => {
+                                        const prev = log.previousState ? JSON.parse(log.previousState) : null;
+                                        const next = log.newState ? JSON.parse(log.newState) : null;
+
+                                        return (
+                                            <div key={log.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                                {/* Icon */}
+                                                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 bg-slate-900 text-slate-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow shadow-slate-900 relative z-10">
+                                                    <ArrowRightLeft className="w-4 h-4" />
+                                                </div>
+                                                {/* Card */}
+                                                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-800 bg-slate-950/50 hover:bg-slate-900 transition-colors shadow-lg shadow-black/20">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs font-bold text-purple-400 tracking-wider uppercase">{log.action}</span>
+                                                        <span className="text-xs text-slate-500 font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                                                    </div>
+                                                    <h3 className="font-semibold text-slate-200 text-sm mb-2">{log.equipment?.name}</h3>
+                                                    <div className="text-xs text-slate-400 space-y-1">
+                                                        <p>User: <span className="text-slate-300 font-semibold">{log.user?.name || 'System / Missing'}</span></p>
+                                                        {prev && next && (
+                                                            <div className="flex items-center gap-2 mt-2 bg-slate-900 p-2 rounded-md border border-slate-800">
+                                                                <div>
+                                                                    <div className="text-[10px] text-slate-500">From</div>
+                                                                    <div className="font-mono text-rose-400">U{prev.uStart}-U{prev.uEnd}</div>
+                                                                </div>
+                                                                <ArrowRightLeft className="w-3 h-3 text-slate-600" />
+                                                                <div>
+                                                                    <div className="text-[10px] text-slate-500">To</div>
+                                                                    <div className="font-mono text-emerald-400">U{next.uStart}-U{next.uEnd}</div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -199,104 +376,71 @@ export default function RackElevationPage() {
                 {selectedEquipment && (
                     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                         <motion.div 
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl"
                         >
-                            <div className="bg-slate-950 px-6 py-4 border-b border-slate-800 flex justify-between items-center shrink-0">
-                                <div className="flex flex-col">
-                                    <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                                        <Network className="w-5 h-5 text-blue-500" />
-                                        Port Map: {selectedEquipment.name}
-                                    </h3>
-                                    <span className="text-xs text-slate-500 uppercase tracking-widest mt-1">
-                                        {selectedEquipment.equipmentType} • Rack {rack.name} • U{selectedEquipment.uStart}-U{selectedEquipment.uEnd}
-                                    </span>
+                            <div className="flex justify-between items-center p-6 border-b border-slate-800">
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-100">{selectedEquipment.name}</h2>
+                                    <p className="text-sm text-muted-foreground mt-1">Detailed port layout and cross-connect mapping.</p>
                                 </div>
-                                <button onClick={() => setSelectedEquipment(null)} className="text-slate-500 hover:text-white transition-colors bg-slate-900 rounded-lg p-2">
+                                <button onClick={() => setSelectedEquipment(null)} className="text-slate-400 hover:text-slate-200 transition-colors">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
-                            
-                            <div className="p-6 overflow-y-auto flex-1">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {(selectedEquipment.ports || []).map((port: any) => {
-                                        // Analyze Connections
-                                        const connectionA = port.crossConnectsAsSideA?.[0]; // This port is Side A
-                                        const connectionZ = port.crossConnectsAsSideZ?.[0]; // This port is Side Z
-                                        const connection = connectionA || connectionZ;
-
-                                        let iconColor = "bg-emerald-500/20 text-emerald-400";
-                                        let borderColor = "border-emerald-500/30";
-                                        let statusText = "Available";
+                            <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+                                <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+                                    {selectedEquipment.ports?.map((port: any) => {
+                                        const isAvail = port.status === 'AVAILABLE';
+                                        const inUse = port.status === 'IN_USE';
+                                        const isDefective = port.status === 'DEFECTIVE';
                                         
-                                        if (port.status === 'IN_USE') {
-                                            iconColor = "bg-blue-500/20 text-blue-400";
-                                            borderColor = "border-blue-500/50";
-                                            statusText = "In Use";
-                                        } else if (port.status === 'DEFECTIVE') {
-                                            iconColor = "bg-red-500/20 text-red-400";
-                                            borderColor = "border-red-500/30";
-                                            statusText = "Defective";
-                                        }
+                                        let portColor = "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20";
+                                        if (inUse) portColor = "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20";
+                                        if (isDefective) portColor = "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20";
 
                                         return (
-                                            <div key={port.id} className={`flex items-start gap-4 p-4 rounded-xl border ${borderColor} bg-slate-900/50`}>
-                                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg border border-white/10 ${iconColor} shrink-0`}>
-                                                    {port.portNumber}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <span className="text-sm font-semibold text-slate-200">Port {port.portNumber}</span>
-                                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${iconColor}`}>
-                                                            {statusText}
-                                                        </span>
-                                                    </div>
-
-                                                    {connection ? (
-                                                        <div className="mt-3 text-xs border-t border-slate-800 pt-3 flex flex-col gap-2">
-                                                            <div className="flex items-start gap-2 text-slate-300">
-                                                                <Share2 className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-                                                                <div className="flex flex-col">
-                                                                    <span className="text-slate-500 font-mono text-[10px] uppercase">Destination (Side Z)</span>
-                                                                    {connection.targetProvider ? (
-                                                                        <span className="font-semibold text-blue-400">
-                                                                            Ext: {connection.targetProvider} 
-                                                                            <span className="text-slate-500 text-[10px] ml-2">({connection.targetType})</span>
-                                                                        </span>
-                                                                    ) : connection.sideZPort ? (
-                                                                        <span className="font-semibold text-blue-400">
-                                                                            {connection.sideZPort?.equipment?.name} (Port {connection.sideZPort?.portNumber})
-                                                                            <span className="text-slate-500 text-[10px] block">
-                                                                                Cabinet {connection.sideZPort?.equipment?.rack?.name}
-                                                                            </span>
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-slate-500 italic">No Target Specified</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <span className="text-[10px] text-slate-500 bg-slate-950 px-2 py-1 rounded">Media: {connection.mediaType}</span>
-                                                                <span className="text-[10px] text-slate-500 bg-slate-950 px-2 py-1 rounded">ID: XCON-{connection.id.toString().padStart(4, '0')}</span>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="mt-2 text-xs text-slate-500 italic">
-                                                            {port.status === 'AVAILABLE' ? 'No active cross connects. Ready for patching.' : 'No cross connect data found.'}
-                                                        </div>
-                                                    )}
+                                            <div 
+                                                key={port.id} 
+                                                className={`p-3 rounded-xl border ${portColor} flex flex-col items-center justify-center gap-2 group relative`}
+                                            >
+                                                <span className="text-xs font-bold font-mono">P{port.portNumber}</span>
+                                                <div className="w-2 h-2 rounded-full bg-current shadow-[0_0_10px_currentColor] opacity-70"></div>
+                                                
+                                                {/* Tooltip */}
+                                                <div className="absolute inset-0 bg-slate-900 border border-slate-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center z-10 pointer-events-none p-2 text-center shadow-xl">
+                                                    <span className="text-[10px] font-bold text-slate-300">{port.status}</span>
+                                                    {port.mediaType && <span className="text-[9px] text-slate-400 mt-1">{port.mediaType}</span>}
                                                 </div>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
+                            <div className="p-6 border-t border-slate-800 bg-slate-950/50 flex justify-end">
+                                <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition-colors">
+                                    <Network className="w-4 h-4" /> Manage Cross-Connects
+                                </button>
+                            </div>
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
+
+            <style jsx global>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: #334155;
+                    border-radius: 20px;
+                }
+            `}</style>
         </div>
     );
 }

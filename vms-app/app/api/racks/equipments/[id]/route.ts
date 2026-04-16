@@ -1,0 +1,77 @@
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../../../auth/[...nextauth]/route';
+
+const prisma = new PrismaClient();
+
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const equipmentId = parseInt(params.id);
+        const { uStart, uEnd, orientation, rackId, name } = await req.json();
+
+        // Fetch existing configuration for Audit Logs
+        const existingEq = await prisma.rackEquipment.findUnique({
+            where: { id: equipmentId }
+        });
+
+        if (!existingEq) return NextResponse.json({ error: 'Equipment not found' }, { status: 404 });
+
+        // Calculate if position actually changed
+        let isRelocated = false;
+        if (
+            (uStart !== undefined && existingEq.uStart !== uStart) ||
+            (uEnd !== undefined && existingEq.uEnd !== uEnd) ||
+            (orientation !== undefined && existingEq.orientation !== orientation) ||
+            (rackId !== undefined && existingEq.rackId !== rackId)
+        ) {
+            isRelocated = true;
+        }
+
+        const updateData: any = {};
+        if (uStart !== undefined) updateData.uStart = uStart;
+        if (uEnd !== undefined) updateData.uEnd = uEnd;
+        if (orientation !== undefined) updateData.orientation = orientation;
+        if (rackId !== undefined) updateData.rackId = rackId;
+        if (name !== undefined) updateData.name = name;
+
+        // Perform Update
+        const updated = await prisma.rackEquipment.update({
+            where: { id: equipmentId },
+            data: updateData
+        });
+
+        // Push to Audit Log if relocated
+        if (isRelocated) {
+             await prisma.infrastructureAuditLog.create({
+                 data: {
+                     equipmentId: equipmentId,
+                     userId: parseInt((session.user as any).id),
+                     action: 'RELOCATE',
+                     previousState: JSON.stringify({
+                         uStart: existingEq.uStart,
+                         uEnd: existingEq.uEnd,
+                         orientation: existingEq.orientation,
+                         rackId: existingEq.rackId
+                     }),
+                     newState: JSON.stringify({
+                         uStart: updated.uStart,
+                         uEnd: updated.uEnd,
+                         orientation: updated.orientation,
+                         rackId: updated.rackId
+                     })
+                 }
+             });
+        }
+
+        return NextResponse.json(updated);
+    } catch (error: any) {
+        console.error('Update Equipment Error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
