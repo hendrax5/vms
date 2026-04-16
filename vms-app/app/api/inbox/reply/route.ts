@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Verify ACL: User belongs to this datacenter or is Super Admin
-        if (session.role !== 'Super Admin' && origMessage.datacenterId !== session.datacenterId) {
+        const userRole = (session.user as any)?.role || '';
+        const userDcId = (session.user as any)?.datacenterId;
+
+        if (userRole !== 'Super Admin' && origMessage.datacenterId !== userDcId) {
             return NextResponse.json({ error: "Permission Denied for this Datacenter's Inbox" }, { status: 403 });
         }
 
@@ -56,7 +59,7 @@ export async function POST(request: NextRequest) {
 
         // Send the Mail
         const info = await transporter.sendMail({
-            from: `"${session.name}" <${config.smtpUser}>`, // Send as NOC user, using official email
+            from: `"${session.user?.name || 'NOC'}" <${config.smtpUser}>`, // Send as NOC user, using official email
             to: origMessage.from, // Reply back
             subject: `Re: ${origMessage.subject}`,
             inReplyTo: origMessage.messageId,

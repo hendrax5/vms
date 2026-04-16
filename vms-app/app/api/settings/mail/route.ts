@@ -13,9 +13,11 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const dcId = searchParams.get('datacenterId');
-        let targetDcId = session.datacenterId; 
-        
-        if (session.role === 'Super Admin' && dcId) targetDcId = parseInt(dcId);
+
+        const userRole = (session.user as any)?.role || '';
+        let targetDcId = (session.user as any)?.datacenterId;
+
+        if (userRole === 'Super Admin' && dcId) targetDcId = parseInt(dcId);
 
         if (!targetDcId) return NextResponse.json({ config: null });
 
@@ -35,19 +37,20 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// Upsert the config
-export async function POST(request: NextRequest) {
+    export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || (session.role !== 'Super Admin' && session.role !== 'NOC Manager')) {
+        const userRole = (session?.user as any)?.role || '';
+        
+        if (!session || (userRole !== 'Super Admin' && userRole !== 'NOC Manager')) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const body = await request.json();
         const { datacenterId, imapHost, imapPort, imapUser, imapPass, smtpHost, smtpPort, smtpUser, smtpPass, isActive } = body;
 
-        let targetDcId = session.datacenterId; 
-        if (session.role === 'Super Admin' && datacenterId) targetDcId = parseInt(datacenterId);
+        let targetDcId = (session.user as any)?.datacenterId; 
+        if (userRole === 'Super Admin' && datacenterId) targetDcId = parseInt(datacenterId);
 
         if (!targetDcId) return NextResponse.json({ error: "Context Datacenter Missing" }, { status: 400 });
 
