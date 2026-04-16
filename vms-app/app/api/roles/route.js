@@ -34,9 +34,19 @@ export async function GET() {
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { roleId, permissions } = body; 
-        // permissions is an array of permission keys: ['tickets:edit', 'dashboard:view']
+        const { roleId, permissions, action, name } = body; 
 
+        // Handle Role Creation
+        if (action === 'create') {
+            if (!name) return NextResponse.json({ error: 'Role name is required' }, { status: 400 });
+            const existing = await prisma.role.findUnique({ where: { name } });
+            if (existing) return NextResponse.json({ error: 'Role already exists' }, { status: 400 });
+            
+            const newRole = await prisma.role.create({ data: { name } });
+            return NextResponse.json({ success: true, role: newRole });
+        }
+
+        // Handle Permission Assignment
         if (!roleId || !Array.isArray(permissions)) {
              return NextResponse.json({ error: 'Missing roleId or permissions array' }, { status: 400 });
         }

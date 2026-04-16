@@ -39,6 +39,12 @@ function SettingsContent() {
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
     const [newUserForm, setNewUserForm] = useState({ name: '', email: '', password: '', roleId: '' });
 
+    const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
+    const [newRoleName, setNewRoleName] = useState('');
+
+    const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+    const [editUserForm, setEditUserForm] = useState<{ id: number, roleId: string, explicitPermissions: string[] }>({ id: 0, roleId: '', explicitPermissions: [] });
+
     useEffect(() => {
         if (activeTab === 'rbac') {
             loadRbacData();
@@ -138,6 +144,51 @@ function SettingsContent() {
         setLoading(false);
     };
 
+    const handleCreateRole = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch('/api/roles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create', name: newRoleName, permissions: [] })
+            });
+            if (res.ok) {
+                setIsCreateRoleModalOpen(false);
+                setNewRoleName('');
+                loadRbacData();
+            } else {
+                const data = await res.json();
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+        setLoading(false);
+    };
+
+    const handleUpdateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/users/${editUserForm.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roleId: editUserForm.roleId, permissions: editUserForm.explicitPermissions })
+            });
+            if (res.ok) {
+                setIsEditUserModalOpen(false);
+                loadUsersData();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to update user');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+        setLoading(false);
+    };
+
     const togglePermission = (roleId: number, permissionKey: string) => {
         setRoles(roles.map(r => {
             if (r.id === roleId) {
@@ -149,6 +200,16 @@ function SettingsContent() {
             }
             return r;
         }));
+    };
+
+    const toggleUserExplicitPermission = (permissionKey: string) => {
+        setEditUserForm(prev => {
+            const hasPerm = prev.explicitPermissions.includes(permissionKey);
+            const newPerms = hasPerm 
+                ? prev.explicitPermissions.filter(p => p !== permissionKey)
+                : [...prev.explicitPermissions, permissionKey];
+            return { ...prev, explicitPermissions: newPerms };
+        });
     };
 
     const groupedPermissions = systemPermissions.reduce<Record<string, any[]>>((acc, perm) => {
@@ -279,13 +340,23 @@ function SettingsContent() {
 
                     {activeTab === 'rbac' && (
                         <div className="space-y-6">
-                            <div className="bg-gradient-to-r from-indigo-500/10 to-transparent border border-indigo-500/20 rounded-2xl p-6 backdrop-blur-xl mb-6">
-                                <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                                    <Lock className="w-5 h-5 text-indigo-400" /> Granular Access Control
-                                </h2>
-                                <p className="text-slate-400 mt-2 text-sm max-w-2xl">
-                                    Assign specific read/write permissions to roles. These settings will immediately take effect for all users grouped under the respective role on their next session validation.
-                                </p>
+                            <div className="bg-gradient-to-r from-indigo-500/10 to-transparent border border-indigo-500/20 rounded-2xl p-6 backdrop-blur-xl mb-6 flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                                        <Lock className="w-5 h-5 text-indigo-400" /> Granular Access Control
+                                    </h2>
+                                    <p className="text-slate-400 mt-2 text-sm max-w-2xl">
+                                        Assign specific read/write permissions to roles. These settings will immediately take effect for all users grouped under the respective role on their next session validation.
+                                    </p>
+                                </div>
+                                <div>
+                                    <button 
+                                        onClick={() => setIsCreateRoleModalOpen(true)}
+                                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg shadow-indigo-600/20"
+                                    >
+                                        Create Role
+                                    </button>
+                                </div>
                             </div>
 
                             {rbacLoading ? (
@@ -344,6 +415,25 @@ function SettingsContent() {
                                     ))}
                                 </div>
                             )}
+
+                            {isCreateRoleModalOpen && (
+                                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-full max-w-md">
+                                        <h3 className="text-xl font-bold text-white mb-4">Create New Role</h3>
+                                        <form onSubmit={handleCreateRole} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Role Name <span className="text-red-400">*</span></label>
+                                                <input type="text" required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-700" placeholder="e.g. NOC Trainee"
+                                                    value={newRoleName} onChange={e => setNewRoleName(e.target.value)} />
+                                            </div>
+                                            <div className="mt-6 flex justify-end gap-3">
+                                                <button type="button" onClick={() => setIsCreateRoleModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
+                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                     {activeTab === 'users' && (
@@ -377,7 +467,15 @@ function SettingsContent() {
                                                         <td className="px-4 py-3">
                                                             <span className="px-2 py-1 bg-slate-800 rounded text-xs font-mono">{u.role?.name || 'N/A'}</span>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right">
+                                                        <td className="px-4 py-3 text-right space-x-4">
+                                                            <button onClick={() => {
+                                                                setEditUserForm({
+                                                                    id: u.id,
+                                                                    roleId: u.roleId?.toString() || '',
+                                                                    explicitPermissions: u.explicitPermissions || []
+                                                                });
+                                                                setIsEditUserModalOpen(true);
+                                                            }} className="text-indigo-400 hover:underline">Edit</button>
                                                             <button onClick={() => handleDeleteUser(u.id)} className="text-red-400 hover:underline">Delete</button>
                                                         </td>
                                                     </tr>
@@ -425,6 +523,67 @@ function SettingsContent() {
                                             <div className="mt-6 flex justify-end gap-3">
                                                 <button type="button" onClick={() => setIsAddUserModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
                                                 <button type="submit" disabled={loading} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold">Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Edit User Modal */}
+                            {isEditUserModalOpen && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+                                        <h3 className="text-xl font-bold text-white mb-4">Edit User Access</h3>
+                                        <form onSubmit={handleUpdateUser} className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">System Role <span className="text-red-400">*</span></label>
+                                                <p className="text-xs text-slate-500 mb-2">Changing the role updates the user's core permissions.</p>
+                                                <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
+                                                    value={editUserForm.roleId} onChange={e => setEditUserForm({...editUserForm, roleId: e.target.value})}>
+                                                    <option value="">Select Role</option>
+                                                    {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Explicit User Permissions</label>
+                                                <p className="text-xs text-slate-500 mb-4">Assign specific permissions to this account that override or extend their base Role.</p>
+                                                
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-950 p-4 rounded-lg border border-slate-800">
+                                                    {Object.entries(groupedPermissions).map(([group, perms]: [string, any[]]) => (
+                                                        <div key={group} className="space-y-2">
+                                                            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-600 pb-1 border-b border-slate-800">{group}</h4>
+                                                            <div className="space-y-2 mt-2">
+                                                                {perms.map(perm => {
+                                                                    const isChecked = editUserForm.explicitPermissions.includes(perm.key);
+                                                                    return (
+                                                                        <label key={perm.id} className="flex items-start gap-3 cursor-pointer group">
+                                                                            <div className="mt-1 relative flex items-center justify-center">
+                                                                                <input 
+                                                                                    type="checkbox" 
+                                                                                    className="sr-only" 
+                                                                                    checked={isChecked}
+                                                                                    onChange={() => toggleUserExplicitPermission(perm.key)}
+                                                                                />
+                                                                                <div className={`w-4 h-4 rounded border ${isChecked ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-900 border-slate-700 group-hover:border-slate-500'} flex items-center justify-center transition-colors`}>
+                                                                                    {isChecked && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className={`text-xs font-medium ${isChecked ? 'text-slate-200' : 'text-slate-400'}`}>{perm.label}</p>
+                                                                            </div>
+                                                                        </label>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-800">
+                                                <button type="button" onClick={() => setIsEditUserModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
+                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold">Save Changes</button>
                                             </div>
                                         </form>
                                     </div>

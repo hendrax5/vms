@@ -25,14 +25,22 @@ export async function GET(request: Request) {
                 role: true,
                 datacenter: true,
                 customer: true,
+                permissions: {
+                    include: {
+                        permission: true
+                    }
+                }
             },
             orderBy: { id: 'asc' }
         });
 
         // Exclude passwords
         const safeUsers = users.map(u => {
-            const { password, ...safeUser } = u;
-            return safeUser;
+            const { password, permissions, ...safeUser } = u;
+            return {
+                ...safeUser,
+                explicitPermissions: permissions.map(p => p.permission.key)
+            };
         });
 
         return NextResponse.json(safeUsers, { status: 200 });

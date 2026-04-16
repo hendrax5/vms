@@ -25,6 +25,7 @@ model Permission {
   label           String
   group           String           @default("other")
   rolePermissions RolePermission[]
+  userPermissions UserPermission[]
 }
 
 model RolePermission {
@@ -34,6 +35,15 @@ model RolePermission {
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
+}
+
+model UserPermission {
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionId Int
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
 }
 
 model User {
@@ -55,6 +65,7 @@ model User {
   assignedTickets        SupportTicket[]          @relation("AssignedTickets")
   ticketComments         TicketComment[]
   InfrastructureAuditLog InfrastructureAuditLog[]
+  permissions            UserPermission[]
 }
 
 // -----------------------------------------

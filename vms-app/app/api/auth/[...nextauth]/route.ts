@@ -29,6 +29,11 @@ export const authOptions: NextAuthOptions = {
                                     }
                                 }
                             }
+                        },
+                        permissions: {
+                            include: {
+                                permission: true
+                            }
                         }
                     }
                 });
@@ -42,7 +47,9 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Incorrect password");
                 }
 
-                const userPermissions = user.role.permissions.map(rp => rp.permission.key);
+                const rolePerms = user.role.permissions.map(rp => rp.permission.key);
+                const explicitPerms = user.permissions.map(up => up.permission.key);
+                const userPermissions = Array.from(new Set([...rolePerms, ...explicitPerms]));
 
                 return {
                     id: user.id.toString(),

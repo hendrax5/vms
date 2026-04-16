@@ -36,3 +36,55 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
+    try {
+        const params = await props.params;
+        const session = await getServerSession(authOptions);
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const userRoleRaw = (session?.user as any)?.role as string || '';
+        const isSuperAdmin = userRoleRaw.replace(/\s+/g, '').toLowerCase() === 'superadmin';
+        const userPermissions = (session?.user as any)?.permissions || [];
+
+        if (!isSuperAdmin && !userPermissions.includes('users:manage')) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        const userId = parseInt(params.id);
+        const body = await request.json();
+        const { roleId, permissions } = body;
+
+        if (roleId) {
+            await prisma.user.update({
+                where: { id: userId },
+                data: { roleId: parseInt(roleId) }
+            });
+        }
+
+        if (Array.isArray(permissions)) {
+            // Unassign all explicit user-level permissions first
+            await prisma.userPermission.deleteMany({
+                where: { userId: userId }
+            });
+
+            if (permissions.length > 0) {
+                const permRecords = await prisma.permission.findMany({
+                    where: { key: { in: permissions } }
+                });
+                const inserts = permRecords.map(p => ({
+                    userId,
+                    permissionId: p.id
+                }));
+                await prisma.userPermission.createMany({
+                    data: inserts
+                });
+            }
+        }
+
+        return NextResponse.json({ success: true }, { status: 200 });
+    } catch (error: any) {
+        console.error('Update User Error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
