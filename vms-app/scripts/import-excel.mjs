@@ -24,7 +24,8 @@ async function runImport() {
         'RACK CUSTOMER LT.9 (P2) DataHal': await getOrCreateRoom(dc.id, 'ProDC P2 DataHall A (Lt.9)'),
         'RACK HSP': await getOrCreateRoom(dc.id, 'HSP Point of Presence'),
         'MMR OPEN RACK LT. 8 (P1)': await getOrCreateRoom(dc.id, 'MMR P1 (Lt.8)'),
-        'MMR OPEN RACK LT.9 (P2)': await getOrCreateRoom(dc.id, 'MMR P2 (Lt.9)')
+        'MMR OPEN RACK LT.9 (P2)': await getOrCreateRoom(dc.id, 'MMR P2 (Lt.9)'),
+        'RACK MMR OTB': await getOrCreateRoom(dc.id, 'MMR OTB Room')
     };
 
     // Helper functions
@@ -157,8 +158,9 @@ async function runImport() {
         // await parseSheet('RACK CUSTOMER LT. 8 (P1)', rooms['RACK CUSTOMER LT. 8 (P1)']);
         // await parseSheet('RACK CUSTOMER LT.9 (P2) DataHal', rooms['RACK CUSTOMER LT.9 (P2) DataHal']);
         // await parseSheet('RACK HSP', rooms['RACK HSP'], 'ION Network');
-        await parseSheet('MMR OPEN RACK LT. 8 (P1)', rooms['MMR OPEN RACK LT. 8 (P1)'], 'Provider MMR Layer 8');
-        await parseSheet('MMR OPEN RACK LT.9 (P2)', rooms['MMR OPEN RACK LT.9 (P2)'], 'Provider MMR Layer 9');
+        // await parseSheet('MMR OPEN RACK LT. 8 (P1)', rooms['MMR OPEN RACK LT. 8 (P1)'], 'Provider MMR Layer 8');
+        // await parseSheet('MMR OPEN RACK LT.9 (P2)', rooms['MMR OPEN RACK LT.9 (P2)'], 'Provider MMR Layer 9');
+        await parseSheet('RACK MMR OTB', rooms['RACK MMR OTB'], 'Provider OTB Layer');
 
         console.log('✅ Excel Importer Completed Successfully!');
     } catch(err) {
