@@ -3,26 +3,48 @@
 import { useState, useEffect, useRef } from 'react';
 import { Camera, QrCode, CheckCircle2, UserX, AlertTriangle, ShieldCheck, ChevronRight, LogOut, ArrowRightCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 const KioskScanner = ({ onScanSuccess }: { onScanSuccess: (text: string) => void }) => {
     useEffect(() => {
-        const scanner = new Html5QrcodeScanner('kiosk-reader', { fps: 10, qrbox: 250 }, false);
+        const scanner = new Html5Qrcode('kiosk-reader');
         let isScanned = false;
-        scanner.render(
+        
+        scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
             (text) => {
                 if (!isScanned) {
                     isScanned = true;
-                    scanner.clear();
+                    scanner.stop().then(() => scanner.clear()).catch(() => {});
                     onScanSuccess(text);
                 }
             },
-            () => {} 
-        );
+            () => {}
+        ).catch(err => {
+            console.warn("Environment camera failed. Trying fallback...", err);
+            scanner.start(
+                { facingMode: 'user' },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (text) => {
+                    if (!isScanned) {
+                        isScanned = true;
+                        scanner.stop().then(() => scanner.clear()).catch(() => {});
+                        onScanSuccess(text);
+                    }
+                },
+                () => {}
+            ).catch(() => {});
+        });
+        
         return () => {
-             scanner.clear().catch(e => console.log('Clear error:', e));
+            if (scanner.isScanning) {
+                scanner.stop().catch(() => {}).finally(() => scanner.clear());
+            } else {
+                try { scanner.clear(); } catch(e){}
+            }
         };
     }, []);
 

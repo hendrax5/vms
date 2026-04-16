@@ -46,6 +46,8 @@ const navCategories = [
         name: 'Administration',
         items: [
             { label: 'Tenant Management', href: '/dashboard/customers', icon: Users, permission: 'settings:manage' },
+            { label: 'Platform Users', href: '/dashboard/settings?tab=users', icon: Users, permission: 'settings:manage' },
+            { label: 'Roles & Permissions', href: '/dashboard/settings?tab=rbac', icon: ShieldAlert, permission: 'settings:manage' },
             { label: 'SLA Engine', href: '/dashboard/sla', icon: Activity, permission: 'sla:view' },
             { label: 'System Settings', href: '/dashboard/settings', icon: Settings, permission: 'settings:manage' }
         ]

@@ -6,7 +6,7 @@ import './globals.css';
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 
 export const metadata: Metadata = {
-  title: 'Antigravity VMS & DCIM',
+  title: 'PRODC VMS',
   description: 'Premium Data Center Infrastructure & Visitor Management System',
 };
 

@@ -1,15 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { User, Bell, Shield, Key, Save, Lock, Network, Mail } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import InterconnectionProviders from './InterconnectionProviders';
 import DatacenterMailSettings from './DatacenterMailSettings';
 
 export default function SettingsPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading settings...</div>}>
+            <SettingsContent />
+        </Suspense>
+    );
+}
+
+function SettingsContent() {
     const { data: session } = useSession();
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('account');
+    const searchParams = useSearchParams();
+    const initialTab = searchParams.get('tab') || 'account';
+    const [activeTab, setActiveTab] = useState(initialTab);
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab) setActiveTab(tab);
+        else setActiveTab('account');
+    }, [searchParams]);
 
     // RBAC States
     const [roles, setRoles] = useState<any[]>([]);
