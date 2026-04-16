@@ -41,7 +41,10 @@ async function main() {
             }
         }
     } catch (err) {
-        console.error('Mail Worker Error:', err);
+        console.error('⚠️ Mail Worker Connection Failed (Check IMAP Settings):', err.message);
+        console.log('🔄 Retrying in 60 seconds...');
+        await new Promise(res => setTimeout(res, 60000));
+        return main(); // Retry loop
     }
 }
 
