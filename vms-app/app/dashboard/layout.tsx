@@ -14,19 +14,58 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-const navItems = [
-    { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
-    { label: 'Team Inbox', href: '/dashboard/inbox', icon: Mail, permission: 'tickets:view' },
-    { label: 'Infrastructure Map', href: '/dashboard/infrastructure', icon: Building2, permission: 'infrastructure:view' },
-    { label: 'Tenant Management', href: '/dashboard/customers', icon: Users, permission: 'settings:manage' },
-    { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
-    { label: 'Rack Logistics', href: '/dashboard/racks', icon: Package, permission: 'racks:manage' },
-    { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },
-    { label: 'Goods & Assets', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' },
-    { label: 'SLA Engine', href: '/dashboard/sla', icon: Activity, permission: 'sla:view' },
-    { label: 'Security', href: '/dashboard/security', icon: ShieldAlert, permission: 'dashboard:view' },
-    { label: 'Support Tickets', href: '/dashboard/tickets', icon: LifeBuoy, permission: 'tickets:view' },
-    { label: 'Settings', href: '/dashboard/settings', icon: Settings, permission: 'settings:manage' },
+const navCategories = [
+    {
+        name: 'Dashboard',
+        items: [
+            { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
+            { label: 'Team Inbox', href: '/dashboard/inbox', icon: Mail, permission: 'tickets:view' },
+            { label: 'Support Tickets', href: '/dashboard/tickets', icon: LifeBuoy, permission: 'tickets:view' },
+        ]
+    },
+    {
+        name: 'Physical Infrastructure',
+        items: [
+            { label: 'Infrastructure Map', href: '/dashboard/infrastructure', icon: Building2, permission: 'infrastructure:view' },
+            { label: 'Rack Management', href: '/dashboard/racks', icon: Package, permission: 'racks:manage' },
+            { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },
+        ]
+    },
+    {
+        name: 'Operations & Tracking',
+        items: [
+            { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
+            { label: 'Asset Delivery Scanner', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' },
+            { label: 'Kiosk Security Panel', href: '/kiosk', icon: ShieldAlert, permission: 'permits:view' },
+        ]
+    },
+    {
+        name: 'Administration',
+        items: [
+            { label: 'Tenant Management', href: '/dashboard/customers', icon: Users, permission: 'settings:manage' },
+            { label: 'SLA Engine', href: '/dashboard/sla', icon: Activity, permission: 'sla:view' },
+            { label: 'Security Center', href: '/dashboard/security', icon: ShieldAlert, permission: 'dashboard:view' },
+            { label: 'System Settings', href: '/dashboard/settings', icon: Settings, permission: 'settings:manage' },
+        ]
+    }
+];
+
+const customerNavCategories = [
+    {
+        name: 'General',
+        items: [
+            { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
+            { label: 'Support Tickets', href: '/dashboard/tickets', icon: LifeBuoy, permission: 'tickets:view' },
+        ]
+    },
+    {
+        name: 'Access & Deliveries',
+        items: [
+            { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
+            { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },
+            { label: 'Asset Tracker', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' },
+        ]
+    }
 ];
 
 export default function DashboardLayout({
@@ -44,20 +83,6 @@ export default function DashboardLayout({
     
     // Always show if they are Super Admin, otherwise check permission presence.
     // If the user is a CUSTOMER, show them their specific allowed menus natively without granular NOC permission checks.
-    
-    const customerNavItems = [
-        { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
-        { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
-        { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },
-        { label: 'Goods & Assets', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' },
-        { label: 'Support Tickets', href: '/dashboard/tickets', icon: LifeBuoy, permission: 'tickets:view' },
-    ];
-
-    const visibleNavItems = isCustomer 
-        ? customerNavItems 
-        : navItems.filter(item => 
-            isSuperAdmin || userPermissions.includes(item.permission)
-        );
 
     return (
         <div className="min-h-screen bg-background flex selection:bg-blue-500/30">
@@ -68,25 +93,37 @@ export default function DashboardLayout({
                         VMS / DCIM
                      </h2>
                 </div>
-                <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-                     <div className="mb-4 px-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Main Navigation</p>
-                     </div>
-                     {visibleNavItems.map((item) => {
-                         const Icon = item.icon;
-                         const isActive = pathname === item.href;
+                <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+                     {(isCustomer ? customerNavCategories : navCategories).map((category, idx) => {
+                         const visibleItems = category.items.filter(item => 
+                             isSuperAdmin || userPermissions.includes(item.permission)
+                         );
+
+                         if (visibleItems.length === 0) return null;
+
                          return (
-                             <Link key={item.href} href={item.href}
-                                 className={cn(
-                                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
-                                     isActive 
-                                        ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-inner" 
-                                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
-                                 )}>
-                                 <Icon className={cn("w-5 h-5", isActive ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300")} />
-                                 {item.label}
-                             </Link>
-                         )
+                             <div key={idx} className="space-y-1">
+                                 <div className="mb-2 px-2">
+                                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{category.name}</p>
+                                 </div>
+                                 {visibleItems.map((item) => {
+                                     const Icon = item.icon;
+                                     const isActive = pathname === item.href;
+                                     return (
+                                         <Link key={item.href} href={item.href}
+                                             className={cn(
+                                                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
+                                                 isActive 
+                                                    ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-inner" 
+                                                    : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                                             )}>
+                                             <Icon className={cn("w-4 h-4", isActive ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300")} />
+                                             {item.label}
+                                         </Link>
+                                     )
+                                 })}
+                             </div>
+                         );
                      })}
                 </div>
                 <div className="p-4 border-t border-border/50">
