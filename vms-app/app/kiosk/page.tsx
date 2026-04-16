@@ -77,7 +77,13 @@ export default function DatacenterKiosk() {
                 console.warn('Camera API not available. Usually requires HTTPS or localhost.');
                 return; // Gracefully do nothing, let the bypass button work
             }
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+            } catch (fallbackErr) {
+                console.warn("User-facing camera failed, falling back to any available video...", fallbackErr);
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            }
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
             }
@@ -123,7 +129,11 @@ export default function DatacenterKiosk() {
                 
                 setVisitorName(data.visitor);
                 setStep('CAMERA'); // Force them into camera
-                startCamera();
+                
+                // Add a small delay so Html5QrcodeScanner can release the media stream hardware lock on Android
+                setTimeout(() => {
+                    startCamera();
+                }, 800);
             } else {
                 setErrorMessage(data.error || 'Invalid QR Code');
                 setStep('ERROR');
