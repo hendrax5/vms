@@ -17,10 +17,11 @@ async function main() {
     });
 
     // Seed User
-    const hashedPw = await bcrypt.hash('admin123', 10);
+    const adminClearTextPass = process.env.VMS_ADMIN_PASSWORD || 'admin123';
+    const hashedPw = await bcrypt.hash(adminClearTextPass, 10);
     const admin = await prisma.user.upsert({
         where: { email: 'admin@vms.local' },
-        update: {},
+        update: { password: hashedPw }, // Ensure it updates the existing password with the dynamic one
         create: {
             name: 'System Admin',
             email: 'admin@vms.local',

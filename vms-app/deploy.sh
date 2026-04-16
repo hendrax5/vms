@@ -49,12 +49,15 @@ docker-compose up -d --build
 echo "⏳ Waiting 10 seconds for PostgreSQL to initialize..."
 sleep 10
 
+# Generate Secure Random Password for Admin
+export SYS_PASS_RANDOM=$(openssl rand -base64 8 | tr -dc 'a-zA-Z0-9' | head -c 10)
+
 # 5. Execute Prisma Migrations & Seeding
 echo "🔐 Pushing Database Schema..."
 docker exec -it vms_mail_worker npx prisma db push --accept-data-loss || echo "⚠️  Schema push issue, please check DB."
 
-echo "🌱 Seeding initial Data and User Roles..."
-docker exec -it vms_mail_worker node seed.js || true
+echo "🌱 Seeding initial Data and User Roles... (Using Generated Sec-Pass)"
+docker exec -e VMS_ADMIN_PASSWORD="$SYS_PASS_RANDOM" -it vms_mail_worker node seed.js || true
 docker exec -it vms_mail_worker node seed_tenant.js || true
 
 echo "=========================================================="
@@ -62,6 +65,6 @@ echo "🎉 DEPLOYMENT COMPLETE!"
 echo "🌐 Your VMS Panel is now running at: http://<your-server-ip>:3000"
 echo "👉 Login to the system:"
 echo "   User: admin@vms.local"
-echo "   Pass: admin123"
+echo "   Pass: $SYS_PASS_RANDOM"
 echo "=========================================================="
 echo "To view logs: docker-compose logs -f web"
