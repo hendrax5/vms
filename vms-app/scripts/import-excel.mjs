@@ -21,7 +21,10 @@ async function runImport() {
 
     const rooms = {
         'RACK CUSTOMER LT. 8 (P1)': await getOrCreateRoom(dc.id, 'ProDC P1 (Lt.8)'),
-        'RACK CUSTOMER LT.9 (P2) DataHal': await getOrCreateRoom(dc.id, 'ProDC P2 DataHall A (Lt.9)')
+        'RACK CUSTOMER LT.9 (P2) DataHal': await getOrCreateRoom(dc.id, 'ProDC P2 DataHall A (Lt.9)'),
+        'RACK HSP': await getOrCreateRoom(dc.id, 'HSP Point of Presence'),
+        'MMR OPEN RACK LT. 8 (P1)': await getOrCreateRoom(dc.id, 'MMR P1 (Lt.8)'),
+        'MMR OPEN RACK LT.9 (P2)': await getOrCreateRoom(dc.id, 'MMR P2 (Lt.9)')
     };
 
     // Helper functions
@@ -45,17 +48,35 @@ async function runImport() {
         return customer;
     }
 
-    async function parseSheet(sheetName, room) {
-        if(!workbook.Sheets[sheetName]) return;
+    async function parseSheet(sheetName, room, forceCustomerName = null) {
+        if(!workbook.Sheets[sheetName]) {
+            console.log(`⚠️ Sheet '${sheetName}' not found in the workbook, skipping.`);
+            return;
+        }
         console.log(`\n📄 Parsing Sheet: ${sheetName} -> Room: ${room.name}`);
         const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
 
-        // We will dump imported racks into a single generic row for topology purposes unless we knew row layouts
         const baseRow = await getOrCreateRow(room.id, 'Imported Row A');
 
-        let currentCustomer = null;
+        let currentCustomer = forceCustomerName ? await getOrCreateCustomer(forceCustomerName) : null;
         let currentRack = null;
-        let currentU = 1; // Start filling rack from U1 up
+        let currentU = 1;
+
+        // Ensure we have a default rack fallback in case a raw equipment list appears without a "RACK X" header
+        const getFallbackRack = async () => {
+            if(!currentRack) {
+                 if(!currentCustomer) currentCustomer = await getOrCreateCustomer('Internal / Unknown');
+                 currentRack = await prisma.rack.create({
+                     data: {
+                         name: `${sheetName} Main Rack`,
+                         rowId: baseRow.id,
+                         uCapacity: 42
+                     }
+                 });
+                 console.log(`   🧱 Created Contextual Default Rack [${sheetName} Main Rack]`);
+            }
+            return currentRack;
+        };
 
         for (let i = 0; i < data.length; i++) {
             const rowArr = data[i];
@@ -64,16 +85,10 @@ async function runImport() {
             const firstCell = String(rowArr[0] || '').trim();
             const secondCell = String(rowArr[1] || '').trim();
 
-            // Detect new Rack block: e.g. "RACK 1 PT INTERNUSA DUTA MAKMUR" or "Rack 2 PT. AURORA"
-            if (firstCell.toUpperCase().startsWith('RACK ') && !firstCell.toUpperCase().includes('CUSTOMER')) {
-                // Extract Customer Name
-                let customerRaw = firstCell.replace(/RACK\s+\d+/i, '').replace(' - ', '').trim();
+            if (firstCell.toUpperCase().startsWith('RACK ') && !firstCell.toUpperCase().includes('CUSTOMER') && !firstCell.toUpperCase().includes('HSP')) {
+                let customerRaw = forceCustomerName || firstCell.replace(/RACK\s+\d+/i, '').replace(' - ', '').trim();
                 currentCustomer = await getOrCreateCustomer(customerRaw);
 
-                // Create Rack
-                const rackName = `RACK-${room.id}-${currentRack ? currentRack.id + 1 : i}`;
-                
-                // check if rack exists
                 currentRack = await prisma.rack.create({
                     data: {
                         name: firstCell,
@@ -82,24 +97,22 @@ async function runImport() {
                     }
                 });
                 console.log(`   🧱 Created Rack [${firstCell}] for Customer [${currentCustomer.name}]`);
-                currentU = 1; // Reset U start
+                currentU = 1;
                 continue;
             }
 
-            // Detect Header
             if (firstCell.toUpperCase() === 'NO' && secondCell.toUpperCase() === 'BARANG') {
-                continue; // pure header
+                continue;
             }
 
-            // Detect Terminal lines
             if (firstCell.toUpperCase().includes('TOTAL') || firstCell.toUpperCase().includes('TERMINATE')) {
                 continue;
             }
 
-            // Content row mapping based on discovered headers:
-            // 0: No, 1: Barang, 2: QTY, 3: Berat, 4: Dimensi, 5: SN, 6: Keterangan
             const no = parseInt(firstCell);
-            if (!isNaN(no) && currentRack && currentCustomer) {
+            if (!isNaN(no)) {
+                await getFallbackRack();
+
                 const barang = secondCell;
                 const qtyRaw = rowArr[2];
                 const dimensiRaw = rowArr[4];
@@ -108,7 +121,6 @@ async function runImport() {
 
                 if(!barang) continue;
 
-                // Guess U Space from "Dimensi" or default to 1
                 let uSpace = 1;
                 if(dimensiRaw && !isNaN(parseInt(dimensiRaw))) {
                     uSpace = parseInt(dimensiRaw);
@@ -116,7 +128,6 @@ async function runImport() {
                     uSpace = parseInt(String(dimensiRaw).toLowerCase().replace('u', '')) || 1;
                 }
 
-                // If Keterangan points out it's OUT, maybe skip or map metadata
                 const isOut = keterangan.toLowerCase().includes('out');
 
                 if(!isOut) {
@@ -143,8 +154,12 @@ async function runImport() {
     }
 
     try {
-        await parseSheet('RACK CUSTOMER LT. 8 (P1)', rooms['RACK CUSTOMER LT. 8 (P1)']);
-        await parseSheet('RACK CUSTOMER LT.9 (P2) DataHal', rooms['RACK CUSTOMER LT.9 (P2) DataHal']);
+        // await parseSheet('RACK CUSTOMER LT. 8 (P1)', rooms['RACK CUSTOMER LT. 8 (P1)']);
+        // await parseSheet('RACK CUSTOMER LT.9 (P2) DataHal', rooms['RACK CUSTOMER LT.9 (P2) DataHal']);
+        // await parseSheet('RACK HSP', rooms['RACK HSP'], 'ION Network');
+        await parseSheet('MMR OPEN RACK LT. 8 (P1)', rooms['MMR OPEN RACK LT. 8 (P1)'], 'Provider MMR Layer 8');
+        await parseSheet('MMR OPEN RACK LT.9 (P2)', rooms['MMR OPEN RACK LT.9 (P2)'], 'Provider MMR Layer 9');
+
         console.log('✅ Excel Importer Completed Successfully!');
     } catch(err) {
         console.error('❌ Migration Error:', err);
