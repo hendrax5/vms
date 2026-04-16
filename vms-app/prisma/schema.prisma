@@ -80,6 +80,8 @@ model Datacenter {
   goods         GoodsItem[]
   supportTickets SupportTicket[]
   interconnectionProviders InterconnectionProvider[]
+  mailConfig    DatacenterMailConfig?
+  inboxMessages InboxMessage[]
   createdAt     DateTime       @default(now())
 }
 
@@ -311,4 +313,40 @@ model TicketComment {
   body      String
   isInternal Boolean      @default(false) // NOC only chat / notes if true
   createdAt DateTime      @default(now())
+}
+
+// -----------------------------------------
+//  7. Unified Inbox & Mail Automation
+// -----------------------------------------
+model DatacenterMailConfig {
+  id           Int        @id @default(autoincrement())
+  datacenterId Int        @unique
+  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
+  imapHost     String
+  imapPort     Int        @default(993)
+  imapUser     String
+  imapPass     String
+  smtpHost     String
+  smtpPort     Int        @default(465)
+  smtpUser     String
+  smtpPass     String
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model InboxMessage {
+  id           Int        @id @default(autoincrement())
+  datacenterId Int
+  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
+  messageId    String     @unique // Global IMAP message ID
+  threadId     String?
+  from         String
+  to           String
+  subject      String
+  bodyText     String
+  htmlContent  String?    // Storing full HTML for rich rendering 
+  isRead       Boolean    @default(false)
+  receivedAt   DateTime   @default(now())
+  repliedAt    DateTime?
 }

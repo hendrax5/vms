@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Bell, Shield, Key, Save, Lock, Network } from 'lucide-react';
+import { User, Bell, Shield, Key, Save, Lock, Network, Mail } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import InterconnectionProviders from './InterconnectionProviders';
+import DatacenterMailSettings from './DatacenterMailSettings';
 
 export default function SettingsPage() {
     const { data: session } = useSession();
@@ -188,10 +189,23 @@ export default function SettingsPage() {
                             Interconnections
                         </button>
                     )}
+                    {isSuperAdmin && (
+                        <button 
+                            onClick={() => setActiveTab('mail')}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'mail' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                        >
+                            <Mail className="w-5 h-5" />
+                            Mail Integration
+                        </button>
+                    )}
                 </div>
 
                 {/* Main Content Area */}
                 <div className="col-span-1 md:col-span-3 space-y-6">
+                    {activeTab === 'mail' && (
+                        <DatacenterMailSettings />
+                    )}
+
                     {activeTab === 'providers' && (
                         <InterconnectionProviders />
                     )}

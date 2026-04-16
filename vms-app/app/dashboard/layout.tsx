@@ -2,7 +2,7 @@
 
 import { 
     LayoutDashboard, Users, Activity, Settings, 
-    LogOut, Package, Network, LifeBuoy, ShieldAlert, Building2
+    LogOut, Package, Network, LifeBuoy, ShieldAlert, Building2, Mail
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -16,6 +16,7 @@ function cn(...inputs: ClassValue[]) {
 
 const navItems = [
     { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
+    { label: 'Team Inbox', href: '/dashboard/inbox', icon: Mail, permission: 'tickets:view' },
     { label: 'Infrastructure Map', href: '/dashboard/infrastructure', icon: Building2, permission: 'infrastructure:view' },
     { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
     { label: 'Rack Logistics', href: '/dashboard/racks', icon: Package, permission: 'racks:manage' },
