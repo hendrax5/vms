@@ -298,7 +298,7 @@ export default function DatacenterKiosk() {
                             <p className="text-slate-400 mb-8">Hello <strong className="text-white">{visitorName}</strong>.<br/> For facility security, please capture your photo.</p>
                             
                             <div className="relative rounded-3xl overflow-hidden bg-black aspect-video w-full max-w-xl mx-auto border-4 border-slate-800 mb-8">
-                                <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover transform scale-x-[-1]" />
+                                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
                                 <canvas ref={canvasRef} className="hidden" />
                                 
                                 {/* Overlay crosshair */}

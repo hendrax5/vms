@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { 
     LayoutDashboard, Users, Activity, Settings, 
     LogOut, Package, Network, LifeBuoy, ShieldAlert, Building2, Mail,
-    Menu, X, PanelLeftClose, PanelLeftOpen
+    Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -18,27 +18,28 @@ function cn(...inputs: ClassValue[]) {
 
 const navCategories = [
     {
-        name: 'Dashboard',
+        name: 'Dashboard & Tracker',
         items: [
             { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
             { label: 'Team Inbox', href: '/dashboard/inbox', icon: Mail, permission: 'tickets:view' },
             { label: 'Support Tickets', href: '/dashboard/tickets', icon: LifeBuoy, permission: 'tickets:view' },
+            { label: 'Asset Tracker', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' }
         ]
     },
     {
-        name: 'Physical Infrastructure',
+        name: 'Datacenter Assets',
         items: [
             { label: 'Infrastructure Map', href: '/dashboard/infrastructure', icon: Building2, permission: 'infrastructure:view' },
             { label: 'Rack Management', href: '/dashboard/racks', icon: Package, permission: 'racks:manage' },
-            { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },
+            { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' }
         ]
     },
     {
-        name: 'Operations & Tracking',
+        name: 'Security & Access',
         items: [
             { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
-            { label: 'Asset Delivery Scanner', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' },
             { label: 'Kiosk Security Panel', href: '/kiosk', icon: ShieldAlert, permission: 'permits:view' },
+            { label: 'Security Center', href: '/dashboard/security', icon: ShieldAlert, permission: 'dashboard:view' }
         ]
     },
     {
@@ -46,8 +47,7 @@ const navCategories = [
         items: [
             { label: 'Tenant Management', href: '/dashboard/customers', icon: Users, permission: 'settings:manage' },
             { label: 'SLA Engine', href: '/dashboard/sla', icon: Activity, permission: 'sla:view' },
-            { label: 'Security Center', href: '/dashboard/security', icon: ShieldAlert, permission: 'dashboard:view' },
-            { label: 'System Settings', href: '/dashboard/settings', icon: Settings, permission: 'settings:manage' },
+            { label: 'System Settings', href: '/dashboard/settings', icon: Settings, permission: 'settings:manage' }
         ]
     }
 ];
@@ -57,15 +57,15 @@ const customerNavCategories = [
         name: 'General',
         items: [
             { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
-            { label: 'Support Tickets', href: '/dashboard/tickets', icon: LifeBuoy, permission: 'tickets:view' },
+            { label: 'Support Tickets', href: '/dashboard/tickets', icon: LifeBuoy, permission: 'tickets:view' }
         ]
     },
     {
-        name: 'Access & Deliveries',
+        name: 'Access & Logistics',
         items: [
             { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
             { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },
-            { label: 'Asset Tracker', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' },
+            { label: 'Asset Tracker', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' }
         ]
     }
 ];
@@ -82,6 +82,7 @@ export default function DashboardLayout({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -95,12 +96,21 @@ export default function DashboardLayout({
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
+    const isCustomer = (session?.user as any)?.role?.toLowerCase() === 'customer';
+
+    // Auto-expand category based on current pathname
+    useEffect(() => {
+        const activeCat = (isCustomer ? customerNavCategories : navCategories).find(c => 
+            c.items.some(i => i.href === pathname)
+        );
+        if (activeCat) setExpandedCategory(activeCat.name);
+    }, [pathname, isCustomer]);
+
     const userPermissions = (session?.user as any)?.permissions || [];
     const userRoleRaw = (session?.user as any)?.role as string || '';
     const userName = session?.user?.name || 'Administrator';
     const userEmail = session?.user?.email || 'admin@vms.local';
     const isSuperAdmin = userRoleRaw.replace(/\s+/g, '').toLowerCase() === 'superadmin';
-    const isCustomer = userRoleRaw.toLowerCase() === 'customer';
     
     // Always show if they are Super Admin, otherwise check permission presence.
     // If the user is a CUSTOMER, show them their specific allowed menus natively without granular NOC permission checks.
@@ -163,21 +173,36 @@ export default function DashboardLayout({
 
                          return (
                              <div key={idx} className="space-y-1">
-                                 <div className="mb-2 px-2 flex-shrink-0 whitespace-nowrap overflow-hidden">
+                                 <div 
+                                     className="mb-2 px-2 flex-shrink-0 flex items-center justify-between cursor-pointer group"
+                                     onClick={() => {
+                                         if (!isCollapsed || isMobile) {
+                                            setExpandedCategory(expandedCategory === category.name ? null : category.name);
+                                         }
+                                     }}
+                                 >
                                      <p className={cn(
                                          "text-[11px] font-bold text-slate-500 uppercase tracking-widest transition-opacity duration-200",
-                                         isCollapsed && !isMobile ? "opacity-0 h-0" : "opacity-100"
+                                         isCollapsed && !isMobile ? "opacity-0 w-0 h-0" : "opacity-100"
                                      )}>
                                          {category.name}
                                      </p>
+                                     {(!isCollapsed || isMobile) && (
+                                         <ChevronDown className={cn("w-3 h-3 text-slate-500 transition-transform group-hover:text-slate-300", expandedCategory === category.name ? "rotate-180" : "")} />
+                                     )}
                                      {isCollapsed && !isMobile && <div className="h-px bg-slate-800 w-full mt-2" />}
                                  </div>
-                                 {visibleItems.map((item) => {
-                                     const Icon = item.icon;
-                                     const isActive = pathname === item.href;
-                                     return (
-                                         <Link key={item.href} href={item.href} title={item.label}
-                                             className={cn(
+                                 
+                                 <div className={cn(
+                                    "space-y-1 overflow-hidden transition-all duration-300 ease-in-out",
+                                     (!isCollapsed || isMobile) ? (expandedCategory === category.name ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0") : "max-h-[1000px] opacity-100"
+                                 )}>
+                                     {visibleItems.map((item) => {
+                                         const Icon = item.icon;
+                                         const isActive = pathname === item.href;
+                                         return (
+                                             <Link key={item.href} href={item.href} title={item.label}
+                                                 className={cn(
                                                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group flex-wrap overflow-hidden flex-shrink-0",
                                                  isActive 
                                                     ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-inner" 
@@ -188,7 +213,8 @@ export default function DashboardLayout({
                                              {(!isCollapsed || isMobile) && <span className="whitespace-nowrap">{item.label}</span>}
                                          </Link>
                                      )
-                                 })}
+                                     })}
+                                 </div>
                              </div>
                          );
                      })}
