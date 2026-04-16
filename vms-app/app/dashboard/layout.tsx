@@ -18,6 +18,7 @@ const navItems = [
     { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
     { label: 'Team Inbox', href: '/dashboard/inbox', icon: Mail, permission: 'tickets:view' },
     { label: 'Infrastructure Map', href: '/dashboard/infrastructure', icon: Building2, permission: 'infrastructure:view' },
+    { label: 'Tenant Management', href: '/dashboard/customers', icon: Users, permission: 'settings:manage' },
     { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
     { label: 'Rack Logistics', href: '/dashboard/racks', icon: Package, permission: 'racks:manage' },
     { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },

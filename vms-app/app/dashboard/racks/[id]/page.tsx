@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Server, Plus, Info, LayoutTemplate, Activity, X, Network, Share2, Map, ArrowRightLeft, History } from 'lucide-react';
+import { ArrowLeft, Server, Plus, Info, LayoutTemplate, Activity, X, Network, Share2, Map, ArrowRightLeft, History, Edit2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -16,6 +16,10 @@ export default function RackElevationPage() {
     const [selectedEquipment, setSelectedEquipment] = useState<any>(null);
     const [perspective, setPerspective] = useState<'FRONT' | 'REAR'>('FRONT');
     const [draggedEq, setDraggedEq] = useState<any>(null);
+
+    // Manual CRUD states
+    const [isEqModalOpen, setIsEqModalOpen] = useState(false);
+    const [eqFormData, setEqFormData] = useState({ id: null, name: '', equipmentType: 'SERVER', uStart: 1, uEnd: 1, orientation: 'FRONT' });
 
     useEffect(() => {
         fetchRackDetails();
@@ -147,6 +151,42 @@ export default function RackElevationPage() {
         }
     };
 
+    const handleSaveEq = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const url = eqFormData.id ? `/api/racks/equipments/${eqFormData.id}` : '/api/racks/equipments';
+        const method = eqFormData.id ? 'PUT' : 'POST';
+        
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...eqFormData, rackId: parseInt(rackId) })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                alert('Error processing equipment: ' + err.error);
+                return;
+            }
+            setIsEqModalOpen(false);
+            fetchRackDetails();
+            fetchAuditLogs();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDeleteEq = async (id: number) => {
+        if (!confirm('Are you sure you want to uninstall and remove this equipment?')) return;
+        try {
+            const res = await fetch(`/api/racks/equipments/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete equipment');
+            fetchRackDetails();
+            fetchAuditLogs();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
             <button 
@@ -167,6 +207,10 @@ export default function RackElevationPage() {
                     </p>
                 </div>
                 <button
+                    onClick={() => {
+                        setEqFormData({ id: null, name: '', equipmentType: 'SERVER', uStart: 1, uEnd: 1, orientation: perspective });
+                        setIsEqModalOpen(true);
+                    }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all"
                 >
                     <Plus className="w-4 h-4" /> Add Equipment
@@ -281,6 +325,25 @@ export default function RackElevationPage() {
                                                     Available Ports: {eq.ports?.filter((p: any) => p.status === 'AVAILABLE').length || 0}
                                                 </div>
                                             </div>
+                                        </div>
+                                        
+                                        {/* Action buttons */}
+                                        <div className="flex flex-row md:flex-col gap-2 items-end justify-start">
+                                            <button 
+                                                onClick={() => {
+                                                    setEqFormData({ id: eq.id, name: eq.name, equipmentType: eq.equipmentType, uStart: eq.uStart, uEnd: eq.uEnd, orientation: eq.orientation });
+                                                    setIsEqModalOpen(true);
+                                                }}
+                                                className="p-1.5 bg-neutral-800 text-blue-400 rounded hover:bg-neutral-700" title="Edit Equipment"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteEq(eq.id)}
+                                                className="p-1.5 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20" title="Uninstall"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                         
                                         {eq.ports && eq.ports.length > 0 && (
@@ -428,6 +491,94 @@ export default function RackElevationPage() {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* CREATE / EDIT EQUIPMENT MODAL */}
+            {isEqModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg shadow-2xl relative flex flex-col">
+                        <button 
+                            onClick={() => setIsEqModalOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="p-6 border-b border-neutral-800">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                {eqFormData.id ? <Edit2 className="w-5 h-5 text-blue-400" /> : <Plus className="w-5 h-5 text-blue-400" />}
+                                {eqFormData.id ? 'Edit Equipment' : 'Install Equipment'}
+                            </h2>
+                        </div>
+                        
+                        <form onSubmit={handleSaveEq} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-400 mb-1">Equipment Name / Hostname / SN <span className="text-red-400">*</span></label>
+                                <input 
+                                    type="text" required value={eqFormData.name}
+                                    onChange={e => setEqFormData({...eqFormData, name: e.target.value})}
+                                    className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    placeholder="e.g. SVR-DB-01"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-400 mb-1">Type</label>
+                                <select 
+                                    value={eqFormData.equipmentType}
+                                    onChange={e => setEqFormData({...eqFormData, equipmentType: e.target.value})}
+                                    className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                >
+                                    <option value="SERVER">SERVER</option>
+                                    <option value="SWITCH">SWITCH</option>
+                                    <option value="ROUTER">ROUTER</option>
+                                    <option value="PATCH_PANEL">PATCH_PANEL</option>
+                                    <option value="OTB">OTB</option>
+                                    <option value="PDU">PDU</option>
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-neutral-400 mb-1">Start U</label>
+                                    <input 
+                                        type="number" min={1} max={totalU} value={eqFormData.uStart}
+                                        onChange={e => setEqFormData({...eqFormData, uStart: parseInt(e.target.value)})}
+                                        className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-neutral-400 mb-1">End U</label>
+                                    <input 
+                                        type="number" min={1} max={totalU} value={eqFormData.uEnd}
+                                        onChange={e => setEqFormData({...eqFormData, uEnd: parseInt(e.target.value)})}
+                                        className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-400 mb-1">Orientation</label>
+                                <select 
+                                    value={eqFormData.orientation}
+                                    onChange={e => setEqFormData({...eqFormData, orientation: e.target.value})}
+                                    className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                >
+                                    <option value="FRONT">FRONT</option>
+                                    <option value="BACK">BACK / REAR</option>
+                                    <option value="BOTH">BOTH (Full Depth)</option>
+                                </select>
+                            </div>
+
+                            <div className="pt-4 flex items-center justify-end gap-3 border-t border-neutral-800 mt-6">
+                                <button type="button" onClick={() => setIsEqModalOpen(false)} className="px-4 py-2 font-medium text-neutral-300 hover:text-white">Cancel</button>
+                                <button type="submit" className="px-5 py-2 font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-lg shadow-blue-500/20">
+                                    {eqFormData.id ? 'Save Changes' : 'Install Device'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <style jsx global>{`
                 .custom-scrollbar::-webkit-scrollbar {

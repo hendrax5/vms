@@ -76,3 +76,45 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const resolvedParams = await params;
+        const equipmentId = parseInt(resolvedParams.id);
+
+        const existingEq = await prisma.rackEquipment.findUnique({
+            where: { id: equipmentId }
+        });
+
+        if (!existingEq) return NextResponse.json({ error: 'Equipment not found' }, { status: 404 });
+
+        await prisma.infrastructureAuditLog.create({
+             data: {
+                 equipmentId: equipmentId,
+                 userId: parseInt((session.user as any).id),
+                 action: 'UNINSTALL',
+                 previousState: JSON.stringify({
+                     name: existingEq.name,
+                     uStart: existingEq.uStart,
+                     uEnd: existingEq.uEnd,
+                     rackId: existingEq.rackId
+                 }),
+                 newState: null
+             }
+        });
+
+        await prisma.rackEquipment.delete({
+            where: { id: equipmentId }
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('Delete Equipment Error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
