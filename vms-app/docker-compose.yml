@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: vms_db
+    environment:
+      POSTGRES_USER: vms_user
+      POSTGRES_PASSWORD: vmspassword
+      POSTGRES_DB: vmsdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - vms_db_data:/var/lib/postgresql/data
+    restart: always
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vms_web
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://vms_user:vmspassword@db:5432/vmsdb?schema=public
+      - NEXTAUTH_SECRET=vms-secret-key-prod-001
+      - NEXTAUTH_URL=http://localhost:3000
+    depends_on:
+      - db
+    restart: always
+
+  mail_worker:
+    image: node:20-alpine
+    container_name: vms_mail_worker
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://vms_user:vmspassword@db:5432/vmsdb?schema=public
+      - IMAP_HOST=imap.example.com
+      - IMAP_PORT=993
+      - IMAP_USER=vms@example.com
+      - IMAP_PASS=password
+    depends_on:
+      - db
+    # Fixed from .js to .mjs and disabled default worker running until requested
+    command: sh -c "npm install && node scripts/mail-worker.mjs"
+    restart: unless-stopped
+
+volumes:
+  vms_db_data:
