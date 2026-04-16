@@ -5,24 +5,39 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-const stats = [
-    { name: 'Active Visit Permits', value: '14', change: '+2 today', icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { name: 'Racks Utilizing > 80%', value: '8', change: 'critical capacity', icon: Server, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    { name: 'Cross Connects Provisioned', value: '432', change: '+12 this week', icon: Network, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-    { name: 'Total Downtime Mins (YTD)', value: '0', change: '100% Uptime', icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-];
-
 export default function NocDashboard() {
     const [permits, setPermits] = useState<any[]>([]);
+    const [realStats, setRealStats] = useState<any>(null);
 
     useEffect(() => {
         fetch('/api/permits')
             .then(res => res.json())
             .then(data => setPermits(data))
             .catch(err => console.error(err));
+            
+        fetch('/api/dashboard/stats')
+            .then(res => res.json())
+            .then(data => setRealStats(data))
+            .catch(err => console.error(err));
     }, []);
 
     const pendingPermits = permits.filter((p: any) => p.status === 'Pending').slice(0, 5);
+
+    const statsConfig = realStats ? [
+        { name: 'Active Visit Permits', value: realStats.activePermits.toString(), change: `+${realStats.todayPermits} today`, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { name: 'Racks Utilizing > 80%', value: realStats.racksOver80.toString(), change: realStats.racksOver80 > 0 ? 'critical capacity' : 'Healthy Load', icon: Server, color: realStats.racksOver80 > 0 ? 'text-rose-400' : 'text-emerald-400', bg: realStats.racksOver80 > 0 ? 'bg-rose-500/10' : 'bg-emerald-500/10' },
+        { name: 'Cross Connects Provisioned', value: realStats.activeCrossConnects.toString(), change: `+${realStats.weekCrossConnects} this week`, icon: Network, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+        { name: 'Total Downtime Mins (YTD)', value: '0', change: '100% Uptime', icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    ] : [
+        { name: 'Active Visit Permits', value: '-', change: 'Loading...', icon: Users, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+        { name: 'Racks Utilizing > 80%', value: '-', change: 'Loading...', icon: Server, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+        { name: 'Cross Connects Provisioned', value: '-', change: 'Loading...', icon: Network, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+        { name: 'Total Downtime Mins (YTD)', value: '-', change: 'Loading...', icon: Activity, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+    ];
+
+    const utilizedPercent = realStats ? realStats.utilizationPercent : 0;
+    // Donut chart logic based on percentage (circumference = 502)
+    const dashOffset = 502 - (502 * utilizedPercent) / 100;
 
     return (
         <div className="space-y-8">
@@ -37,7 +52,7 @@ export default function NocDashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, i) => (
+                {statsConfig.map((stat, i) => (
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -94,27 +109,27 @@ export default function NocDashboard() {
                       </div>
                  </div>
 
-                 {/* Capacity Donut Chart (Mock) */}
+                 {/* Capacity Donut Chart */}
                  <div className="bg-card/50 border border-border/50 rounded-2xl p-6 backdrop-blur-xl flex flex-col">
                       <h3 className="text-lg font-semibold text-slate-100 mb-6">Total Rack Capacity</h3>
                       <div className="flex-1 flex items-center justify-center relative">
                           <svg className="w-48 h-48 transform -rotate-90">
                               <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="20" fill="transparent" className="text-slate-800" />
-                              <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="20" fill="transparent" strokeDasharray="502" strokeDashoffset="120" className="text-blue-500" />
+                              <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="20" fill="transparent" strokeDasharray="502" strokeDashoffset={dashOffset} className="text-blue-500 transition-all duration-1000" />
                           </svg>
                           <div className="absolute flex flex-col items-center">
-                              <span className="text-3xl font-extrabold text-white">76%</span>
+                              <span className="text-3xl font-extrabold text-white">{utilizedPercent}%</span>
                               <span className="text-xs font-medium text-slate-400 uppercase tracking-widest mt-1">Utilized</span>
                           </div>
                       </div>
                       <div className="mt-6 space-y-2">
                            <div className="flex items-center justify-between text-sm">
                                <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500" /> Used Space</span>
-                               <span className="font-semibold text-white">4,200 U</span>
+                               <span className="font-semibold text-white">{realStats ? realStats.totalUsedU : 0} U</span>
                            </div>
                            <div className="flex items-center justify-between text-sm">
                                <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-800" /> Available Space</span>
-                               <span className="font-semibold text-white">1,340 U</span>
+                               <span className="font-semibold text-white">{realStats ? realStats.totalAvailableU - realStats.totalUsedU : 0} U</span>
                            </div>
                       </div>
                  </div>
@@ -122,3 +137,4 @@ export default function NocDashboard() {
         </div>
     );
 }
+
