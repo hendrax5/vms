@@ -56,6 +56,7 @@ export const authOptions: NextAuthOptions = {
             }
         })
     ],
+    trustHost: true,
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
