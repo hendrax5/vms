@@ -192,6 +192,7 @@ model VisitPermit {
   requiresEscort Boolean          @default(false)
   zoneAccess     String[]         // E.g., which DataRooms or Rows they can access
   eventLogs      PermitEventLog[]
+  accessCard     AccessCard?
   createdAt      DateTime         @default(now())
 }
 
@@ -249,6 +250,15 @@ model VendorMaintenance {
   affectedRacks   Rack[]    @relation("MaintenanceAffectedRacks")
   description     String?
   createdAt       DateTime  @default(now())
+}
+
+model AccessCard {
+  id              Int          @id @default(autoincrement())
+  cardNumber      String       @unique // e.g., "VISITOR-RED-01"
+  status          String       @default("Available") // "Available", "InUse", "Lost"
+  currentPermitId Int?         @unique
+  currentPermit   VisitPermit? @relation(fields: [currentPermitId], references: [id])
+  updatedAt       DateTime     @updatedAt
 }
 
 // Security Audit

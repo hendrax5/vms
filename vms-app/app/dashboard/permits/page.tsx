@@ -9,9 +9,14 @@ export default function PermitsPage() {
     const [permits, setPermits] = useState<any[]>([]);
     const [datacenters, setDatacenters] = useState<any[]>([]);
     const [customers, setCustomers] = useState<any[]>([]);
+    const [accessCards, setAccessCards] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+    const [targetPermit, setTargetPermit] = useState<any>(null);
     const [processingPermit, setProcessingPermit] = useState<any>(null);
+    const [selectedCardId, setSelectedCardId] = useState('');
+
     const [formData, setFormData] = useState({
         datacenterId: '',
         customerId: '',
@@ -25,7 +30,17 @@ export default function PermitsPage() {
         fetchPermits();
         fetchDatacenters();
         fetchCustomers();
+        fetchAccessCards();
     }, []);
+
+    const fetchAccessCards = async () => {
+        try {
+            const res = await fetch('/api/access-cards');
+            if (res.ok) setAccessCards(await res.json());
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const fetchPermits = async () => {
         try {
@@ -94,6 +109,39 @@ export default function PermitsPage() {
             fetchPermits();
         } catch (error) {
             console.error('Failed to create permit', error);
+        }
+    };
+
+    const handleAssignCard = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!targetPermit || !selectedCardId) return;
+        try {
+            await fetch('/api/access-cards/assign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ permitId: targetPermit.id, cardId: selectedCardId })
+            });
+            setIsCardModalOpen(false);
+            setTargetPermit(null);
+            setSelectedCardId('');
+            fetchPermits();
+            fetchAccessCards();
+        } catch (error) {
+            console.error('Failed to assign card', error);
+        }
+    };
+
+    const handleReleaseCard = async (cardId: string) => {
+        try {
+            await fetch('/api/access-cards/release', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cardId })
+            });
+            fetchPermits();
+            fetchAccessCards();
+        } catch (error) {
+            console.error('Failed to release card', error);
         }
     };
 
@@ -375,15 +423,82 @@ export default function PermitsPage() {
                                          </>
                                      )}
                                      {processingPermit.status === 'Approved' && (
-                                          <button onClick={() => handleUpdateStatus(processingPermit.id, 'Check In')} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors">
+                                          <button onClick={() => handleUpdateStatus(processingPermit.id, 'CheckIn')} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors">
                                               Mark Check-In (Arrived)
                                           </button>
+                                     )}
+                                     {(processingPermit.status === 'CheckIn' || processingPermit.status === 'Check In') && (
+                                          (() => {
+                                              const assignedCard = accessCards.find(c => c.currentPermitId === processingPermit.id);
+                                              if (assignedCard) {
+                                                  return (
+                                                      <button onClick={() => handleReleaseCard(assignedCard.id)} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors">
+                                                          Release Card {assignedCard.cardNumber}
+                                                      </button>
+                                                  );
+                                              } else {
+                                                  return (
+                                                      <button onClick={() => { setTargetPermit(processingPermit); setIsCardModalOpen(true); }} className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-amber-500/20">
+                                                          Assign Access Card (Collect KTP)
+                                                      </button>
+                                                  );
+                                              }
+                                          })()
                                      )}
                                      <button onClick={() => setProcessingPermit(null)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-semibold transition-colors ml-4">
                                          Close View
                                      </button>
                                  </div>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Assign Card Modal */}
+            <AnimatePresence>
+                {isCardModalOpen && targetPermit && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col"
+                        >
+                            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                                <h2 className="text-xl font-semibold text-slate-100">Assign Access Card</h2>
+                                <button onClick={() => { setIsCardModalOpen(false); setTargetPermit(null); }} className="text-slate-400 hover:text-slate-200">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            
+                            <form onSubmit={handleAssignCard} className="p-6 space-y-4">
+                                <p className="text-xs text-slate-400">
+                                    Ensure that the Visitor <strong className="text-white">{targetPermit.visitorNames}</strong> has handed over their Physical KTP/ID Document before issuing an access card.
+                                </p>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">Available Access Cards</label>
+                                    <select 
+                                        required
+                                        value={selectedCardId}
+                                        onChange={(e) => setSelectedCardId(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                                    >
+                                        <option value="">- Scan or Select Available Card -</option>
+                                        {accessCards.filter(c => c.status === 'Available').map(card => (
+                                            <option key={card.id} value={card.id}>{card.cardNumber}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                
+                                <button 
+                                    type="submit"
+                                    className="w-full mt-4 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg"
+                                >
+                                    Confirm Assignment
+                                </button>
+                            </form>
                         </motion.div>
                     </div>
                 )}
