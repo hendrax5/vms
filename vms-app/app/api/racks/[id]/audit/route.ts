@@ -4,9 +4,10 @@ import { PrismaClient } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 const prisma = new PrismaClient();
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const rackId = parseInt(params.id);
+        const resolvedParams = await params;
+        const rackId = parseInt(resolvedParams.id);
         const logs = await prisma.infrastructureAuditLog.findMany({
             where: {
                 equipment: {

@@ -5,14 +5,15 @@ import { authOptions } from '../../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await getServerSession(authOptions);
         if (!session || !session.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const equipmentId = parseInt(params.id);
+        const resolvedParams = await params;
+        const equipmentId = parseInt(resolvedParams.id);
         const { uStart, uEnd, orientation, rackId, name } = await req.json();
 
         // Fetch existing configuration for Audit Logs
