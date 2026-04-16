@@ -22,9 +22,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://vms_user:vmspassword@db:5432/vmsdb?schema=public
-      - NEXTAUTH_SECRET=vms-secret-key-prod-001
-      - NEXTAUTH_URL=http://localhost:3000
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
     depends_on:
       - db
     restart: always
@@ -36,11 +36,11 @@ services:
     volumes:
       - .:/app
     environment:
-      - DATABASE_URL=postgresql://vms_user:vmspassword@db:5432/vmsdb?schema=public
-      - IMAP_HOST=imap.example.com
-      - IMAP_PORT=993
-      - IMAP_USER=vms@example.com
-      - IMAP_PASS=password
+      - DATABASE_URL=${DATABASE_URL}
+      - IMAP_HOST=${IMAP_HOST:-imap.example.com}
+      - IMAP_PORT=${IMAP_PORT:-993}
+      - IMAP_USER=${IMAP_USER:-vms@example.com}
+      - IMAP_PASS=${IMAP_PASS:-password}
     depends_on:
       - db
     # Fixed from .js to .mjs and disabled default worker running until requested

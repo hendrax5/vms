@@ -32,10 +32,15 @@ fi
 # 2. Environment Verification
 if [ ! -f .env ]; then
     echo "⚙️  Generating production .env file..."
+    PUBLIC_IP=$(hostname -I | awk '{print $1}')
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP="localhost"
+    fi
+    echo "🌍 Detected IP Address: $PUBLIC_IP"
     cat <<EOF > .env
 DATABASE_URL="postgresql://vms_user:vmspassword@db:5432/vmsdb?schema=public"
 NEXTAUTH_SECRET="vms-secret-key-prod-randomized-$(date +%s)"
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="http://$PUBLIC_IP:3000"
 EOF
     echo "✅ Generated .env file."
 fi
