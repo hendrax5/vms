@@ -99,9 +99,16 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
+    try {
+        const session = await getServerSession(authOptions);
+        const { searchParams } = new URL(req.url);
+        const rackId = searchParams.get('rackId');
+        const customerId = searchParams.get('customerId');
+
         const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
         const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
         const sessionCustomerId = session?.user?.customerId;
+        let equipments = [];
 
         const includeRelations = { 
             customer: true, 
