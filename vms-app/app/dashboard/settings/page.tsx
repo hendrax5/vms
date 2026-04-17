@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { User, Bell, Shield, Key, Save, Lock, Network, Mail, Trash2, Activity } from 'lucide-react';
+import { User, Bell, Shield, Key, Save, Lock, Network, Mail, Trash2, Activity, Plus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
