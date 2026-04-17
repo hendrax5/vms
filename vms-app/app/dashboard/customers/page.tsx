@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Trash2, Search, AlertTriangle, X, Building2 } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, Search, AlertTriangle, X, Building2, GitMerge } from 'lucide-react';
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<any[]>([]);
@@ -12,6 +12,11 @@ export default function CustomersPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState<any>(null);
     const [formData, setFormData] = useState({ name: '', code: '', contactEmail: '', contactPhone: '' });
+    
+    // Merge Modal States
+    const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+    const [mergingSource, setMergingSource] = useState<any>(null);
+    const [mergeTargetId, setMergeTargetId] = useState('');
     
     // Alert state
     const [errorMsg, setErrorMsg] = useState('');
@@ -83,6 +88,37 @@ export default function CustomersPage() {
             fetchCustomers();
         } catch (e: any) {
             alert(e.message); // Show error if they own racks
+        }
+    };
+
+    const handleMerge = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrorMsg('');
+        if (!mergeTargetId) {
+            setErrorMsg('Please select a target tenant.');
+            return;
+        }
+        
+        try {
+            const res = await fetch('/api/customers/merge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sourceId: mergingSource.id,
+                    targetId: mergeTargetId
+                })
+            });
+            const data = await res.json();
+            
+            if (!res.ok) throw new Error(data.error || 'Failed to merge');
+            
+            setIsMergeModalOpen(false);
+            setMergingSource(null);
+            setMergeTargetId('');
+            fetchCustomers();
+            alert(data.message);
+        } catch (e: any) {
+            setErrorMsg(e.message);
         }
     };
 
@@ -158,8 +194,16 @@ export default function CustomersPage() {
                                     <td className="p-4">
                                         <div className="flex items-center gap-2">
                                             <button 
+                                                onClick={() => { setMergingSource(c); setIsMergeModalOpen(true); setErrorMsg(''); setMergeTargetId(''); }}
+                                                className="p-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded transition-colors"
+                                                title="Merge Tenant"
+                                            >
+                                                <GitMerge className="w-4 h-4" />
+                                            </button>
+                                            <button 
                                                 onClick={() => handleOpenModal(c)}
                                                 className="p-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded transition-colors"
+                                                title="Edit Tenant"
                                             >
                                                 <Edit2 className="w-4 h-4" />
                                             </button>
@@ -263,6 +307,73 @@ export default function CustomersPage() {
                                     className="px-5 py-2 font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-600/20"
                                 >
                                     {editingCustomer ? 'Save Changes' : 'Create Tenant'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* MERGE MODAL */}
+            {isMergeModalOpen && mergingSource && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg shadow-2xl relative flex flex-col">
+                        <button 
+                            onClick={() => setIsMergeModalOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="p-6 border-b border-neutral-800">
+                            <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+                                <GitMerge className="w-5 h-5 text-red-500" />
+                                Merge Tenant
+                            </h2>
+                        </div>
+                        
+                        <form onSubmit={handleMerge} className="p-6 space-y-4">
+                            {errorMsg && (
+                                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
+                                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                                    {errorMsg}
+                                </div>
+                            )}
+
+                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400 space-y-2">
+                                <p className="font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Warning: Data Destructive Action</p>
+                                <p>You are about to merge <b>{mergingSource.name}</b> into another tenant. All assets, users, tickets, and cross-connects will be permanently transferred. The tenant <b>{mergingSource.name}</b> will be deleted.</p>
+                                <p>This action cannot be undone.</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-neutral-400 mb-1">Target Tenant (Keep this one) <span className="text-red-400">*</span></label>
+                                <select
+                                    required
+                                    value={mergeTargetId}
+                                    onChange={e => setMergeTargetId(e.target.value)}
+                                    className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                >
+                                    <option value="">Select target tenant...</option>
+                                    {customers.filter(c => c.id !== mergingSource.id).map(c => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="pt-4 flex items-center justify-end gap-3 border-t border-neutral-800 mt-6">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsMergeModalOpen(false)}
+                                    className="px-4 py-2 font-medium text-neutral-300 hover:text-white"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="px-5 py-2 font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg shadow-lg shadow-red-600/20"
+                                >
+                                    Execute Merge
                                 </button>
                             </div>
                         </form>
