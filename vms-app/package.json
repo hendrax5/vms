@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "migrate:excel": "node scripts/import-excel.mjs",
-    "migrate:crossconnect": "node scripts/import-crossconnect.mjs"
+    "migrate:crossconnect": "node scripts/import-crossconnect.mjs",
+    "db:seed:permissions": "node seed_permissions.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
