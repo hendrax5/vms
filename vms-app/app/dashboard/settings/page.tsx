@@ -425,10 +425,102 @@ function SettingsContent() {
                             Mail Integration
                         </button>
                     )}
+                    {isSuperAdmin && (
+                        <button 
+                            onClick={() => setActiveTab('advanced')}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'advanced' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                        >
+                            <Save className="w-5 h-5" />
+                            Advanced
+                        </button>
+                    )}
                 </div>
 
                 {/* Main Content Area */}
                 <div className="col-span-1 md:col-span-3 space-y-6">
+                    {activeTab === 'advanced' && isSuperAdmin && (
+                        <div className="bg-card/40 border border-border/50 rounded-2xl p-6 backdrop-blur-xl">
+                            <div className="flex items-center gap-3 mb-6 border-b border-border/50 pb-4">
+                                <div className="w-12 h-12 bg-rose-500/20 text-rose-400 flex flex-col items-center justify-center rounded-full font-bold text-xl uppercase ring-2 ring-rose-500/30">
+                                    <Save className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-slate-100 leading-tight">Database Migration</h2>
+                                    <p className="text-xs text-slate-400">Export and import database for server migrations.</p>
+                                </div>
+                            </div>
+                            <div className="space-y-6">
+                                <div className="p-4 rounded-xl bg-slate-800/50 border border-border/50">
+                                    <h3 className="text-sm font-semibold text-slate-200 mb-2">Export Database</h3>
+                                    <p className="text-xs text-slate-400 mb-4">Download a full JSON backup of all tables. Use this file to migrate data to another server.</p>
+                                    <button 
+                                        disabled={loading}
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            try {
+                                                const res = await fetch('/api/database/export');
+                                                if (!res.ok) throw new Error('Export failed');
+                                                const blob = await res.blob();
+                                                const url = window.URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = `vms_backup_${new Date().toISOString().slice(0,10)}.json`;
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                a.remove();
+                                                toast.success('Database exported successfully!');
+                                            } catch (e: any) {
+                                                toast.error(e.message || 'Export error');
+                                            }
+                                            setLoading(false);
+                                        }}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
+                                    >
+                                        Download JSON
+                                    </button>
+                                </div>
+
+                                <div className="p-4 rounded-xl bg-slate-800/50 border border-border/50">
+                                    <h3 className="text-sm font-semibold text-rose-400 mb-2">Import Database</h3>
+                                    <p className="text-xs text-slate-400 mb-4">Upload a JSON backup to merge into the current server. Duplicates with the same IDs will be skipped.</p>
+                                    <div className="flex items-center gap-4">
+                                        <input 
+                                            type="file" 
+                                            accept=".json"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                if (!confirm('Are you sure you want to import this data? Existing data with matching unique IDs will be skipped.')) return;
+                                                setLoading(true);
+                                                try {
+                                                    const text = await file.text();
+                                                    const data = JSON.parse(text);
+                                                    const res = await fetch('/api/database/import', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify(data)
+                                                    });
+                                                    const result = await res.json();
+                                                    if (res.ok) {
+                                                        console.log('Import summary:', result.summary);
+                                                        toast.success('Database imported successfully!');
+                                                    } else {
+                                                        toast.error(result.error || 'Import failed');
+                                                    }
+                                                } catch (err: any) {
+                                                    toast.error('Failed to parse or upload JSON');
+                                                }
+                                                setLoading(false);
+                                                e.target.value = ''; // reset
+                                            }}
+                                            className="block w-full max-w-sm text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-rose-500/10 file:text-rose-400 hover:file:bg-rose-500/20 transition-all cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'mail' && (
                         <DatacenterMailSettings />
                     )}
