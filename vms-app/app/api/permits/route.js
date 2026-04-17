@@ -56,8 +56,8 @@ export async function PUT(req) {
 
         let dataToUpdate = { status };
         
-        // If status is Approved and no token exists, generate one
-        if (status === 'Approved' && !existingPermit.qrCodeToken) {
+        // Ensure token exists for Approved or CheckIn statuses
+        if (['Approved', 'CheckIn', 'Check In'].includes(status) && !existingPermit.qrCodeToken) {
             dataToUpdate.qrCodeToken = crypto.randomBytes(32).toString('hex');
         }
 

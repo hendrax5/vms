@@ -433,40 +433,47 @@ export default function PermitsPage() {
                                      <span className={`px-2 py-1 rounded text-xs font-bold ${processingPermit.status === 'Pending' ? 'bg-amber-500/20 text-amber-500' : processingPermit.status === 'Approved' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
                                          {processingPermit.status}
                                      </span>
+                                     <span className="text-[10px] text-slate-600 font-mono ml-4">
+                                         Expires: {new Date(new Date(processingPermit.scheduledAt).getTime() + 24 * 60 * 60 * 1000).toLocaleDateString()}
+                                     </span>
                                  </div>
                                  <div className="flex gap-3">
-                                     {processingPermit.status === 'Pending' && (
+                                     {isInternalAdmin && (
                                          <>
-                                             <button onClick={() => handleUpdateStatus(processingPermit.id, 'Rejected')} className="px-4 py-2 border border-red-900/50 text-red-500 hover:bg-red-900/20 rounded-lg text-sm font-semibold transition-colors">
-                                                 Reject
-                                             </button>
-                                             <button onClick={() => handleUpdateStatus(processingPermit.id, 'Approved')} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20">
-                                                 Approve Request
-                                             </button>
+                                             {processingPermit.status === 'Pending' && (
+                                                 <>
+                                                     <button onClick={() => handleUpdateStatus(processingPermit.id, 'Rejected')} className="px-4 py-2 border border-red-900/50 text-red-500 hover:bg-red-900/20 rounded-lg text-sm font-semibold transition-colors">
+                                                         Reject
+                                                     </button>
+                                                     <button onClick={() => handleUpdateStatus(processingPermit.id, 'Approved')} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20">
+                                                         Approve Request
+                                                     </button>
+                                                 </>
+                                             )}
+                                             {processingPermit.status === 'Approved' && (
+                                                  <button onClick={() => handleUpdateStatus(processingPermit.id, 'CheckIn')} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors">
+                                                      Mark Check-In (Arrived)
+                                                  </button>
+                                             )}
+                                             {(processingPermit.status === 'CheckIn' || processingPermit.status === 'Check In') && (
+                                                  (() => {
+                                                      const assignedCard = accessCards.find(c => c.currentPermitId === processingPermit.id);
+                                                      if (assignedCard) {
+                                                          return (
+                                                              <button onClick={() => handleReleaseCard(assignedCard.id)} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors">
+                                                                  Release Card {assignedCard.cardNumber}
+                                                              </button>
+                                                          );
+                                                      } else {
+                                                          return (
+                                                              <button onClick={() => { setTargetPermit(processingPermit); setIsCardModalOpen(true); }} className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-amber-500/20">
+                                                                  Assign Access Card (Collect KTP)
+                                                              </button>
+                                                          );
+                                                      }
+                                                  })()
+                                             )}
                                          </>
-                                     )}
-                                     {processingPermit.status === 'Approved' && (
-                                          <button onClick={() => handleUpdateStatus(processingPermit.id, 'CheckIn')} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors">
-                                              Mark Check-In (Arrived)
-                                          </button>
-                                     )}
-                                     {(processingPermit.status === 'CheckIn' || processingPermit.status === 'Check In') && (
-                                          (() => {
-                                              const assignedCard = accessCards.find(c => c.currentPermitId === processingPermit.id);
-                                              if (assignedCard) {
-                                                  return (
-                                                      <button onClick={() => handleReleaseCard(assignedCard.id)} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors">
-                                                          Release Card {assignedCard.cardNumber}
-                                                      </button>
-                                                  );
-                                              } else {
-                                                  return (
-                                                      <button onClick={() => { setTargetPermit(processingPermit); setIsCardModalOpen(true); }} className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-amber-500/20">
-                                                          Assign Access Card (Collect KTP)
-                                                      </button>
-                                                  );
-                                              }
-                                          })()
                                      )}
                                      <button onClick={() => setProcessingPermit(null)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-semibold transition-colors ml-4">
                                          Close View
