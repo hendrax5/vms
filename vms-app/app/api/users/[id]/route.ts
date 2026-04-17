@@ -71,7 +71,6 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const userId = parseInt(params.id);
         const body = await request.json();
         const { roleId, permissions, password, customerId, name, email } = body;
 
