@@ -4,9 +4,15 @@ import { Users, CheckCircle, Clock, XCircle, Search, Plus, X, FileText, Printer,
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 export default function PermitsPage() {
+    const { data: session } = useSession();
+    const userRole = (session?.user as any)?.role || '';
+    const userRoleLower = userRole.toLowerCase().replace(/\s+/g, '');
+    const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRoleLower);
+
     const [permits, setPermits] = useState<any[]>([]);
     const [datacenters, setDatacenters] = useState<any[]>([]);
     const [customers, setCustomers] = useState<any[]>([]);
