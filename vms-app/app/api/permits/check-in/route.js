@@ -54,8 +54,8 @@ export async function POST(req) {
             if (!isSameDay) {
                 const timeDiffMins = (scheduled.getTime() - now.getTime()) / 60000;
                 
-                // Don't allow check-ins more than 2 hours early for future days
-                if (timeDiffMins > 120) {
+                // Allow check-ins up to 12 hours early to account for timezone shifts and flexibility
+                if (timeDiffMins > 720) {
                     return NextResponse.json({ 
                         error: `Check-in is too early. Your permit is scheduled for ${scheduled.toLocaleDateString()} at ${scheduled.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}.` 
                     }, { status: 403 });
