@@ -71,7 +71,14 @@ export async function POST(req) {
         });
 
     } catch (error) {
-        console.error('Check-in Validation Error:', error);
-        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+        console.error('Check-in Validation Error Details:', {
+            message: error.message,
+            stack: error.stack,
+            body: body
+        });
+        return NextResponse.json({ 
+            error: 'Server configuration error',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        }, { status: 500 });
     }
 }

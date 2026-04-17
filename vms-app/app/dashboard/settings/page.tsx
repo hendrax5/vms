@@ -66,6 +66,12 @@ function SettingsContent() {
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
     const [logsLoading, setLogsLoading] = useState(false);
 
+    // Access Cards States
+    const [accessCards, setAccessCards] = useState<any[]>([]);
+    const [cardsLoading, setCardsLoading] = useState(false);
+    const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
+    const [newCardNumber, setNewCardNumber] = useState('');
+
     useEffect(() => {
         if (activeTab === 'rbac') {
             loadRbacData();
@@ -74,8 +80,62 @@ function SettingsContent() {
             if (roles.length === 0) loadRbacData(); // Need roles for the creation dropdown
         } else if (activeTab === 'activity') {
             loadAuditLogs();
+        } else if (activeTab === 'access-cards') {
+            loadAccessCards();
         }
     }, [activeTab]);
+
+    const loadAccessCards = async () => {
+        setCardsLoading(true);
+        try {
+            const res = await fetch('/api/access-cards');
+            const data = await res.json();
+            setAccessCards(data || []);
+        } catch (error) {
+            console.error('Failed to load access cards', error);
+        }
+        setCardsLoading(false);
+    };
+
+    const handleAddAccessCard = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch('/api/access-cards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cardNumber: newCardNumber })
+            });
+            if (res.ok) {
+                setIsAddCardModalOpen(false);
+                setNewCardNumber('');
+                loadAccessCards();
+                toast.success('Access card added successfully');
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to add access card');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+        setLoading(false);
+    };
+
+    const handleDeleteAccessCard = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this access card?')) return;
+        try {
+            const res = await fetch(`/api/access-cards/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadAccessCards();
+                toast.success('Access card deleted successfully');
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to delete access card');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const loadAuditLogs = async () => {
         setLogsLoading(true);
@@ -357,6 +417,7 @@ function SettingsContent() {
     const userRoleRaw = (session?.user as any)?.role as string || '';
     const userRoleLower = userRoleRaw.replace(/\s+/g, '').toLowerCase();
     const isSuperAdmin = userRoleLower === 'superadmin';
+    const isDatacenterStaff = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRoleLower);
     const isTenantAdmin = userRoleLower.includes('admin') && userRoleLower.includes('tenant');
     const userPermissions = (session?.user as any)?.permissions || [];
     const canManageUsers = isSuperAdmin || isTenantAdmin || userPermissions.includes('users:manage');
@@ -432,6 +493,15 @@ function SettingsContent() {
                         >
                             <Save className="w-5 h-5" />
                             Advanced
+                        </button>
+                    )}
+                    {isDatacenterStaff && (
+                        <button 
+                            onClick={() => setActiveTab('access-cards')}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'access-cards' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                        >
+                            <Key className="w-5 h-5" />
+                            Access Cards
                         </button>
                     )}
                 </div>
@@ -1010,6 +1080,103 @@ function SettingsContent() {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    )}
+                    {activeTab === 'access-cards' && isDatacenterStaff && (
+                        <div className="space-y-6">
+                            <div className="bg-card/40 border border-border/50 rounded-2xl p-6 backdrop-blur-xl">
+                                <div className="flex justify-between items-center mb-6 border-b border-border/50 pb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-indigo-500/20 text-indigo-400 flex items-center justify-center rounded-full">
+                                            <Key className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-slate-100">Access Card Database</h2>
+                                            <p className="text-xs text-slate-400">Manage physical cards available for visitor check-in.</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsAddCardModalOpen(true)}
+                                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                    >
+                                        Register New Card
+                                    </button>
+                                </div>
+
+                                {cardsLoading ? (
+                                    <div className="text-center text-slate-500 py-12">Loading cards...</div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {accessCards.map((card) => (
+                                            <div key={card.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between group">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-2 h-10 rounded-full ${card.status === 'Available' ? 'bg-emerald-500' : card.status === 'InUse' ? 'bg-amber-500' : 'bg-red-500'}`} />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-200">{card.cardNumber}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`text-[10px] uppercase font-bold ${card.status === 'Available' ? 'text-emerald-500' : card.status === 'InUse' ? 'text-amber-500' : 'text-red-500'}`}>
+                                                                {card.status}
+                                                            </span>
+                                                            {card.currentPermit && (
+                                                                <span className="text-[10px] text-slate-500 truncate max-w-[100px]">
+                                                                    - PRM-{card.currentPermit.id}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleDeleteAccessCard(card.id)}
+                                                    className="p-2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                                    title="Delete Card"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {accessCards.length === 0 && (
+                                            <div className="col-span-full py-12 text-center bg-slate-950/50 rounded-xl border border-dashed border-slate-800">
+                                                <Key className="w-12 h-12 text-slate-800 mx-auto mb-3" />
+                                                <p className="text-slate-500">No access cards registered.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Add Card Modal */}
+                            {isAddCardModalOpen && (
+                                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-full max-w-md">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div className="w-10 h-10 bg-indigo-500/20 text-indigo-400 flex items-center justify-center rounded-full">
+                                                <Plus className="w-5 h-5" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-white">Register New Card</h3>
+                                        </div>
+                                        <form onSubmit={handleAddAccessCard} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Card Serial / Number <span className="text-red-400">*</span></label>
+                                                <input 
+                                                    type="text" 
+                                                    required 
+                                                    autoFocus
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-700 font-mono" 
+                                                    placeholder="e.g. VISITOR-001"
+                                                    value={newCardNumber} 
+                                                    onChange={e => setNewCardNumber(e.target.value.toUpperCase())} 
+                                                />
+                                            </div>
+                                            <div className="pt-4 flex justify-end gap-3">
+                                                <button type="button" onClick={() => setIsAddCardModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
+                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold transition-shadow shadow-lg shadow-indigo-600/20">
+                                                    {loading ? 'Registering...' : 'Register Card'}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
