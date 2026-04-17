@@ -398,7 +398,7 @@ export default function PermitsPage() {
                                 </div>
 
                                 <div className="bg-slate-950 p-4 border border-slate-800 rounded-lg text-center">
-                                     <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-4">Master Access Token (QR Code)</p>
+                                     <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-4">Visitor Entry QR Code (For Customer)</p>
                                      {processingPermit.qrCodeToken ? (
                                          <div className="bg-white p-4 rounded-xl inline-block mb-4 border-4 border-emerald-500/20 shadow-xl shadow-emerald-500/5">
                                              <QRCodeSVG value={processingPermit.qrCodeToken} size={160} level="H" />

@@ -240,7 +240,7 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                                 })}
                                                 className="text-slate-400 hover:text-red-400 transition-colors inline-flex items-center gap-1.5 font-semibold text-xs border border-transparent hover:border-red-900 px-2 py-1 bg-slate-950 shadow-sm"
                                              >
-                                                 <QrCode className="w-4 h-4" /> MASTER BADGE
+                                                 <QrCode className="w-4 h-4" /> ACCESS QR
                                              </button>
                                          </td>
                                      </tr>
@@ -519,7 +519,7 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                              <div className="p-6 text-center text-slate-900 border-b border-slate-300">
                                  {selectedQR.type === 'Visit' ? <ShieldCheck className="w-8 h-8 mx-auto text-red-600 mb-2" /> : <Package className="w-8 h-8 mx-auto text-blue-600 mb-2" />}
                                  <h2 className="text-xl font-extrabold uppercase tracking-widest">{selectedQR.title}</h2>
-                                 <p className="text-[10px] font-bold text-slate-500 uppercase mt-1 tracking-widest">{selectedQR.type === 'Visit' ? 'E-Badge Credential' : 'Logistics Waybill Tracking'}</p>
+                                 <p className="text-[10px] font-bold text-slate-500 uppercase mt-1 tracking-widest">{selectedQR.type === 'Visit' ? 'Visitor Entry Permit' : 'Logistics Waybill Tracking'}</p>
                              </div>
                              <div className="p-8 bg-white flex flex-col items-center">
                                  <div className="p-3 border-2 border-slate-200">
