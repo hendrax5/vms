@@ -25,8 +25,31 @@ export async function POST(req) {
         });
 
         if (permit) {
+            // AUTO-CHECKOUT LOGIC: If already checked in, and scanning again, trigger checkout
             if (permit.status === 'CheckIn' && !validateOnly) {
-                return NextResponse.json({ error: 'Visitor is already checked in' }, { status: 400 });
+                // We could redirect logic here, but let's just perform checkout
+                const now = new Date();
+                const updatedPermit = await prisma.$transaction(async (tx) => {
+                    await tx.visitPermit.update({
+                        where: { id: permit.id },
+                        data: { status: 'CheckOut', checkOutAt: now }
+                    });
+                    await tx.permitEventLog.create({
+                        data: {
+                            permitId: permit.id,
+                            status: 'CheckOut',
+                            message: 'Visitor auto-scanned QR at Kiosk for Check-Out.'
+                        }
+                    });
+                    return tx.visitPermit.findUnique({ where: { id: permit.id } });
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    type: 'CHECKOUT',
+                    visitor: updatedPermit?.visitorNames,
+                    message: 'Auto Check-Out Successful. Thank you for your visit.'
+                });
             }
 
             if (validateOnly) {
@@ -36,6 +59,7 @@ export async function POST(req) {
                     permitId: permit.id,
                     visitorNames: permit.visitorNames,
                     status: permit.status,
+                    isCheckoutNeeded: permit.status === 'CheckIn',
                     datacenter: permit.datacenter?.name
                 });
             }
@@ -72,7 +96,7 @@ export async function POST(req) {
                 const res = await tx.visitPermit.update({
                     where: { id: permit.id },
                     data: {
-                        status: 'CheckIn',
+                        status: 'KioskVerified',
                         checkInAt: now,
                         ...(visitorPhoto && { visitorPhoto })
                     }
@@ -81,8 +105,8 @@ export async function POST(req) {
                 await tx.permitEventLog.create({
                     data: {
                         permitId: permit.id,
-                        status: 'CheckIn',
-                        message: visitorPhoto ? 'Visitor verified QR and registered identity photo at Kiosk.' : 'Visitor verified QR and checked in.',
+                        status: 'KioskVerified',
+                        message: visitorPhoto ? 'Visitor verified QR and registered identity photo at Kiosk.' : 'Visitor verified QR and scanned at Kiosk.',
                     }
                 });
 

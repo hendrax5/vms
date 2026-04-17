@@ -205,6 +205,7 @@ export default function SecurityDashboard() {
                                     <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${
                                         event.status === 'CheckIn' ? 'bg-emerald-500' :
                                         event.status === 'NDASigned' ? 'bg-blue-500' :
+                                        event.status === 'KioskVerified' ? 'bg-indigo-500' :
                                         'bg-orange-500'
                                     }`} />
                                     

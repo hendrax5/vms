@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, CheckCircle, Clock, XCircle, Search, Plus, X, FileText, Printer, ShieldCheck } from 'lucide-react';
+import { Users, CheckCircle, Clock, XCircle, Search, Plus, X, FileText, Printer, ShieldCheck, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
@@ -225,7 +225,9 @@ export default function PermitsPage() {
                                          <td className="px-6 py-4">
                                              {permit.status === 'Pending' && <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-md text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20"><Clock className="w-3 h-3" /> Pending</span>}
                                              {permit.status === 'Approved' && <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-md text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20"><CheckCircle className="w-3 h-3" /> Approved</span>}
+                                             {permit.status === 'KioskVerified' && <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-md text-xs font-medium bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 animate-pulse"><Camera className="w-3 h-3" /> Kiosk Verified</span>}
                                              {permit.status === 'Check In' && <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><Users className="w-3 h-3" /> Check In</span>}
+                                             {permit.status === 'CheckIn' && <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><Users className="w-3 h-3" /> Check In</span>}
                                              {permit.status === 'Rejected' && <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-md text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" /> Rejected</span>}
                                          </td>
                                          <td className="px-6 py-4 text-right">
@@ -391,7 +393,7 @@ export default function PermitsPage() {
                                      </div>
                                 </div>
                                 
-                                <div className="bg-slate-950 p-4 border border-slate-800 rounded-lg">
+                                 <div className="bg-slate-950 p-4 border border-slate-800 rounded-lg">
                                      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">Authorized Visitors</p>
                                      <div className="flex flex-wrap gap-2">
                                          {processingPermit.visitorNames.split(',').map((name: string, i: number) => (
@@ -401,6 +403,39 @@ export default function PermitsPage() {
                                          ))}
                                      </div>
                                 </div>
+
+                                {processingPermit.visitorPhoto && (
+                                    <div className="bg-slate-950 p-4 border border-indigo-500/30 rounded-lg">
+                                         <p className="text-[10px] uppercase tracking-wider text-indigo-400 font-bold mb-3 flex items-center gap-2">
+                                             <Camera className="w-3 h-3" /> Kiosk Identity Verification Photos
+                                         </p>
+                                         <div className="grid grid-cols-2 gap-3">
+                                             {(() => {
+                                                 try {
+                                                     const photos = JSON.parse(processingPermit.visitorPhoto);
+                                                     return Object.entries(photos).map(([name, data]: [string, any], i) => (
+                                                         <div key={i} className="relative group">
+                                                             <img 
+                                                                 src={data} 
+                                                                 alt={name} 
+                                                                 className="w-full h-32 object-cover rounded-lg border border-slate-800"
+                                                             />
+                                                             <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-1.5 rounded-b-lg">
+                                                                 <p className="text-[9px] text-white font-bold truncate text-center">{name}</p>
+                                                             </div>
+                                                         </div>
+                                                     ));
+                                                 } catch (e) {
+                                                     return (
+                                                         <div className="col-span-2 p-4 text-center text-slate-500 italic text-xs">
+                                                             Failed to load biometric data format
+                                                         </div>
+                                                     );
+                                                 }
+                                             })()}
+                                         </div>
+                                    </div>
+                                )}
 
                                 <div className="bg-slate-950 p-4 border border-slate-800 rounded-lg">
                                      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">Activity Description / Logistical Payload</p>
@@ -471,7 +506,12 @@ export default function PermitsPage() {
                                                       Mark Check-In (Arrived)
                                                   </button>
                                              )}
-                                             {(processingPermit.status === 'CheckIn' || processingPermit.status === 'Check In') && (
+                                             {processingPermit.status === 'KioskVerified' && (
+                                                  <button onClick={() => handleUpdateStatus(processingPermit.id, 'CheckIn')} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-indigo-500/20">
+                                                      Confirm Kiosk Check-In
+                                                  </button>
+                                             )}
+                                             {(processingPermit.status === 'CheckIn' || processingPermit.status === 'Check In' || processingPermit.status === 'KioskVerified') && (
                                                   (() => {
                                                       const assignedCard = accessCards.find(c => c.currentPermitId === processingPermit.id);
                                                       if (assignedCard) {

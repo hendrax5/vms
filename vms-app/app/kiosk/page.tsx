@@ -198,7 +198,7 @@ export default function DatacenterKiosk() {
 
             const data = await res.json();
             
-            if (res.status === 400 && data.error === 'Visitor is already checked in') {
+            if (data.isCheckoutNeeded) {
                 setIsCheckoutQueue(true);
                 await processCheckOut(token);
             } else if (res.ok) {
