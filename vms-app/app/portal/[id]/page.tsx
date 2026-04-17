@@ -48,10 +48,10 @@ export default function PortalPage() {
         }
     };
 
-    if (loading && !permitData) return <div className="h-screen w-full flex items-center justify-center text-slate-400">Verifying Ticket...</div>;
+    if (loading && !permitData) return <div className="h-[100dvh] w-full flex items-center justify-center text-slate-400">Verifying Ticket...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 font-sans">
+        <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 font-sans">
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

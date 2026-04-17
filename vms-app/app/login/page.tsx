@@ -33,11 +33,11 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex relative items-center justify-center p-4 overflow-hidden selection:bg-blue-500/30">
+        <div className="min-h-[100dvh] bg-slate-950 flex relative items-center justify-center p-4 overflow-hidden selection:bg-emerald-500/30">
             {/* Background Effects */}
             <div className="absolute inset-0 z-0">
-                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]" />
+                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-600/20 rounded-full blur-[120px]" />
+                <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-teal-600/20 rounded-full blur-[100px]" />
             </div>
 
             <motion.div 
@@ -48,9 +48,9 @@ export default function LoginPage() {
             >
                 <div className="bg-slate-900/50 backdrop-blur-2xl border border-slate-800/50 rounded-3xl p-8 shadow-2xl overflow-hidden">
                     <div className="flex justify-center mb-8">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center relative">
-                            <Shield className="w-8 h-8 text-blue-400" />
-                            <div className="absolute inset-0 bg-blue-400 blur-xl opacity-20 rounded-2xl" />
+                        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center relative">
+                            <Shield className="w-8 h-8 text-emerald-400" />
+                            <div className="absolute inset-0 bg-emerald-400 blur-xl opacity-20 rounded-2xl" />
                         </div>
                     </div>
 
@@ -79,7 +79,7 @@ export default function LoginPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="operator@vms.local"
-                                    className="w-full bg-slate-950/50 border border-slate-800 text-slate-100 placeholder:text-slate-600 rounded-xl pl-11 pr-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                    className="w-full bg-slate-950/50 border border-slate-800 text-slate-100 placeholder:text-slate-600 rounded-xl pl-11 pr-4 py-3 outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
                                     required
                                 />
                             </div>
@@ -94,7 +94,7 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="w-full bg-slate-950/50 border border-slate-800 text-slate-100 placeholder:text-slate-600 rounded-xl pl-11 pr-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all font-mono"
+                                    className="w-full bg-slate-950/50 border border-slate-800 text-slate-100 placeholder:text-slate-600 rounded-xl pl-11 pr-4 py-3 outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
                                     required
                                 />
                             </div>
@@ -103,7 +103,7 @@ export default function LoginPage() {
                         <button 
                             type="submit" 
                             disabled={loading}
-                            className="w-full relative group bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center justify-center gap-2 py-3 rounded-xl transition-all shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                            className="w-full relative group bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center justify-center gap-2 py-3 rounded-xl transition-all shadow-[0_0_20px_-5px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
                         >
                             {loading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

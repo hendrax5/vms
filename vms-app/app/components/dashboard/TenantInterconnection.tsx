@@ -149,7 +149,7 @@ export default function TenantInterconnection({
                                      <td className="px-5 py-4 text-xs font-mono">
                                          <div className="flex flex-col gap-1">
                                              <div className="bg-slate-950 px-2 py-1 border border-slate-800 flex justify-between space-x-2">
-                                                 <span className="text-slate-500">A</span><span className="text-blue-400">{cc.sideAPort?.equipment?.name} {cc.sideAPort?.portName}</span>
+                                                 <span className="text-slate-500">A</span><span className="text-emerald-400">{cc.sideAPort?.equipment?.name} {cc.sideAPort?.portName}</span>
                                              </div>
                                              <div className="bg-slate-950 px-2 py-1 border border-slate-800 flex justify-between space-x-2">
                                                  <span className="text-slate-500">Z</span><span className="text-purple-400">{cc.sideZPort?.equipment?.name} {cc.sideZPort?.portName}</span>
@@ -328,7 +328,7 @@ export default function TenantInterconnection({
                                             required
                                             value={formData.targetType}
                                             onChange={(e) => setFormData({...formData, targetType: e.target.value, targetProvider: '', targetNotes: ''})}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
                                         >
                                             <option value="">Select Target Type...</option>
                                             <option value="Internal">Internal Cross-Connect (My Racks)</option>
@@ -348,7 +348,7 @@ export default function TenantInterconnection({
                                                 required
                                                 value={formData.targetProvider}
                                                 onChange={(e) => setFormData({...formData, targetProvider: e.target.value})}
-                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
                                             >
                                                 <option value="">Select Provider...</option>
                                                 {providers.filter(p => p.type === formData.targetType).map(p => (
@@ -366,7 +366,7 @@ export default function TenantInterconnection({
                                                 required
                                                 value={formData.targetNotes}
                                                 onChange={(e) => setFormData({...formData, targetNotes: e.target.value})}
-                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder-slate-600"
                                                 placeholder={formData.targetType === 'IXP' ? "e.g. AS12345" : "e.g. CKT-9876543"}
                                             />
                                         </div>
@@ -381,7 +381,7 @@ export default function TenantInterconnection({
                                             required
                                             value={formData.targetNotes}
                                             onChange={(e) => setFormData({...formData, targetNotes: e.target.value})}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder-slate-600"
                                             placeholder="Write detailed destination (e.g., Company X rack 4)"
                                         />
                                     </div>
@@ -395,7 +395,7 @@ export default function TenantInterconnection({
                                                 required
                                                 value={formData.sideZRackId}
                                                 onChange={(e) => setFormData({...formData, sideZRackId: e.target.value, sideZEquipmentId: '', sideZPortId: ''})}
-                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
                                             >
                                                 <option value="">Select Cabinet...</option>
                                                 {availableRacks.filter(r => r.row?.roomId === parseInt(formData.datacenterId) || !formData.datacenterId).map((r: any) => (
@@ -410,7 +410,7 @@ export default function TenantInterconnection({
                                                 disabled={!formData.sideZRackId}
                                                 value={formData.sideZEquipmentId}
                                                 onChange={(e) => setFormData({...formData, sideZEquipmentId: e.target.value, sideZPortId: ''})}
-                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 disabled:opacity-50"
                                             >
                                                 <option value="">Select Target...</option>
                                                 {(equipments || []).filter(eq => eq.rackId === parseInt(formData.sideZRackId)).map((eq: any) => (
@@ -425,7 +425,7 @@ export default function TenantInterconnection({
                                                 disabled={!formData.sideZEquipmentId}
                                                 value={formData.sideZPortId}
                                                 onChange={(e) => setFormData({...formData, sideZPortId: e.target.value})}
-                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-sm px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 disabled:opacity-50"
                                             >
                                                 <option value="">Select Port...</option>
                                                 {(equipments || []).find((eq: any) => eq.id === parseInt(formData.sideZEquipmentId))?.ports?.map((p: any) => (

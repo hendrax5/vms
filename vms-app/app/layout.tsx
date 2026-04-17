@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${outfit.variable} font-sans`}>
-      <body className="antialiased min-h-screen selection:bg-primary selection:text-primary-foreground">
+      <body className="antialiased min-h-[100dvh] selection:bg-primary selection:text-primary-foreground">
         <Providers>
             {children}
             <Toaster position="bottom-right" />

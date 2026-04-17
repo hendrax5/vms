@@ -123,7 +123,7 @@ export default function DashboardLayout({
     // If the user is a CUSTOMER, show them their specific allowed menus natively without granular NOC permission checks.
 
     return (
-        <div className="min-h-screen bg-background flex selection:bg-blue-500/30 overflow-hidden relative">
+        <div className="min-h-[100dvh] bg-background flex selection:bg-emerald-500/30 overflow-hidden relative">
             {/* Mobile Overlay */}
             {isMobile && isMobileMenuOpen && (
                 <div 
@@ -136,21 +136,21 @@ export default function DashboardLayout({
             <aside 
                 className={cn(
                     "bg-card border-r border-border/50 flex flex-col transition-all duration-300 ease-in-out z-50",
-                    isMobile ? "fixed inset-y-0 left-0" : "relative h-screen",
+                    isMobile ? "fixed inset-y-0 left-0" : "relative h-[100dvh]",
                     isMobile && !isMobileMenuOpen ? "-translate-x-full" : "translate-x-0",
                     !isMobile && isCollapsed ? "w-[80px]" : "w-[280px]"
                 )}
             >
                 <div className="h-20 flex items-center justify-between px-6 border-b border-border/50 flex-shrink-0 flex-nowrap overflow-hidden">
                      <h2 className={cn(
-                         "font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400 whitespace-nowrap transition-all",
+                         "font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400 whitespace-nowrap transition-all",
                          isCollapsed && !isMobile ? "text-sm opacity-0 hidden" : "text-xl opacity-100 block"
                      )}>
                         VMS / DCIM
                      </h2>
                      {isCollapsed && !isMobile && (
                         <div className="w-full flex justify-center">
-                            <ShieldAlert className="w-8 h-8 text-blue-500" />
+                            <ShieldAlert className="w-8 h-8 text-emerald-500" />
                         </div>
                      )}
                      
@@ -219,11 +219,11 @@ export default function DashboardLayout({
                                                  className={cn(
                                                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group flex-wrap overflow-hidden flex-shrink-0",
                                                  isActive 
-                                                    ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-inner" 
+                                                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-inner" 
                                                     : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200",
                                                 isCollapsed && !isMobile && "justify-center"
                                              )}>
-                                             <Icon className={cn("w-5 h-5 flex-shrink-0", isActive ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300")} />
+                                             <Icon className={cn("w-5 h-5 flex-shrink-0", isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-slate-300")} />
                                              {(!isCollapsed || isMobile) && <span className="whitespace-nowrap">{item.label}</span>}
                                          </Link>
                                      )
@@ -240,7 +240,7 @@ export default function DashboardLayout({
                         "flex items-center gap-3 px-2 py-2 overflow-hidden",
                          isCollapsed && !isMobile ? "justify-center" : ""
                     )}>
-                         <div className="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold shadow-lg ring-2 ring-white/10 text-white">
+                         <div className="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-sm font-bold shadow-lg ring-2 ring-white/10 text-white">
                             {userName ? userName.charAt(0).toUpperCase() : 'A'}
                          </div>
                          {(!isCollapsed || isMobile) && (
@@ -265,7 +265,7 @@ export default function DashboardLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+            <main className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-y-auto">
                 <header className="h-20 border-b border-border/50 w-full flex items-center px-6 lg:px-8 bg-card/50 backdrop-blur-md sticky top-0 z-10 flex-shrink-0">
                      {/* Mobile Hamburger Trigger */}
                      {isMobile && (

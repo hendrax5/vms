@@ -59,10 +59,10 @@ export default function TenantDashboard() {
     }, [customerId]);
 
     const tenantStats = [
-        { name: 'Colocation', value: equipments.length.toString(), change: 'Provisioned Assets', icon: Database, color: 'text-red-500', action: () => setActiveModule('COLOCATION') },
-        { name: 'Interconnection', value: crossConnects.length.toString(), change: 'Active Circuits', icon: Network, color: 'text-red-500', action: () => setActiveModule('INTERCONNECTION') },
-        { name: 'Access & Logistics', value: permits.filter(p => p.status === 'Pending' || p.status === 'Approved').length.toString(), change: 'Pending Visits', icon: ShieldAlert, color: 'text-red-500', action: () => setActiveModule('ACCESS') },
-        { name: 'Platform SLA', value: '99.99%', change: 'All systems nominal', icon: Activity, color: 'text-red-500', action: () => {} },
+        { name: 'Colocation', value: equipments.length.toString(), change: 'Provisioned Assets', icon: Database, color: 'text-emerald-500', action: () => setActiveModule('COLOCATION') },
+        { name: 'Interconnection', value: crossConnects.length.toString(), change: 'Active Circuits', icon: Network, color: 'text-emerald-500', action: () => setActiveModule('INTERCONNECTION') },
+        { name: 'Access & Logistics', value: permits.filter(p => p.status === 'Pending' || p.status === 'Approved').length.toString(), change: 'Pending Visits', icon: ShieldAlert, color: 'text-emerald-500', action: () => setActiveModule('ACCESS') },
+        { name: 'Platform SLA', value: '99.99%', change: 'All systems nominal', icon: Activity, color: 'text-emerald-500', action: () => {} },
     ];
 
     return (
@@ -77,13 +77,13 @@ export default function TenantDashboard() {
                 </div>
             </div>
 
-            {/* Industrial Navigation Bar */}
-            <div className="flex space-x-1 border-b border-slate-800 bg-slate-900/50 p-1">
+            {/* Bento Navigation Bar */}
+            <div className="flex flex-wrap gap-2 border border-white/10 bg-slate-900/40 backdrop-blur-2xl p-2 rounded-2xl">
                  {['OVERVIEW', 'COLOCATION', 'INTERCONNECTION', 'ACCESS'].map(mod => (
                       <button 
                          key={mod}
                          onClick={() => setActiveModule(mod as any)}
-                         className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all rounded-sm ${activeModule === mod ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                         className={`px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all rounded-xl ${activeModule === mod ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
                       >
                           {mod}
                       </button>
@@ -92,7 +92,7 @@ export default function TenantDashboard() {
 
             {loadingData ? (
                 <div className="py-24 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 border-4 border-slate-800 border-t-red-600 rounded-full animate-spin mb-4"></div>
+                    <div className="w-12 h-12 border-4 border-white/10 border-t-emerald-600 rounded-full animate-spin mb-4"></div>
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Facility Data</p>
                 </div>
             ) : (
@@ -105,29 +105,30 @@ export default function TenantDashboard() {
                                     <motion.div 
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.1, duration: 0.3 }}
+                                        whileHover={{ y: -5, scale: 1.02 }}
+                                        transition={{ delay: i * 0.1, type: "spring", stiffness: 100, damping: 20 }}
                                         key={stat.name} 
                                         onClick={stat.action}
-                                        className="bg-slate-900 border border-slate-800 p-6 relative overflow-hidden group hover:border-red-500 transition-colors cursor-pointer rounded-sm"
+                                        className="bg-slate-900/40 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] rounded-3xl p-8 backdrop-blur-2xl relative overflow-hidden group transition-colors cursor-pointer group-hover:border-white/20"
                                     >
                                         <div className="flex items-start justify-between z-10 relative">
                                             <div>
                                                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{stat.name}</p>
-                                                <p className="text-4xl font-black text-slate-100">{stat.value}</p>
+                                                <p className="text-4xl font-bold text-slate-100 font-mono tracking-tight">{stat.value}</p>
                                                 <p className="text-xs font-semibold text-slate-400 mt-2">{stat.change}</p>
                                             </div>
-                                            <div className="w-10 h-10 bg-slate-950 border border-slate-800 flex items-center justify-center rounded-sm">
-                                                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                                            <div className="w-12 h-12 bg-white/5 border border-white/10 flex items-center justify-center rounded-xl">
+                                                <stat.icon className={`w-6 h-6 ${stat.color}`} />
                                             </div>
                                         </div>
                                         {/* Accent bar bottom */}
-                                        <div className="absolute bottom-0 left-0 h-1 w-0 bg-red-600 transition-all duration-300 group-hover:w-full"></div>
+                                        <div className="absolute bottom-0 left-0 h-1 w-0 bg-emerald-600 transition-all duration-300 group-hover:w-full rounded-b-3xl"></div>
                                     </motion.div>
                                 ))}
                             </div>
                             
-                            <div className="mt-8 bg-slate-900 border border-slate-800 p-8 text-center rounded-sm">
-                                 <h2 className="text-lg font-bold text-white uppercase tracking-widest">Equinix-Style Enterprise Portal</h2>
+                            <div className="mt-8 bg-slate-900/40 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] rounded-3xl p-8 text-center backdrop-blur-2xl">
+                                 <h2 className="text-lg font-bold text-white uppercase tracking-widest">Enterprise Datacenter Portal</h2>
                                  <p className="text-sm text-slate-500 max-w-2xl mx-auto mt-2">Navigate using the top tabs to visualize your Colocation assets, manage Interconnections, and schedule Datacenter security visits with QR badges.</p>
                             </div>
                         </div>
@@ -135,7 +136,7 @@ export default function TenantDashboard() {
 
                     {/* COLOCATION MODULE */}
                     {activeModule === 'COLOCATION' && (
-                        <TenantColocation equipments={equipments} />
+                        <TenantColocation equipments={equipments} onRefresh={fetchDashboardData} />
                     )}
 
                     {/* INTERCONNECTION MODULE */}

@@ -30,7 +30,7 @@ export default function BuildingExitPassPrint() {
     const companyName = permit.customer?.name || permit.companyName || 'Unknown Entity';
 
     return (
-        <div className="bg-white min-h-screen text-black p-10 font-serif max-w-4xl mx-auto">
+        <div className="bg-white min-h-[100dvh] text-black p-10 font-serif max-w-4xl mx-auto">
             <div className="flex justify-between items-start border-b-4 border-black pb-6 mb-8">
                 <div>
                     <h1 className="text-4xl font-black uppercase tracking-tighter">DATA CENTER OPERATIONS</h1>

@@ -202,7 +202,7 @@ export default function DatacenterKiosk() {
     }, [status, router]);
 
     if (status === 'loading' || status === 'unauthenticated') {
-        return <div className="min-h-screen bg-[#020817] flex justify-center items-center text-white"><div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div>;
+        return <div className="min-h-[100dvh] bg-[#020817] flex justify-center items-center text-white"><div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div></div>;
     }
 
     const processCheckOut = async (token: string) => {
@@ -229,9 +229,9 @@ export default function DatacenterKiosk() {
     };
 
     return (
-        <div className="min-h-screen bg-[#020817] flex flex-col justify-center items-center relative overflow-hidden text-slate-200">
+        <div className="min-h-[100dvh] bg-[#020817] flex flex-col justify-center items-center relative overflow-hidden text-slate-200">
             {/* Background elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/10 blur-[100px] rounded-full point-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/10 blur-[100px] rounded-full point-events-none" />
             <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[100px] rounded-full point-events-none" />
             
             {/* Header Text - Global */}
