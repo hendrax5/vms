@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -74,11 +75,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Email already in use.' }, { status: 400 });
         }
 
+        const hashedPassword = await bcrypt.hash(password || 'password123', 10);
+
         const newUser = await prisma.user.create({
             data: {
                 email,
                 name: name || '',
-                password: password || 'password123',
+                password: hashedPassword,
                 roleId: parseInt(roleId),
                 ...(customerId ? { customerId: parseInt(customerId) } : {}),
                 ...(datacenterId ? { datacenterId: parseInt(datacenterId) } : {}),
