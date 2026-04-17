@@ -33,7 +33,7 @@ export default function RackElevationPage() {
     let canEdit = false;
     if (isInternalAdmin) {
         canEdit = true;
-    } else if (isTenantAdmin && rack && rack.customerId === userCustomerId) {
+    } else if (isTenantAdmin && rack && rack.customerId === Number(userCustomerId)) {
         canEdit = true;
     }
 

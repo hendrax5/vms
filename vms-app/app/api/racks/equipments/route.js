@@ -37,7 +37,7 @@ export async function POST(req) {
             if (!isTenantAdmin) {
                 return NextResponse.json({ error: 'Forbidden. Read-Only users cannot add equipment.' }, { status: 403 });
             }
-            if (rack.customerId !== session.user.customerId) {
+            if (rack.customerId !== Number(session.user.customerId)) {
                 return NextResponse.json({ error: 'Forbidden. You do not own this rack.' }, { status: 403 });
             }
         }
