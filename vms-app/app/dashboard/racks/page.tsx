@@ -17,9 +17,12 @@ export default function RacksPage() {
 
     // Pagination, Filter, & View Mode States
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedLocation, setSelectedLocation] = useState('All Locations');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    
+    const uniqueLocations = Array.from(new Set(racks.map(r => r.siteName).filter(Boolean))) as string[];
 
     useEffect(() => {
         // Load view preference
@@ -105,20 +108,22 @@ export default function RacksPage() {
     };
 
     // Filter Logic
-    const filteredRacks = racks.filter(r => 
-        r.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        r.roomName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.rowName?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredRacks = racks.filter(r => {
+        const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              r.roomName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              r.rowName?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesLocation = selectedLocation === 'All Locations' || r.siteName === selectedLocation;
+        return matchesSearch && matchesLocation;
+    });
 
     // Pagination Logic
     const totalPages = Math.ceil(filteredRacks.length / itemsPerPage) || 1;
     const paginatedRacks = filteredRacks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    // Reset pagination when searching
+    // Reset pagination when searching or filtering
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm]);
+    }, [searchTerm, selectedLocation]);
 
     return (
         <div className="space-y-8">
@@ -139,6 +144,16 @@ export default function RacksPage() {
                             className="pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-blue-500 min-w-[200px]"
                          />
                      </div>
+                     <select 
+                         value={selectedLocation} 
+                         onChange={(e) => setSelectedLocation(e.target.value)} 
+                         className="px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-blue-500 max-w-[200px] truncate cursor-pointer"
+                     >
+                         <option value="All Locations">All Locations</option>
+                         {uniqueLocations.map(loc => (
+                             <option key={loc} value={loc}>{loc}</option>
+                         ))}
+                     </select>
                      <div className="flex bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shrink-0">
                          <button 
                             onClick={() => toggleViewMode('grid')}
