@@ -67,6 +67,12 @@ const customerNavCategories = [
             { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },
             { label: 'Asset Tracker', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' }
         ]
+    },
+    {
+        name: 'Administration',
+        items: [
+            { label: 'User Management', href: '/dashboard/settings', icon: Settings, permission: 'users:manage' }
+        ]
     }
 ];
 
@@ -96,7 +102,8 @@ export default function DashboardLayout({
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
-    const isCustomer = (session?.user as any)?.role?.toLowerCase() === 'customer';
+    const userRoleLower = ((session?.user as any)?.role || '').toLowerCase();
+    const isCustomer = userRoleLower === 'customer' || userRoleLower.includes('tenant');
 
     // Auto-expand category based on current pathname
     useEffect(() => {
