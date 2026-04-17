@@ -195,7 +195,7 @@ export default function InfrastructureTopologyPage() {
                            <div className="p-0 bg-neutral-950">
                                 {/* Room Horizontal Tabs */}
                                 {dc.rooms && dc.rooms.length > 0 ? (
-                                    <div className="flex overflow-x-auto border-b border-neutral-800 custom-scrollbar">
+                                    <div className="flex flex-wrap border-b border-neutral-800">
                                         {dc.rooms.map((room: any) => (
                                             <div 
                                                 key={room.id}
