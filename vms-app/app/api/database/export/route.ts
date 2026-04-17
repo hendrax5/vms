@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user || (session.user as any).roleName !== 'Super Admin') {
+        if (!session || !session.user || (session.user as any).role !== 'Super Admin') {
             return NextResponse.json({ error: 'Unauthorized. Super Admin access required.' }, { status: 403 });
         }
 
