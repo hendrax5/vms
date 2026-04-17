@@ -19,7 +19,12 @@ export async function GET(req) {
         if (type === 'cross-connect') {
              const cx = await prisma.crossConnect.findUnique({
                  where: { id: parseInt(id) },
-                 include: { sideARack: true, sideZRack: true, customer: true, site: true }
+                 include: { 
+                     sideAPort: { include: { equipment: { include: { rack: true } } } }, 
+                     sideZPort: { include: { equipment: { include: { rack: true } } } }, 
+                     customer: true, 
+                     datacenter: true 
+                 }
              });
              if (!cx) return NextResponse.json({ error: 'Cross-connect not found' }, { status: 404 });
              
@@ -31,15 +36,18 @@ export async function GET(req) {
                      `Media: ${cx.mediaType}`,
                      `Date: ${new Date(cx.createdAt).toLocaleDateString()}`,
                      `--- A-SIDE ---`,
-                     `Rack: ${cx.sideARack.name} | Port: ${cx.sideAPort}`,
+                     `Rack: ${cx.sideAPort.equipment.rack.name} | Port: ${cx.sideAPort.portName}`,
                      `--- Z-SIDE ---`,
-                     `Rack: ${cx.sideZRack.name} | Port: ${cx.sideZPort}`,
+                     `Rack: ${cx.sideZPort ? cx.sideZPort.equipment.rack.name : 'N/A'} | Port: ${cx.sideZPort ? cx.sideZPort.portName : 'N/A'}`,
                  ]
              };
         } else if (type === 'rack') {
              const eq = await prisma.rackEquipment.findUnique({
                  where: { id: parseInt(id) },
-                 include: { rack: { include: { site: true } }, customer: true }
+                 include: { 
+                     rack: { include: { row: { include: { room: { include: { datacenter: true } } } } } }, 
+                     customer: true 
+                 }
              });
              if (!eq) return NextResponse.json({ error: 'Equipment not found' }, { status: 404 });
 
@@ -49,7 +57,7 @@ export async function GET(req) {
                      `Equipment ID: RE-${eq.id}`,
                      `Name: ${eq.name}`,
                      `Customer: ${eq.customer ? eq.customer.name : 'Internal'}`,
-                     `Location: ${eq.rack.site.name} - Rack ${eq.rack.name}`,
+                     `Location: ${eq.rack.row.room.datacenter.name} - Rack ${eq.rack.name}`,
                      `U-Space: U${eq.uStart} to U${eq.uEnd}`,
                      `Status: ${eq.status}`,
                  ]

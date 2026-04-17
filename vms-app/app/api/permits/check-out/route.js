@@ -14,7 +14,7 @@ export async function POST(req) {
 
         const permit = await prisma.visitPermit.findUnique({
             where: { qrCodeToken: qrToken },
-            include: { customer: true, site: true }
+            include: { customer: true, datacenter: true }
         });
 
         if (!permit) {

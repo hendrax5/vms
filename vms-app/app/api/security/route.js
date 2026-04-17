@@ -11,7 +11,7 @@ export async function GET() {
             },
             include: {
                 customer: true,
-                site: true
+                datacenter: true
             }
         });
 
