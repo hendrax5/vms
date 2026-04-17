@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
+import crypto from 'crypto';
 import { authOptions } from '../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
@@ -53,9 +54,16 @@ export async function PUT(req) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
+        let dataToUpdate = { status };
+        
+        // If status is Approved and no token exists, generate one
+        if (status === 'Approved' && !existingPermit.qrCodeToken) {
+            dataToUpdate.qrCodeToken = crypto.randomBytes(32).toString('hex');
+        }
+
         const updatedPermit = await prisma.visitPermit.update({
             where: { id: parseInt(id) },
-            data: { status }
+            data: dataToUpdate
         });
 
         return NextResponse.json(updatedPermit);

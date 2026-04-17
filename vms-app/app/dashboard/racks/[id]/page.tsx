@@ -30,7 +30,7 @@ export default function RackElevationPage() {
     const userCustomerId = (session?.user as any)?.customerId || null;
     
     const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
-    const isTenantAdmin = ['tenantadmin', 'tenantstaff'].includes(userRole);
+    const isTenantAdmin = ['tenantadmin', 'tenantstaff', 'customer'].includes(userRole);
     
     let canEdit = false;
     if (isInternalAdmin) {

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { ShieldCheck, FileCheck, QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
 import { useParams } from 'next/navigation';
 // A mock standalone page for external visitors to sign NDAs and view QR codes.
 
@@ -91,7 +92,7 @@ export default function PortalPage() {
                         className="text-center space-y-6"
                     >
                         <div className="bg-white p-6 rounded-2xl mx-auto inline-block border-4 border-emerald-500/20">
-                            <QrCode className="w-48 h-48 text-slate-900" />
+                            <QRCodeSVG value={permitData.qrCodeToken} size={200} level="H" />
                         </div>
                         <div>
                             <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs items-center font-bold uppercase tracking-widest border border-emerald-500/20">

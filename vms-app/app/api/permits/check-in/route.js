@@ -26,8 +26,8 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Visitor is already checked in' }, { status: 400 });
         }
 
-        if (permit.status !== 'NDASigned') {
-            return NextResponse.json({ error: 'Permit is not ready for Check In (Ensure NDA is signed)' }, { status: 400 });
+        if (permit.status !== 'NDASigned' && permit.status !== 'Approved') {
+            return NextResponse.json({ error: 'Permit is not ready for Check In (Ensure NDA is signed or permit is Approved)' }, { status: 400 });
         }
 
         // Validate time

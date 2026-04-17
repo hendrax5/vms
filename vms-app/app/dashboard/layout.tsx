@@ -64,6 +64,7 @@ const customerNavCategories = [
         name: 'Access & Logistics',
         items: [
             { label: 'Active Permits', href: '/dashboard/permits', icon: Users, permission: 'permits:view' },
+            { label: 'Rack Management', href: '/dashboard/racks', icon: Package, permission: 'racks:manage' },
             { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' },
             { label: 'Asset Tracker', href: '/dashboard/goods', icon: Package, permission: 'dashboard:view' }
         ]

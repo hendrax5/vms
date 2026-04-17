@@ -1,7 +1,8 @@
 'use client';
 
-import { Users, CheckCircle, Clock, XCircle, Search, Plus, X, FileText, Printer } from 'lucide-react';
+import { Users, CheckCircle, Clock, XCircle, Search, Plus, X, FileText, Printer, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -82,14 +83,15 @@ export default function PermitsPage() {
 
     const handleUpdateStatus = async (id: number, status: string) => {
         try {
-            await fetch('/api/permits', {
+            const res = await fetch('/api/permits', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, status })
             });
+            const updatedPermit = await res.json();
             fetchPermits();
             if (processingPermit && processingPermit.id === id) {
-                 setProcessingPermit({...processingPermit, status});
+                 setProcessingPermit(updatedPermit);
             }
         } catch (error) {
             console.error(error);
@@ -387,6 +389,25 @@ export default function PermitsPage() {
                                 <div className="bg-slate-950 p-4 border border-slate-800 rounded-lg">
                                      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">Activity Description / Logistical Payload</p>
                                      <p className="text-sm text-slate-300 font-mono whitespace-pre-wrap">{processingPermit.activity}</p>
+                                </div>
+
+                                <div className="bg-slate-950 p-4 border border-slate-800 rounded-lg text-center">
+                                     <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-4">Master Access Token (QR Code)</p>
+                                     {processingPermit.qrCodeToken ? (
+                                         <div className="bg-white p-4 rounded-xl inline-block mb-4 border-4 border-emerald-500/20 shadow-xl shadow-emerald-500/5">
+                                             <QRCodeSVG value={processingPermit.qrCodeToken} size={160} level="H" />
+                                         </div>
+                                     ) : (
+                                         <div className="py-8 border-2 border-dashed border-slate-800 rounded-xl">
+                                             <ShieldCheck className="w-12 h-12 text-slate-800 mx-auto mb-2 opacity-20" />
+                                             <p className="text-xs text-slate-600 font-semibold italic">Token will be generated upon Approval</p>
+                                         </div>
+                                     )}
+                                     {processingPermit.qrCodeToken && (
+                                         <p className="text-[10px] font-mono text-slate-500 tracking-widest break-all mt-2 max-w-xs mx-auto">
+                                             {processingPermit.qrCodeToken}
+                                         </p>
+                                     )}
                                 </div>
 
                                 {/* Intelligent Detect for Building Permits */}

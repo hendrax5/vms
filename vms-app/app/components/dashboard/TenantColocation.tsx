@@ -20,7 +20,7 @@ export default function TenantColocation({ equipments, onRefresh }: { equipments
     const userRole = (roleName || '').toLowerCase().replace(/\s+/g, '') || '';
     const userCustomerId = (session?.user as any)?.customerId || null;
     const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
-    const isTenantAdmin = ['tenantadmin', 'tenantstaff'].includes(userRole);
+    const isTenantAdmin = ['tenantadmin', 'tenantstaff', 'customer'].includes(userRole);
 
     // Determine unique racks from the equipments
     const racksMap = new Map();

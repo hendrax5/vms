@@ -233,7 +233,11 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                          </td>
                                          <td className="px-5 py-4 text-right">
                                              <button 
-                                                onClick={() => setSelectedQR({ type: 'Visit', code: `VMS-PRM-C${customerId}-${p.id}`, title: `Visit PRM-${p.id}` })}
+                                                onClick={() => setSelectedQR({ 
+                                                    type: 'Visit', 
+                                                    code: p.qrCodeToken || `VMS-PRM-C${customerId}-${p.id}`, 
+                                                    title: `Visit PRM-${p.id}` 
+                                                })}
                                                 className="text-slate-400 hover:text-red-400 transition-colors inline-flex items-center gap-1.5 font-semibold text-xs border border-transparent hover:border-red-900 px-2 py-1 bg-slate-950 shadow-sm"
                                              >
                                                  <QrCode className="w-4 h-4" /> MASTER BADGE
