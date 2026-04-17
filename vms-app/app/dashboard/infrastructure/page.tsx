@@ -16,8 +16,9 @@ export default function InfrastructureTopologyPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-    // activeRooms maps datacenterId -> roomId currently active in the tab
-    const [activeRooms, setActiveRooms] = useState<Record<number, number>>({});
+    // Track selected node in the master-detail Floor Plan view
+    const [activeDcId, setActiveDcId] = useState<number | null>(null);
+    const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<{type: string, id: number} | null>(null);
@@ -166,6 +167,12 @@ export default function InfrastructureTopologyPage() {
         return null;
     }).filter(dc => dc !== null);
 
+    // Derive selected entities for Floor Plan Map
+    const currentDcId = activeDcId || (filteredTopology[0]?.id || null);
+    const currentDc = filteredTopology.find(dc => dc.id === currentDcId) || filteredTopology[0];
+    const currentRoomId = activeRoomId || (currentDc?.rooms?.[0]?.id || null);
+    const currentRoom = currentDc?.rooms?.find((r:any) => r.id === currentRoomId) || currentDc?.rooms?.[0];
+
     return (
         <div className="space-y-8 max-w-[1600px] mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -210,168 +217,205 @@ export default function InfrastructureTopologyPage() {
                  </div>
             </div>
 
-            {/* Topology Rendering */}
-            <div className="grid grid-cols-1 gap-8">
-                 {filteredTopology.map((dc, i) => {
-                      const currentRoomId = activeRooms[dc.id] || (dc.rooms?.[0]?.id);
-                      const currentRoom = dc.rooms?.find((r:any) => r.id === currentRoomId);
-
-                      return (
-                      <motion.div 
-                          key={dc.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.1 }}
-                          className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl relative group"
-                      >
-                           {/* Datacenter Header */}
-                           <div className="p-6 flex flex-col md:flex-row md:items-center justify-between border-b border-neutral-800 bg-gradient-to-r from-neutral-900 to-indigo-900/10 hover:to-indigo-900/20 transition-colors">
-                               <div className="flex items-center gap-4">
-                                   <div className="p-4 bg-indigo-500/10 rounded-2xl">
-                                       <Building2 className="w-8 h-8 text-indigo-400" />
-                                   </div>
-                                   <div>
-                                       <h2 className="text-2xl font-bold text-white tracking-tight">{dc.name} <span className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-sm ml-2">[{dc.code}]</span></h2>
-                                       <p className="text-sm text-neutral-400 flex items-center gap-1 mt-1">
-                                           <MapPin className="w-3.5 h-3.5" /> {dc.region?.name || 'Global'}
-                                       </p>
-                                   </div>
-                               </div>
-                               <div className="flex gap-6 items-center mt-4 md:mt-0">
-                                   <div className="text-center">
-                                       <p className="text-2xl font-black text-white">{dc.rooms?.length || 0}</p>
-                                       <p className="text-xs text-neutral-500 uppercase tracking-widest font-bold">Rooms</p>
-                                   </div>
-                                   {canEdit && (
-                                       <div className="flex gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={(e) => handleEditClick(e, 'datacenter', dc, dc.regionId?.toString())} className="p-2 bg-neutral-800 hover:bg-indigo-600 text-neutral-400 hover:text-white rounded-lg transition-colors" title="Edit Datacenter"><Edit2 className="w-4 h-4" /></button>
-                                            <button onClick={(e) => triggerDelete(e, 'datacenter', dc.id)} className="p-2 bg-neutral-800 hover:bg-red-600 text-neutral-400 hover:text-white rounded-lg transition-colors" title="Delete Datacenter"><Trash2 className="w-4 h-4" /></button>
-                                        </div>
-                                   )}
-                               </div>
-                           </div>
-
-                           <div className="p-0 bg-neutral-950">
-                                {/* Room Horizontal Tabs */}
-                                {dc.rooms && dc.rooms.length > 0 ? (
-                                    <div className="flex flex-wrap border-b border-neutral-800">
-                                        {dc.rooms.map((room: any) => (
-                                            <div 
-                                                key={room.id}
-                                                onClick={() => setActiveRooms(prev => ({ ...prev, [dc.id]: room.id }))}
-                                                className={`px-6 py-4 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer transition-colors relative group/tab ${currentRoomId === room.id ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5' : 'border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900'}`}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <Layers className="w-4 h-4" />
-                                                    <span className="mt-0.5">Room: {room.name}</span>
-                                                    {canEdit && (
-                                                        <div className="flex items-center gap-1 ml-3 opacity-0 group-hover/tab:opacity-100 transition-opacity">
-                                                            <button onClick={(e) => handleEditClick(e, 'room', room, dc.id.toString())} className="p-1 hover:text-indigo-300 transition-colors" title="Edit Room"><Edit2 className="w-3.5 h-3.5" /></button>
-                                                            <button onClick={(e) => triggerDelete(e, 'room', room.id)} className="p-1 hover:text-red-400 transition-colors" title="Delete Room"><Trash2 className="w-3.5 h-3.5" /></button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-8 text-center text-neutral-500">No rooms mapped in this datacenter.</div>
-                                )}
-
-                                {/* Row & Rack Grid Area */}
-                                {currentRoom && (
-                                    <div className="p-6 bg-neutral-950">
-                                        <div className="space-y-10">
-                                            {currentRoom.rows?.map((row: any) => (
-                                                <div key={row.id} className="relative group/row">
-                                                    {/* Row Divider Header */}
-                                                    <div className="flex items-center gap-4 mb-5">
-                                                        <div className="h-px bg-neutral-800 flex-grow"></div>
-                                                        <h4 className="text-sm font-bold text-neutral-300 uppercase tracking-widest flex items-center gap-2 px-5 py-2 bg-neutral-900 border border-neutral-800 rounded-full shadow-inner">
-                                                            <Box className="w-4 h-4 text-emerald-400" /> Row {row.name}
-                                                        </h4>
-                                                        <div className="h-px bg-neutral-800 flex-grow relative">
-                                                            {canEdit && (
-                                                                <div className="absolute right-0 -top-4 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-neutral-900 px-2 py-1 rounded-full border border-neutral-800">
-                                                                    <button onClick={(e) => handleEditClick(e, 'row', row, currentRoom.id.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400 transition-colors" title="Edit Row"><Edit2 className="w-3.5 h-3.5" /></button>
-                                                                    <button onClick={(e) => triggerDelete(e, 'row', row.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors" title="Delete Row"><Trash2 className="w-3.5 h-3.5" /></button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {/* Modular Rack Tiles */}
-                                                    <div className={viewMode === 'grid' ? "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 pl-4 pr-4" : "flex flex-col gap-2 pl-4 pr-4"}>
-                                                        {row.racks?.map((rack: any) => (
-                                                            viewMode === 'grid' ? (
-                                                                <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
-                                                                    <div className="bg-black border border-neutral-800 p-5 rounded-xl flex flex-col items-center justify-center aspect-square hover:border-emerald-500/50 hover:bg-emerald-500/5 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all text-center">
-                                                                        <Server className="w-8 h-8 text-neutral-600 group-hover/rack:text-emerald-400 mb-3 transition-colors" />
-                                                                        <p className="text-sm font-bold text-neutral-200 truncate w-full px-2">{rack.name}</p>
-                                                                        <p className="text-[10px] text-neutral-500 uppercase font-mono mt-1">
-                                                                            {rack.uCapacity}U • <span className="text-emerald-500/80">{rack.equipments?.length || 0} Assets</span>
-                                                                        </p>
-                                                                    </div>
-                                                                    
-                                                                    {/* Floating Rack Actions */}
-                                                                    {canEdit && (
-                                                                        <div 
-                                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                                                            className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover/rack:opacity-100 transition-opacity z-10"
-                                                                        >
-                                                                            <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-900/90 backdrop-blur-sm hover:bg-indigo-600 border border-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button>
-                                                                            <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-900/90 backdrop-blur-sm hover:bg-red-600 border border-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors shadow-lg"><Trash2 className="w-3 h-3" /></button>
-                                                                        </div>
-                                                                    )}
-                                                                </Link>
-                                                            ) : (
-                                                                <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
-                                                                    <div className="bg-black border border-neutral-800 p-3 rounded-lg flex items-center justify-between hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all">
-                                                                        <div className="flex items-center gap-4">
-                                                                            <Server className="w-5 h-5 text-neutral-600 group-hover/rack:text-emerald-400 transition-colors" />
-                                                                            <div>
-                                                                                <p className="text-sm font-bold text-neutral-200">{rack.name}</p>
-                                                                                <p className="text-[10px] text-neutral-500 uppercase font-mono">{rack.uCapacity}U • <span className="text-emerald-500/80">{rack.equipments?.length || 0} Assets</span></p>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-3">
-                                                                            {canEdit && (
-                                                                                <div 
-                                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                                                                    className="flex gap-2 opacity-0 group-hover/rack:opacity-100 transition-opacity"
-                                                                                >
-                                                                                    <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400 transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
-                                                                                    <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </Link>
-                                                            )
-                                                        ))}
-                                                        {row.racks?.length === 0 && (
-                                                            <div className="col-span-full py-8 text-center border-2 border-dashed border-neutral-800 rounded-xl text-neutral-600 text-sm">Empty Space: No racks deployed in this row.</div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {currentRoom.rows?.length === 0 && (
-                                                <div className="text-center py-12 text-sm text-neutral-600 border-2 border-dashed border-neutral-800/50 rounded-xl">Area is empty. No rows built inside {currentRoom.name}.</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                           </div>
-                      </motion.div>
-                 )})}
+            {/* Topology Master-Detail Rendering */}
+            <div className="flex flex-col xl:flex-row gap-6">
                  
-                 {topology.length === 0 && (
-                     <div className="text-center py-12 bg-neutral-900 border border-neutral-800 rounded-2xl">
-                         <Building2 className="w-12 h-12 text-neutral-700 mx-auto mb-3" />
-                         <h3 className="text-lg font-medium text-white">No Datacenters Found</h3>
-                         <p className="text-neutral-500">Click "Add Facility" to start building your infrastructure map.</p>
-                     </div>
-                 )}
+                 {/* Left Sidebar: Navigating Datacenters and Rooms */}
+                 <div className="w-full xl:w-80 shrink-0 flex flex-col gap-4">
+                     {filteredTopology.length === 0 ? (
+                         <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl text-center text-neutral-500">
+                             No mapping data available
+                         </div>
+                     ) : (
+                         filteredTopology.map((dc, i) => (
+                             <motion.div 
+                                 key={dc.id}
+                                 initial={{ opacity: 0, x: -20 }}
+                                 animate={{ opacity: 1, x: 0 }}
+                                 transition={{ delay: i * 0.05 }}
+                                 className={`bg-neutral-900 border transition-all rounded-2xl overflow-hidden ${currentDcId === dc.id ? 'border-indigo-500/50 shadow-lg shadow-indigo-500/10' : 'border-neutral-800 hover:border-neutral-700'}`}
+                             >
+                                 <div 
+                                     className="p-4 cursor-pointer flex items-center justify-between group"
+                                     onClick={() => { setActiveDcId(dc.id); setActiveRoomId(null); }}
+                                 >
+                                     <div className="flex items-center gap-3">
+                                         <div className={`p-2 rounded-lg ${currentDcId === dc.id ? 'bg-indigo-500/20 text-indigo-400' : 'bg-neutral-800 text-neutral-500'}`}>
+                                            <Building2 className="w-4 h-4" />
+                                         </div>
+                                         <div>
+                                             <h3 className={`font-bold text-sm leading-tight ${currentDcId === dc.id ? 'text-white' : 'text-neutral-300'}`}>{dc.name}</h3>
+                                             <p className="text-[10px] text-neutral-500 font-mono tracking-wider">{dc.code} • {dc.region?.name || 'Global'}</p>
+                                         </div>
+                                     </div>
+                                     {canEdit && (
+                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                             <button onClick={(e) => handleEditClick(e, 'datacenter', dc, dc.regionId?.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400"><Edit2 className="w-3 h-3" /></button>
+                                             <button onClick={(e) => triggerDelete(e, 'datacenter', dc.id)} className="p-1.5 text-neutral-400 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
+                                         </div>
+                                     )}
+                                 </div>
+                                 
+                                 {/* Expanded Rooms List */}
+                                 {currentDcId === dc.id && (
+                                     <div className="bg-[#0a0a0a] border-t border-neutral-800/50 p-2">
+                                         {dc.rooms?.length > 0 ? (
+                                             <div className="space-y-1">
+                                                 {dc.rooms.map((room:any) => (
+                                                     <div 
+                                                         key={room.id}
+                                                         onClick={(e) => { e.stopPropagation(); setActiveRoomId(room.id); }}
+                                                         className={`px-3 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer group/room transition-colors ${currentRoomId === room.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm' : 'text-neutral-400 hover:bg-neutral-900 border-transparent hover:text-neutral-300'}`}
+                                                     >
+                                                         <div className="flex items-center gap-2">
+                                                             <Layers className={`w-3.5 h-3.5 ${currentRoomId === room.id ? 'text-indigo-200' : 'text-neutral-500'}`} />
+                                                             {room.name}
+                                                         </div>
+                                                         {canEdit && (
+                                                             <div className="flex gap-1 opacity-0 group-hover/room:opacity-100 transition-opacity">
+                                                                 <button onClick={(e) => handleEditClick(e, 'room', room, dc.id.toString())} className="p-1 text-neutral-300 hover:text-white"><Edit2 className="w-3 h-3" /></button>
+                                                                 <button onClick={(e) => triggerDelete(e, 'room', room.id)} className="p-1 text-neutral-300 hover:text-red-200"><Trash2 className="w-3 h-3" /></button>
+                                                             </div>
+                                                         )}
+                                                     </div>
+                                                 ))}
+                                             </div>
+                                         ) : (
+                                             <div className="text-center py-4 text-xs font-medium text-neutral-600">No rooms mapped</div>
+                                         )}
+                                     </div>
+                                 )}
+                             </motion.div>
+                         ))
+                     )}
+                 </div>
+
+                 {/* Right Canvas: Floor Plan */}
+                 <div className="flex-1 bg-black border border-neutral-800 rounded-2xl min-h-[600px] overflow-hidden flex flex-col relative shadow-2xl">
+                     {currentRoom ? (
+                         <>
+                             {/* Floor map Header */}
+                             <div className="px-6 py-4 border-b border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex justify-between items-center z-10 sticky top-0">
+                                 <div className="flex items-center gap-3">
+                                     <div className="p-1.5 bg-neutral-800 rounded-md">
+                                         <MapPin className="w-4 h-4 text-indigo-400" />
+                                     </div>
+                                     <div>
+                                         <h2 className="text-sm font-bold text-white tracking-wide">
+                                             <span className="text-neutral-400 font-normal">Map View:</span> {currentDc?.name} <span className="text-neutral-600">/</span> {currentRoom.name}
+                                         </h2>
+                                     </div>
+                                 </div>
+                                 <div className="text-xs text-neutral-500 font-mono bg-black px-3 py-1 rounded-full border border-neutral-800">
+                                     {currentRoom.rows?.length || 0} ROWS ACTIVE
+                                 </div>
+                             </div>
+                             
+                             {/* 2D Canvas Area */}
+                             <div className="flex-1 p-8 overflow-auto relative bg-[radial-gradient(#1e1e1e_1px,transparent_1px)] [background-size:24px_24px]">
+                                 <div className="space-y-16 max-w-6xl mx-auto pb-10">
+                                     {currentRoom.rows?.map((row: any) => (
+                                         <div key={row.id} className="relative group/row">
+                                             {/* Row Divider / Aisle Marker */}
+                                             <div className="flex items-center gap-4 mb-4">
+                                                 <div className="w-2 h-8 bg-emerald-500 rounded-r-md"></div>
+                                                 <h4 className="text-sm font-black text-neutral-300 uppercase tracking-widest flex items-center gap-2">
+                                                     ROW {row.name}
+                                                 </h4>
+                                                 <div className="h-px bg-gradient-to-r from-emerald-500/50 to-transparent flex-grow"></div>
+                                                 
+                                                 <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-neutral-900 px-2 py-1 rounded-full border border-neutral-800">
+                                                     {canEdit && (
+                                                         <>
+                                                             <button onClick={(e) => handleEditClick(e, 'row', row, currentRoom.id.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400 transition-colors" title="Edit Row"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                             <button onClick={(e) => triggerDelete(e, 'row', row.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors" title="Delete Row"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                         </>
+                                                     )}
+                                                 </div>
+                                             </div>
+                                             
+                                             {/* Racks Grouping Area */}
+                                             <div className={viewMode === 'grid' 
+                                                 ? "flex flex-wrap gap-1 md:gap-2 px-6" 
+                                                 : "flex flex-col gap-2 px-6 max-w-3xl"
+                                             }>
+                                                 {row.racks?.map((rack: any) => (
+                                                     viewMode === 'grid' ? (
+                                                         <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
+                                                             {/* 2D Top-Down Rectangular Rack Simulation */}
+                                                             <div className="bg-neutral-900 border border-neutral-800 w-20 h-28 sm:w-24 sm:h-32 rounded-sm flex flex-col items-center justify-between py-3 hover:border-emerald-500 hover:bg-neutral-800 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all overflow-hidden relative">
+                                                                 {/* Intake indicator */}
+                                                                 <div className="w-full h-1 bg-blue-500/20 absolute top-0"></div>
+                                                                 
+                                                                 <Server className="w-6 h-6 text-neutral-600 group-hover/rack:text-emerald-400 transition-colors mt-2" />
+                                                                 
+                                                                 <div className="text-center w-full px-1">
+                                                                     <p className="text-[11px] sm:text-xs font-bold text-neutral-300 truncate w-full">{rack.name}</p>
+                                                                     <p className="text-[9px] text-neutral-500 uppercase mt-0.5">{rack.uCapacity}U</p>
+                                                                 </div>
+                                                                 
+                                                                 {/* Exhaust indicator */}
+                                                                 <div className="w-full h-1 bg-red-500/20 absolute bottom-0"></div>
+                                                             </div>
+                                                             
+                                                             {/* Floating Ghost Actions on Hover map */}
+                                                             {canEdit && (
+                                                                 <div 
+                                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                     className="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover/rack:opacity-100 transition-opacity z-10"
+                                                                 >
+                                                                     <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-neutral-300 hover:text-white hover:bg-indigo-600 transition-colors"><Edit2 className="w-3 h-3" /></button>
+                                                                     <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-neutral-300 hover:text-white hover:bg-red-600 transition-colors"><Trash2 className="w-3 h-3" /></button>
+                                                                 </div>
+                                                             )}
+                                                         </Link>
+                                                     ) : (
+                                                         <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
+                                                             <div className="bg-neutral-900 border border-neutral-800 p-3 rounded-lg flex items-center justify-between hover:border-emerald-500/50 hover:bg-neutral-800 transition-all">
+                                                                 <div className="flex items-center gap-4">
+                                                                     <Server className="w-5 h-5 text-neutral-500 group-hover/rack:text-emerald-400 transition-colors" />
+                                                                     <div>
+                                                                         <p className="text-sm font-bold text-neutral-200">{rack.name}</p>
+                                                                         <p className="text-xs text-neutral-500 font-mono mt-0.5">{rack.uCapacity}U • {rack.equipments?.length || 0} Assets deployed</p>
+                                                                     </div>
+                                                                 </div>
+                                                                 {canEdit && (
+                                                                     <div 
+                                                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                         className="flex gap-2 opacity-0 group-hover/rack:opacity-100 transition-opacity"
+                                                                     >
+                                                                         <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400 transition-colors"><Edit2 className="w-4 h-4" /></button>
+                                                                         <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                                                     </div>
+                                                                 )}
+                                                             </div>
+                                                         </Link>
+                                                     )
+                                                 ))}
+                                                 {row.racks?.length === 0 && (
+                                                     <div className="py-6 text-center border border-dashed border-neutral-800 rounded-lg text-neutral-600 text-xs tracking-wider uppercase font-bold w-full max-w-sm">No racks deployed</div>
+                                                 )}
+                                             </div>
+                                         </div>
+                                     ))}
+                                     
+                                     {currentRoom.rows?.length === 0 && (
+                                         <div className="text-center py-20">
+                                             <Layers className="w-12 h-12 text-neutral-800 mx-auto mb-4" />
+                                             <div className="text-neutral-500">Floor map is empty</div>
+                                             <div className="text-xs text-neutral-600 mt-1">Configure rows to visualize this room</div>
+                                         </div>
+                                     )}
+                                 </div>
+                             </div>
+                         </>
+                     ) : (
+                         <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 p-8">
+                             <MapPin className="w-16 h-16 text-neutral-800 mb-4" />
+                             <p className="text-lg">Select a facility room from the sidebar to view floor plan</p>
+                         </div>
+                     )}
+                 </div>
             </div>
 
             {/* Add Facility Modal */}
