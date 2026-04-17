@@ -49,6 +49,19 @@ function SettingsContent() {
     const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
     const [editUserForm, setEditUserForm] = useState<{ id: number, roleId: string, explicitPermissions: string[], password?: string, customerId: string }>({ id: 0, roleId: '', explicitPermissions: [], password: '', customerId: '' });
 
+    // Profile State
+    const [profileForm, setProfileForm] = useState({ name: '', email: '', password: '' });
+
+    useEffect(() => {
+        if (session?.user) {
+            setProfileForm(prev => ({
+                ...prev,
+                name: session.user.name || '',
+                email: session.user.email || ''
+            }));
+        }
+    }, [session]);
+
     // Activity Logs States
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
     const [logsLoading, setLogsLoading] = useState(false);
@@ -148,9 +161,38 @@ function SettingsContent() {
         }
     };
 
-    const handleSaveProfile = () => {
+    const handleSaveProfile = async () => {
         setLoading(true);
-        setTimeout(() => setLoading(false), 800);
+        try {
+            const userId = (session?.user as any)?.id;
+            if (!userId) {
+                toast.error('Session error: User ID not found');
+                setLoading(false);
+                return;
+            }
+
+            const res = await fetch(`/api/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: profileForm.name,
+                    email: profileForm.email,
+                    password: profileForm.password || undefined
+                })
+            });
+
+            if (res.ok) {
+                toast.success('Profile updated successfully! You may need to sign in again to see all changes.');
+                setProfileForm(prev => ({ ...prev, password: '' })); // clear password field
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to update profile');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Network error while updating profile');
+        }
+        setLoading(false);
     };
 
     const handleSaveRole = async (roleId: number, currentPermissions: string[]) => {
@@ -398,14 +440,24 @@ function SettingsContent() {
                     {activeTab === 'account' && (
                         <>
                             <div className="bg-card/40 border border-border/50 rounded-2xl p-6 backdrop-blur-xl">
-                                <h2 className="text-lg font-bold text-slate-100 mb-4 border-b border-border/50 pb-4">Personal Information</h2>
+                                <div className="flex items-center gap-3 mb-6 border-b border-border/50 pb-4">
+                                    <div className="w-12 h-12 bg-blue-500/20 text-blue-400 flex flex-col items-center justify-center rounded-full font-bold text-xl uppercase ring-2 ring-blue-500/30">
+                                        {(profileForm.name || 'U').charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold text-slate-100 leading-tight">Personal Information</h2>
+                                        <p className="text-xs text-slate-400">Update your account details</p>
+                                    </div>
+                                </div>
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-slate-400">Full Name</label>
                                             <input 
                                                 type="text" 
-                                                defaultValue={session?.user?.name || ''}
+                                                value={profileForm.name}
+                                                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                                                placeholder="Your full name"
                                                 className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                                             />
                                         </div>
@@ -413,15 +465,26 @@ function SettingsContent() {
                                             <label className="text-sm font-medium text-slate-400">Email Address</label>
                                             <input 
                                                 type="email" 
-                                                defaultValue={session?.user?.email || ''}
-                                                disabled
-                                                className="w-full bg-slate-900/50 border border-slate-800 rounded-lg px-4 py-2 text-slate-500 cursor-not-allowed"
+                                                value={profileForm.email}
+                                                onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                                                placeholder="your.email@example.com"
+                                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                                             />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium text-slate-400">Role</label>
+                                            <label className="text-sm font-medium text-slate-400">New Password (optional)</label>
+                                            <input 
+                                                type="password" 
+                                                value={profileForm.password}
+                                                onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })}
+                                                placeholder="Leave blank to keep current password"
+                                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-400">Assigned Role</label>
                                             <input 
                                                 type="text" 
                                                 defaultValue={(session?.user as any)?.role || ''}

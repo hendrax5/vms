@@ -62,14 +62,18 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
         const isSuperAdmin = userRoleLower === 'superadmin';
         const isTenantAdmin = userRoleLower.includes('admin') && userRoleLower.includes('tenant');
         const userPermissions = (session?.user as any)?.permissions || [];
+        const currentUserId = (session?.user as any)?.id ? parseInt((session?.user as any).id) : null;
+        const userId = parseInt(params.id);
 
-        if (!isSuperAdmin && !isTenantAdmin && !userPermissions.includes('users:manage')) {
+        const isSelf = currentUserId === userId;
+
+        if (!isSuperAdmin && !isTenantAdmin && !userPermissions.includes('users:manage') && !isSelf) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const userId = parseInt(params.id);
         const body = await request.json();
-        const { roleId, permissions, password, customerId } = body;
+        const { roleId, permissions, password, customerId, name, email } = body;
 
         const sessionCustomerId = (session?.user as any)?.customerId;
         const targetUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -83,7 +87,15 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
         }
 
         let updateData: any = {};
-        if (roleId) {
+        
+        // Allow updating name and email
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+
+        const hasAdminRights = isSuperAdmin || isTenantAdmin || userPermissions.includes('users:manage');
+
+        // Only admins can change roles
+        if (roleId && hasAdminRights) {
             const parsedRoleId = parseInt(roleId);
             if (sessionCustomerId) {
                 // Verify the requested role is a Tenant role
@@ -99,11 +111,13 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
             updateData.password = await bcrypt.hash(password, 10);
         }
 
-        if (sessionCustomerId) {
-            // Force customerId to be their own, ignore the payload
-            updateData.customerId = sessionCustomerId;
-        } else if (customerId !== undefined) {
-            updateData.customerId = customerId ? parseInt(customerId) : null;
+        if (hasAdminRights) {
+            if (sessionCustomerId) {
+                // Force customerId to be their own, ignore the payload
+                updateData.customerId = sessionCustomerId;
+            } else if (customerId !== undefined) {
+                updateData.customerId = customerId ? parseInt(customerId) : null;
+            }
         }
 
         if (Object.keys(updateData).length > 0) {
@@ -113,7 +127,7 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
             });
         }
 
-        if (Array.isArray(permissions)) {
+        if (hasAdminRights && Array.isArray(permissions)) {
             // Unassign all explicit user-level permissions first
             await prisma.userPermission.deleteMany({
                 where: { userId: userId }
