@@ -1,9 +1,8 @@
-'use client';
-
 import { Activity, Users, Network, Settings, Package, Server } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import KioskActivityFeed from './KioskActivityFeed';
 
 export default function NocDashboard() {
     const [permits, setPermits] = useState<any[]>([]);
@@ -81,8 +80,11 @@ export default function NocDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                  {/* Top Visitors List */}
-                 <div className="bg-slate-900/40 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] rounded-3xl p-8 backdrop-blur-2xl lg:col-span-2 min-h-[400px]">
-                      <h3 className="text-lg font-semibold text-slate-100 mb-6">Recent Pending Permits</h3>
+                 <div className="bg-slate-900/40 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] rounded-3xl p-8 backdrop-blur-2xl min-h-[400px]">
+                      <h3 className="text-lg font-semibold text-slate-100 mb-6 flex items-center gap-2">
+                          <Users className="w-5 h-5 text-blue-400" />
+                          Pending Permits
+                      </h3>
                       
                       <div className="space-y-4">
                             {pendingPermits.length === 0 ? (
@@ -95,43 +97,56 @@ export default function NocDashboard() {
                                                 <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-semibold border border-slate-700">
                                                     {permit.customer?.name ? permit.customer.name.substring(0, 2).toUpperCase() : 'NA'}
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-200">{permit.customer?.name || permit.companyName || 'Unknown Customer'}</p>
-                                                    <p className="text-xs text-muted-foreground line-clamp-1 max-w-[200px] hover:max-w-full" title={permit.visitorNames}>Visitors: {permit.visitorNames}</p>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-bold text-slate-200 truncate">{permit.customer?.name || permit.companyName || 'Unknown Customer'}</p>
+                                                    <p className="text-[10px] text-muted-foreground truncate" title={permit.visitorNames}>Visitors: {permit.visitorNames}</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right flex flex-col items-end">
-                                                <p className="text-sm text-slate-300">{new Date(permit.scheduledAt).toLocaleDateString()}</p>
-                                                <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-md text-xs font-medium bg-amber-500/10 text-amber-500 mt-1">Pending</span>
+                                            <div className="text-right flex-shrink-0">
+                                                <p className="text-[10px] text-slate-500 font-mono">{new Date(permit.scheduledAt).toLocaleDateString()}</p>
+                                                <span className="inline-flex items-center py-0.5 px-2 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase mt-1">Pending</span>
                                             </div>
                                         </div>
                                     </Link>
                                 ))
                             )}
                       </div>
+                      <div className="mt-6 pt-4 border-t border-white/5">
+                          <Link href="/dashboard/permits" className="text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-widest">
+                              View All Permits
+                          </Link>
+                      </div>
+                 </div>
+
+                 {/* LIVE KIOSK ACTIVITY */}
+                 <div className="min-h-[400px]">
+                     <KioskActivityFeed />
                  </div>
 
                  {/* Capacity Donut Chart */}
-                 <div className="bg-slate-900/40 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] rounded-3xl p-8 backdrop-blur-2xl flex flex-col">
-                      <h3 className="text-lg font-semibold text-slate-100 mb-6">Total Rack Capacity</h3>
+                 <div className="bg-slate-900/40 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] rounded-3xl p-8 backdrop-blur-2xl flex flex-col min-h-[400px]">
+                      <h3 className="text-lg font-semibold text-slate-100 mb-6 flex items-center gap-2">
+                          <Server className="w-5 h-5 text-emerald-400" />
+                          Rack Capacity
+                      </h3>
                       <div className="flex-1 flex items-center justify-center relative">
-                          <svg className="w-48 h-48 transform -rotate-90">
-                              <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="20" fill="transparent" className="text-slate-800" />
-                              <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="20" fill="transparent" strokeDasharray="502" strokeDashoffset={dashOffset} className="text-emerald-500 transition-all duration-1000" />
+                          <svg className="w-40 h-40 transform -rotate-90">
+                              <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="15" fill="transparent" className="text-slate-800" />
+                              <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="15" fill="transparent" strokeDasharray="440" strokeDashoffset={440 - (440 * utilizedPercent) / 100} className="text-emerald-500 transition-all duration-1000" />
                           </svg>
                           <div className="absolute flex flex-col items-center">
-                              <span className="text-3xl font-extrabold text-white font-mono">{utilizedPercent}%</span>
-                              <span className="text-xs font-medium text-slate-400 uppercase tracking-widest mt-1">Utilized</span>
+                              <span className="text-2xl font-extrabold text-white font-mono">{utilizedPercent}%</span>
+                              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-1">Utilized</span>
                           </div>
                       </div>
-                      <div className="mt-6 space-y-2">
-                           <div className="flex items-center justify-between text-sm">
-                               <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500" /> Used Space</span>
-                               <span className="font-semibold text-white font-mono">{realStats ? realStats.totalUsedU : 0} U</span>
+                      <div className="mt-6 space-y-3">
+                           <div className="flex items-center justify-between text-[11px]">
+                               <span className="flex items-center gap-2 text-slate-400"><div className="w-2 h-2 rounded-full bg-emerald-500" /> Used Space</span>
+                               <span className="font-bold text-white font-mono">{realStats ? realStats.totalUsedU : 0} U</span>
                            </div>
-                           <div className="flex items-center justify-between text-sm">
-                               <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-800" /> Available Space</span>
-                               <span className="font-semibold text-white font-mono">{realStats ? realStats.totalAvailableU - realStats.totalUsedU : 0} U</span>
+                           <div className="flex items-center justify-between text-[11px]">
+                               <span className="flex items-center gap-2 text-slate-400"><div className="w-2 h-2 rounded-full bg-slate-800" /> Available Space</span>
+                               <span className="font-bold text-white font-mono">{realStats ? realStats.totalAvailableU - realStats.totalUsedU : 0} U</span>
                            </div>
                       </div>
                  </div>

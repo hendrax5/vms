@@ -7,8 +7,20 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get('limit') || '50', 10);
+        const action = searchParams.get('action');
         
+        let where = {};
+        if (action) {
+            // Support comma separated actions
+            if (action.includes(',')) {
+                where.action = { in: action.split(',') };
+            } else {
+                where.action = action;
+            }
+        }
+
         const logs = await prisma.systemAuditLog.findMany({
+            where,
             orderBy: {
                 createdAt: 'desc'
             },

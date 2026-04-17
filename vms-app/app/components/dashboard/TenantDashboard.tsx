@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Network, Database, Calendar, Server, Cable, Box, ShieldAlert } from 'lucide-react';
+import { Activity, Network, Database, Calendar, Server, Cable, Box, ShieldAlert, History } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -9,12 +9,13 @@ import { useSession } from 'next-auth/react';
 import TenantAccess from './TenantAccess';
 import TenantColocation from './TenantColocation';
 import TenantInterconnection from './TenantInterconnection';
+import TenantAudit from './TenantAudit';
 
 export default function TenantDashboard() {
     const { data: session } = useSession();
     
     // Tab Router State
-    const [activeModule, setActiveModule] = useState<'OVERVIEW' | 'COLOCATION' | 'INTERCONNECTION' | 'ACCESS'>('OVERVIEW');
+    const [activeModule, setActiveModule] = useState<'OVERVIEW' | 'COLOCATION' | 'INTERCONNECTION' | 'ACCESS' | 'AUDIT'>('OVERVIEW');
 
     // Live Dynamic Data
     const [datacenters, setDatacenters] = useState<any[]>([]);
@@ -35,7 +36,7 @@ export default function TenantDashboard() {
                 fetch(`/api/racks/equipments?customerId=${customerId}`),
                 fetch(`/api/cross-connects?customerId=${customerId}`),
                 fetch(`/api/permits?customerId=${customerId}`),
-                fetch(`/api/goods`), // Note: In future modify to support customerId 
+                fetch(`/api/goods?customerId=${customerId}`), 
                 fetch('/api/datacenters'),
                 fetch(`/api/customers/${customerId}/users`)
             ]);
@@ -62,7 +63,7 @@ export default function TenantDashboard() {
         { name: 'Colocation', value: equipments.length.toString(), change: 'Provisioned Assets', icon: Database, color: 'text-emerald-500', action: () => setActiveModule('COLOCATION') },
         { name: 'Interconnection', value: crossConnects.length.toString(), change: 'Active Circuits', icon: Network, color: 'text-emerald-500', action: () => setActiveModule('INTERCONNECTION') },
         { name: 'Access & Logistics', value: permits.filter(p => p.status === 'Pending' || p.status === 'Approved').length.toString(), change: 'Pending Visits', icon: ShieldAlert, color: 'text-emerald-500', action: () => setActiveModule('ACCESS') },
-        { name: 'Platform SLA', value: '99.99%', change: 'All systems nominal', icon: Activity, color: 'text-emerald-500', action: () => {} },
+        { name: 'Activity Audit', value: permits.filter(p => p.status === 'CheckIn').length.toString(), change: 'Total Logged Visits', icon: History, color: 'text-emerald-500', action: () => setActiveModule('AUDIT') },
     ];
 
     return (
@@ -79,7 +80,7 @@ export default function TenantDashboard() {
 
             {/* Bento Navigation Bar */}
             <div className="flex flex-wrap gap-2 border border-white/10 bg-slate-900/40 backdrop-blur-2xl p-2 rounded-2xl">
-                 {['OVERVIEW', 'COLOCATION', 'INTERCONNECTION', 'ACCESS'].map(mod => (
+                 {['OVERVIEW', 'COLOCATION', 'INTERCONNECTION', 'ACCESS', 'AUDIT'].map(mod => (
                       <button 
                          key={mod}
                          onClick={() => setActiveModule(mod as any)}
@@ -153,6 +154,11 @@ export default function TenantDashboard() {
                     {/* ACCESS MODULE */}
                     {activeModule === 'ACCESS' && (
                         <TenantAccess permits={permits} goods={goods} customerId={customerId} datacenters={datacenters} equipments={equipments} tenantUsers={tenantUsers} onRefresh={fetchDashboardData} />
+                    )}
+
+                    {/* AUDIT MODULE */}
+                    {activeModule === 'AUDIT' && (
+                        <TenantAudit permits={permits} goods={goods} />
                     )}
                 </div>
             )}
