@@ -28,6 +28,17 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
             return NextResponse.json({ error: 'You cannot delete yourself.' }, { status: 400 });
         }
 
+        const sessionCustomerId = (session?.user as any)?.customerId;
+        
+        const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+        if (!targetUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        if (sessionCustomerId && targetUser.customerId !== sessionCustomerId) {
+            return NextResponse.json({ error: 'Forbidden. You can only manage users in your own tenant.' }, { status: 403 });
+        }
+
         await prisma.user.delete({
             where: { id: userId }
         });
@@ -56,12 +67,38 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
         const body = await request.json();
         const { roleId, permissions, password, customerId } = body;
 
+        const sessionCustomerId = (session?.user as any)?.customerId;
+        const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+        
+        if (!targetUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        if (sessionCustomerId && targetUser.customerId !== sessionCustomerId) {
+            return NextResponse.json({ error: 'Forbidden. You can only manage users in your own tenant.' }, { status: 403 });
+        }
+
         let updateData: any = {};
-        if (roleId) updateData.roleId = parseInt(roleId);
+        if (roleId) {
+            const parsedRoleId = parseInt(roleId);
+            if (sessionCustomerId) {
+                // Verify the requested role is a Tenant role
+                const requestedRole = await prisma.role.findUnique({ where: { id: parsedRoleId } });
+                if (!requestedRole || !requestedRole.name.toLowerCase().includes('tenant')) {
+                    return NextResponse.json({ error: 'Forbidden. Tenants can only assign Tenant roles.' }, { status: 403 });
+                }
+            }
+            updateData.roleId = parsedRoleId;
+        }
+
         if (password && password.trim() !== '') {
             updateData.password = await bcrypt.hash(password, 10);
         }
-        if (customerId !== undefined) {
+
+        if (sessionCustomerId) {
+            // Force customerId to be their own, ignore the payload
+            updateData.customerId = sessionCustomerId;
+        } else if (customerId !== undefined) {
             updateData.customerId = customerId ? parseInt(customerId) : null;
         }
 

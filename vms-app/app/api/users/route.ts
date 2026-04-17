@@ -21,7 +21,10 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
+        const sessionCustomerId = (session?.user as any)?.customerId;
+
         const users = await prisma.user.findMany({
+            where: sessionCustomerId ? { customerId: sessionCustomerId } : {},
             include: {
                 role: true,
                 datacenter: true,
@@ -70,6 +73,21 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Email and roleId are required.' }, { status: 400 });
         }
 
+        const sessionCustomerId = (session?.user as any)?.customerId;
+
+        // Determine final customerId
+        let finalCustomerId = customerId ? parseInt(customerId) : undefined;
+        if (sessionCustomerId) {
+            // Tenant admins MUST only create users in their own tenant
+            finalCustomerId = sessionCustomerId;
+
+            // Security check: Verify that the selected role is a "Tenant" role
+            const requestedRole = await prisma.role.findUnique({ where: { id: parseInt(roleId) } });
+            if (!requestedRole || !requestedRole.name.toLowerCase().includes('tenant')) {
+                return NextResponse.json({ error: 'Forbidden. Tenants can only assign Tenant roles.' }, { status: 403 });
+            }
+        }
+
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
             return NextResponse.json({ error: 'Email already in use.' }, { status: 400 });
@@ -83,7 +101,7 @@ export async function POST(request: Request) {
                 name: name || '',
                 password: hashedPassword,
                 roleId: parseInt(roleId),
-                ...(customerId ? { customerId: parseInt(customerId) } : {}),
+                ...(finalCustomerId ? { customerId: finalCustomerId } : {}),
                 ...(datacenterId ? { datacenterId: parseInt(datacenterId) } : {}),
             }
         });

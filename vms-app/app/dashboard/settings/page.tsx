@@ -316,6 +316,8 @@ function SettingsContent() {
     const isSuperAdmin = userRoleRaw.replace(/\s+/g, '').toLowerCase() === 'superadmin';
     const userPermissions = (session?.user as any)?.permissions || [];
     const canManageUsers = isSuperAdmin || userPermissions.includes('users:manage');
+    const sessionCustomerId = (session?.user as any)?.customerId;
+    const availableRoles = sessionCustomerId ? roles.filter(r => r.name.toLowerCase().includes('tenant')) : roles;
 
     return (
         <div className="space-y-8 max-w-6xl">
@@ -676,18 +678,20 @@ function SettingsContent() {
                                                 <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
                                                     value={newUserForm.roleId} onChange={e => setNewUserForm({...newUserForm, roleId: e.target.value})}>
                                                     <option value="">Select Role</option>
-                                                    {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                                    {availableRoles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                                                 </select>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm text-slate-400 mb-1">Assign to Tenant</label>
-                                                <p className="text-xs text-slate-500 mb-2">Leave blank for Internal/NOC users.</p>
-                                                <select className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
-                                                    value={newUserForm.customerId} onChange={e => setNewUserForm({...newUserForm, customerId: e.target.value})}>
-                                                    <option value="">No Tenant (Internal)</option>
-                                                    {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                </select>
-                                            </div>
+                                            {!sessionCustomerId && (
+                                                <div>
+                                                    <label className="block text-sm text-slate-400 mb-1">Assign to Tenant</label>
+                                                    <p className="text-xs text-slate-500 mb-2">Leave blank for Internal/NOC users.</p>
+                                                    <select className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
+                                                        value={newUserForm.customerId} onChange={e => setNewUserForm({...newUserForm, customerId: e.target.value})}>
+                                                        <option value="">No Tenant (Internal)</option>
+                                                        {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                    </select>
+                                                </div>
+                                            )}
                                             <div>
                                                 <label className="block text-sm text-slate-400 mb-1">Password</label>
                                                 <input type="password" placeholder="Defaults to password123" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
@@ -714,19 +718,21 @@ function SettingsContent() {
                                                 <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
                                                     value={editUserForm.roleId} onChange={e => setEditUserForm({...editUserForm, roleId: e.target.value})}>
                                                     <option value="">Select Role</option>
-                                                    {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                                    {availableRoles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                                                 </select>
                                             </div>
 
-                                            <div>
-                                                <label className="block text-sm text-slate-400 mb-1">Assign to Tenant</label>
-                                                <p className="text-xs text-slate-500 mb-2">Assign this user to a customer company.</p>
-                                                <select className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
-                                                    value={editUserForm.customerId} onChange={e => setEditUserForm({...editUserForm, customerId: e.target.value})}>
-                                                    <option value="">No Tenant (Internal)</option>
-                                                    {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                </select>
-                                            </div>
+                                            {!sessionCustomerId && (
+                                                <div>
+                                                    <label className="block text-sm text-slate-400 mb-1">Assign to Tenant</label>
+                                                    <p className="text-xs text-slate-500 mb-2">Assign this user to a customer company.</p>
+                                                    <select className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
+                                                        value={editUserForm.customerId} onChange={e => setEditUserForm({...editUserForm, customerId: e.target.value})}>
+                                                        <option value="">No Tenant (Internal)</option>
+                                                        {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                    </select>
+                                                </div>
+                                            )}
 
                                             <div>
                                                 <label className="block text-sm text-slate-400 mb-1">Update Password</label>
