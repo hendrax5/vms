@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { User, Bell, Shield, Key, Save, Lock, Network, Mail } from 'lucide-react';
+import { User, Bell, Shield, Key, Save, Lock, Network, Mail, Trash2, Activity } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import InterconnectionProviders from './InterconnectionProviders';
@@ -41,9 +41,15 @@ function SettingsContent() {
 
     const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
     const [newRoleName, setNewRoleName] = useState('');
+    const [isCreatePermissionModalOpen, setIsCreatePermissionModalOpen] = useState(false);
+    const [newPermissionForm, setNewPermissionForm] = useState({ key: '', label: '', group: 'Custom' });
 
     const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
     const [editUserForm, setEditUserForm] = useState<{ id: number, roleId: string, explicitPermissions: string[] }>({ id: 0, roleId: '', explicitPermissions: [] });
+
+    // Activity Logs States
+    const [auditLogs, setAuditLogs] = useState<any[]>([]);
+    const [logsLoading, setLogsLoading] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'rbac') {
@@ -51,8 +57,24 @@ function SettingsContent() {
         } else if (activeTab === 'users') {
             loadUsersData();
             if (roles.length === 0) loadRbacData(); // Need roles for the creation dropdown
+        } else if (activeTab === 'activity') {
+            loadAuditLogs();
         }
     }, [activeTab]);
+
+    const loadAuditLogs = async () => {
+        setLogsLoading(true);
+        try {
+            const res = await fetch('/api/audit-logs?limit=50');
+            const data = await res.json();
+            if (data.success) {
+                setAuditLogs(data.logs || []);
+            }
+        } catch (error) {
+            console.error('Failed to load audit logs', error);
+        }
+        setLogsLoading(false);
+    };
 
     const loadRbacData = async () => {
         setRbacLoading(true);
@@ -167,6 +189,63 @@ function SettingsContent() {
         setLoading(false);
     };
 
+    const handleDeleteRole = async (roleId: number) => {
+        if (!confirm('Are you sure you want to delete this role? Any users attached to this role will lose their access.')) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/roles/${roleId}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadRbacData();
+            } else {
+                const data = await res.json();
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+        setLoading(false);
+    };
+
+    const handleCreatePermission = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch('/api/permissions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newPermissionForm)
+            });
+            if (res.ok) {
+                setIsCreatePermissionModalOpen(false);
+                setNewPermissionForm({ key: '', label: '', group: 'Custom' });
+                loadRbacData();
+            } else {
+                const data = await res.json();
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+        setLoading(false);
+    };
+
+    const handleDeletePermission = async (e: React.MouseEvent, id: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!confirm('Are you sure you want to delete this permission? It will be removed from all roles.')) return;
+        try {
+            const res = await fetch(`/api/permissions/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadRbacData();
+            } else {
+                const data = await res.json();
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     const handleUpdateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -260,6 +339,15 @@ function SettingsContent() {
                     )}
                     {isSuperAdmin && (
                         <button 
+                            onClick={() => setActiveTab('activity')}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'activity' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                        >
+                            <Activity className="w-5 h-5" />
+                            Activity Logs
+                        </button>
+                    )}
+                    {isSuperAdmin && (
+                        <button 
                             onClick={() => setActiveTab('providers')}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'providers' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
                         >
@@ -349,7 +437,13 @@ function SettingsContent() {
                                         Assign specific read/write permissions to roles. These settings will immediately take effect for all users grouped under the respective role on their next session validation.
                                     </p>
                                 </div>
-                                <div>
+                                <div className="flex items-center gap-3">
+                                    <button 
+                                        onClick={() => setIsCreatePermissionModalOpen(true)}
+                                        className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg shadow-slate-900/20"
+                                    >
+                                        Add Permission
+                                    </button>
                                     <button 
                                         onClick={() => setIsCreateRoleModalOpen(true)}
                                         className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg shadow-indigo-600/20"
@@ -372,13 +466,22 @@ function SettingsContent() {
                                                     <h3 className="text-lg font-bold text-slate-200">{role.name}</h3>
                                                     <p className="text-xs text-slate-500">{role.permissions.length} permissions assigned</p>
                                                 </div>
-                                                <button 
-                                                    onClick={() => handleSaveRole(role.id, role.permissions)}
-                                                    disabled={loading}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 disabled:opacity-50 border border-indigo-500/20 rounded-lg text-sm font-semibold transition-all"
-                                                >
-                                                    {loading ? 'Saving...' : 'Save Configuration'}
-                                                </button>
+                                                <div className="flex items-center gap-2 flex-col sm:flex-row">
+                                                    <button 
+                                                        onClick={() => handleDeleteRole(role.id)}
+                                                        className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg border border-red-500/10 transition-colors"
+                                                        title="Delete Role"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleSaveRole(role.id, role.permissions)}
+                                                        disabled={loading}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 disabled:opacity-50 border border-indigo-500/20 rounded-lg text-sm font-semibold transition-all"
+                                                    >
+                                                        {loading ? 'Saving...' : 'Save Configuration'}
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                                                 {Object.entries(groupedPermissions).map(([group, perms]: [string, any[]]) => (
@@ -388,22 +491,31 @@ function SettingsContent() {
                                                             {perms.map(perm => {
                                                                 const isChecked = role.permissions.includes(perm.key);
                                                                 return (
-                                                                    <label key={perm.id} className="flex items-start gap-3 cursor-pointer group">
-                                                                        <div className="mt-1 relative flex items-center justify-center">
-                                                                            <input 
-                                                                                type="checkbox" 
-                                                                                className="sr-only" 
-                                                                                checked={isChecked}
-                                                                                onChange={() => togglePermission(role.id, perm.key)}
-                                                                            />
-                                                                            <div className={`w-5 h-5 rounded border ${isChecked ? 'bg-indigo-500 border-indigo-500' : 'bg-slate-900 border-slate-700 group-hover:border-slate-500'} flex items-center justify-center transition-colors`}>
-                                                                                {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                                                                    <label key={perm.id} className="flex items-start justify-between cursor-pointer group hover:bg-slate-800/30 p-2 rounded-lg -mx-2 transition-colors">
+                                                                        <div className="flex items-start gap-3">
+                                                                            <div className="mt-1 relative flex items-center justify-center">
+                                                                                <input 
+                                                                                    type="checkbox" 
+                                                                                    className="sr-only" 
+                                                                                    checked={isChecked}
+                                                                                    onChange={() => togglePermission(role.id, perm.key)}
+                                                                                />
+                                                                                <div className={`w-5 h-5 rounded border ${isChecked ? 'bg-indigo-500 border-indigo-500' : 'bg-slate-900 border-slate-700 group-hover:border-slate-500'} flex items-center justify-center transition-colors`}>
+                                                                                    {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className={`text-sm font-medium ${isChecked ? 'text-slate-200' : 'text-slate-400'}`}>{perm.label}</p>
+                                                                                <p className="text-xs text-slate-600 font-mono mt-0.5">{perm.key}</p>
                                                                             </div>
                                                                         </div>
-                                                                        <div>
-                                                                            <p className={`text-sm font-medium ${isChecked ? 'text-slate-200' : 'text-slate-400'}`}>{perm.label}</p>
-                                                                            <p className="text-xs text-slate-600 font-mono mt-0.5">{perm.key}</p>
-                                                                        </div>
+                                                                        <button 
+                                                                            onClick={(e) => handleDeletePermission(e, perm.id)}
+                                                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all self-center"
+                                                                            title="Delete Permission"
+                                                                        >
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </button>
                                                                     </label>
                                                                 );
                                                             })}
@@ -428,6 +540,35 @@ function SettingsContent() {
                                             </div>
                                             <div className="mt-6 flex justify-end gap-3">
                                                 <button type="button" onClick={() => setIsCreateRoleModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
+                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isCreatePermissionModalOpen && (
+                                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-full max-w-md">
+                                        <h3 className="text-xl font-bold text-white mb-4">Create New Permission</h3>
+                                        <form onSubmit={handleCreatePermission} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Permission Group <span className="text-red-400">*</span></label>
+                                                <input type="text" required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-700" placeholder="e.g. System"
+                                                    value={newPermissionForm.group} onChange={e => setNewPermissionForm({...newPermissionForm, group: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Permission Key (e.g. system:view) <span className="text-red-400">*</span></label>
+                                                <input type="text" required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-700" placeholder="e.g. system:manage"
+                                                    value={newPermissionForm.key} onChange={e => setNewPermissionForm({...newPermissionForm, key: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Display Label <span className="text-red-400">*</span></label>
+                                                <input type="text" required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-700" placeholder="e.g. Manage System Elements"
+                                                    value={newPermissionForm.label} onChange={e => setNewPermissionForm({...newPermissionForm, label: e.target.value})} />
+                                            </div>
+                                            <div className="mt-6 flex justify-end gap-3">
+                                                <button type="button" onClick={() => setIsCreatePermissionModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
                                                 <button type="submit" disabled={loading} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Save</button>
                                             </div>
                                         </form>
@@ -589,6 +730,74 @@ function SettingsContent() {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    )}
+                    {activeTab === 'activity' && (
+                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 overflow-hidden pointer-events-none">
+                                <Activity className="w-64 h-64 text-amber-500 transform rotate-12" />
+                            </div>
+
+                            <div className="relative z-10 space-y-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                                        <Activity className="w-6 h-6 text-amber-500" />
+                                        Activity & Audit Logs
+                                    </h2>
+                                    <p className="text-slate-400 mt-1">Review recent administrative actions performed within the system.</p>
+                                </div>
+
+                                {logsLoading ? (
+                                    <div className="text-center text-slate-400 py-12">Loading logs...</div>
+                                ) : (
+                                    <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/50">
+                                        <table className="w-full text-left text-sm text-slate-300">
+                                            <thead className="bg-slate-900 text-slate-400 border-b border-slate-800">
+                                                <tr>
+                                                    <th className="px-4 py-3 font-medium">Timestamp</th>
+                                                    <th className="px-4 py-3 font-medium">User</th>
+                                                    <th className="px-4 py-3 font-medium">IP Address</th>
+                                                    <th className="px-4 py-3 font-medium">Action</th>
+                                                    <th className="px-4 py-3 font-medium">Resource</th>
+                                                    <th className="px-4 py-3 font-medium">Details</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-800">
+                                                {auditLogs.map((log: any) => (
+                                                    <tr key={log.id} className="hover:bg-slate-900/50 transition-colors">
+                                                        <td className="px-4 py-3 whitespace-nowrap">{new Date(log.createdAt).toLocaleString()}</td>
+                                                        <td className="px-4 py-3">
+                                                            {log.user ? (
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-medium text-slate-200">{log.user.name}</span>
+                                                                    <span className="text-xs text-slate-500">{log.user.email}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-slate-500 italic">System / Unknown</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3 font-mono text-xs text-slate-400 whitespace-nowrap">{log.ipAddress || '-'}</td>
+                                                        <td className="px-4 py-3">
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-300">
+                                                                {log.action}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3">{log.resource || '-'}</td>
+                                                        <td className="px-4 py-3 font-mono text-xs text-slate-400 max-w-xs truncate" title={log.details}>
+                                                            {log.details || '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {auditLogs.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={6} className="text-center py-6 text-slate-500">No activity logs found.</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

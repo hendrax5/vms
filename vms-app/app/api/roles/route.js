@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 export const dynamic = 'force-dynamic';
@@ -43,6 +45,21 @@ export async function POST(req) {
             if (existing) return NextResponse.json({ error: 'Role already exists' }, { status: 400 });
             
             const newRole = await prisma.role.create({ data: { name } });
+            
+            // Audit Log
+            const session = await getServerSession(authOptions);
+            const userId = session?.user?.id ? parseInt(session.user.id) : null;
+            const ipAddress = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
+            await prisma.systemAuditLog.create({
+                data: {
+                    action: 'CREATE_ROLE',
+                    resource: 'Role',
+                    details: JSON.stringify({ name }),
+                    ipAddress: ipAddress,
+                    userId: userId
+                }
+            });
+
             return NextResponse.json({ success: true, role: newRole });
         }
 
@@ -81,6 +98,20 @@ export async function POST(req) {
                 data: dataToInsert
             });
         }
+
+        // Audit Log
+        const session = await getServerSession(authOptions);
+        const userId = session?.user?.id ? parseInt(session.user.id) : null;
+        const ipAddress = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
+        await prisma.systemAuditLog.create({
+            data: {
+                action: 'UPDATE_ROLE_PERMISSIONS',
+                resource: 'Role',
+                details: JSON.stringify({ roleId: role.id, roleName: role.name, permissions }),
+                ipAddress: ipAddress,
+                userId: userId
+            }
+        });
 
         return NextResponse.json({ success: true, message: 'Permissions updated successfully' });
     } catch (error) {

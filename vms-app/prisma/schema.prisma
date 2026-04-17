@@ -66,6 +66,7 @@ model User {
   ticketComments         TicketComment[]
   InfrastructureAuditLog InfrastructureAuditLog[]
   permissions            UserPermission[]
+  systemAuditLogs        SystemAuditLog[]
 }
 
 // -----------------------------------------
@@ -299,6 +300,17 @@ model ApiLog {
   action    String
   status    Int
   timestamp DateTime @default(now())
+}
+
+model SystemAuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  resource  String?
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
 }
 
 // -----------------------------------------
