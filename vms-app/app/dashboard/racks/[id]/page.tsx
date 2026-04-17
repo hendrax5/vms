@@ -33,8 +33,11 @@ export default function RackElevationPage() {
     let canEdit = false;
     if (isInternalAdmin) {
         canEdit = true;
-    } else if (isTenantAdmin && rack && rack.customerId === Number(userCustomerId)) {
-        canEdit = true;
+    } else if (isTenantAdmin && rack) {
+        // Tenant admins can manage their own private racks OR shared datacenter racks (where customerId is null)
+        if (rack.customerId === null || rack.customerId === Number(userCustomerId)) {
+            canEdit = true;
+        }
     }
 
     useEffect(() => {
@@ -116,6 +119,17 @@ export default function RackElevationPage() {
         }
         if (!draggedEq) return;
 
+        // Dynamic equipment-level check for Tenant Admins in shared racks
+        if (!isInternalAdmin && isTenantAdmin) {
+            const ownsRack = rack.customerId === Number(userCustomerId);
+            const ownsEq = draggedEq.customerId === Number(userCustomerId);
+            if (!ownsRack && !ownsEq) {
+                alert("You do not have permission to move this specific equipment.");
+                setDraggedEq(null);
+                return;
+            }
+        }
+
         const size = draggedEq.uEnd - draggedEq.uStart + 1;
         
         // Calculate the new boundaries based on targetU (target is where they dropped it)
@@ -196,6 +210,16 @@ export default function RackElevationPage() {
     };
 
     const handleDeleteEq = async (id: number) => {
+        const eqToDelete = equipments.find((eq: any) => eq.id === id);
+        if (eqToDelete && !isInternalAdmin && isTenantAdmin) {
+            const ownsRack = rack.customerId === Number(userCustomerId);
+            const ownsEq = eqToDelete.customerId === Number(userCustomerId);
+            if (!ownsRack && !ownsEq) {
+                alert("You do not have permission to delete this specific equipment.");
+                return;
+            }
+        }
+
         if (!confirm('Are you sure you want to uninstall and remove this equipment?')) return;
         try {
             const res = await fetch(`/api/racks/equipments/${id}`, { method: 'DELETE' });
@@ -350,7 +374,7 @@ export default function RackElevationPage() {
                                         </div>
                                         
                                         {/* Action buttons */}
-                                        {canEdit && (
+                                        {(isInternalAdmin || (isTenantAdmin && (rack?.customerId === Number(userCustomerId) || eq.customerId === Number(userCustomerId)))) && (
                                         <div className="flex flex-row md:flex-col gap-2 items-end justify-start">
                                             <button 
                                                 onClick={() => {

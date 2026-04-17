@@ -33,8 +33,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             if (!isTenantAdmin) {
                 return NextResponse.json({ error: 'Forbidden. Read-Only users cannot edit equipment.' }, { status: 403 });
             }
-            if (existingEq.rack?.customerId !== Number((session.user as any).customerId)) {
-                return NextResponse.json({ error: 'Forbidden. You do not own the rack this equipment is in.' }, { status: 403 });
+            const ownsRack = existingEq.rack?.customerId === Number((session.user as any).customerId);
+            const ownsEquipment = existingEq.customerId === Number((session.user as any).customerId);
+            if (!ownsRack && !ownsEquipment) {
+                return NextResponse.json({ error: 'Forbidden. You do not own this equipment or its rack.' }, { status: 403 });
             }
         }
         // -------------------------
@@ -119,8 +121,10 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
             if (!isTenantAdmin) {
                 return NextResponse.json({ error: 'Forbidden. Read-Only users cannot delete equipment.' }, { status: 403 });
             }
-            if (existingEq.rack?.customerId !== Number((session.user as any).customerId)) {
-                return NextResponse.json({ error: 'Forbidden. You do not own the rack this equipment is in.' }, { status: 403 });
+            const ownsRack = existingEq.rack?.customerId === Number((session.user as any).customerId);
+            const ownsEquipment = existingEq.customerId === Number((session.user as any).customerId);
+            if (!ownsRack && !ownsEquipment) {
+                return NextResponse.json({ error: 'Forbidden. You do not own this equipment or its rack.' }, { status: 403 });
             }
         }
         // -------------------------

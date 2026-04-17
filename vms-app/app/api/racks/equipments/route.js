@@ -37,11 +37,15 @@ export async function POST(req) {
             if (!isTenantAdmin) {
                 return NextResponse.json({ error: 'Forbidden. Read-Only users cannot add equipment.' }, { status: 403 });
             }
-            if (rack.customerId !== Number(session.user.customerId)) {
-                return NextResponse.json({ error: 'Forbidden. You do not own this rack.' }, { status: 403 });
+            if (rack.customerId !== null && rack.customerId !== Number(session.user.customerId)) {
+                return NextResponse.json({ error: 'Forbidden. You cannot add equipment to another tenant\'s private rack.' }, { status: 403 });
             }
         }
-        // -------------------------
+        
+        let finalCustomerId = customerId ? parseInt(customerId) : null;
+        if (isTenantAdmin && !isInternalAdmin) {
+            finalCustomerId = Number(session.user.customerId); // Force tenant's own ID
+        }
 
         if (uEnd > rack.uCapacity || uStart < 1) {
             return NextResponse.json({ error: `Invalid U values. Rack capacity is 1 to ${rack.uCapacity}` }, { status: 400 });
@@ -74,7 +78,7 @@ export async function POST(req) {
         const newEquipment = await prisma.rackEquipment.create({
             data: {
                 rackId: parseInt(rackId),
-                customerId: customerId ? parseInt(customerId) : null,
+                customerId: finalCustomerId,
                 name,
                 equipmentType, // SERVER, SWITCH, ROUTER, PATCH_PANEL, OTB
                 uStart: parseInt(uStart),
