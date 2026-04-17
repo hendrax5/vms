@@ -1,40 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Network, Server, Box, Layers, Building2, MapPin, Plus, X, Trash2, MoreVertical, Edit2 } from 'lucide-react';
-
-const ActionMenu = ({ onEdit, onDelete }: { onEdit: (e:any)=>void, onDelete: (e:any)=>void }) => {
-    const [open, setOpen] = useState(false);
-    return (
-        <div className="relative">
-            <button 
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(!open); }} 
-                className="p-1 hover:bg-neutral-800 rounded text-neutral-400"
-            >
-                <MoreVertical className="w-5 h-5" />
-            </button>
-            {open && (
-                <>
-                    <div className="fixed inset-0 z-40" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); }} />
-                    <div className="absolute right-0 mt-1 w-32 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-50 py-1 overflow-visible">
-                        <button 
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); onEdit(e); }}
-                            className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 flex items-center gap-2"
-                        >
-                            <Edit2 className="w-4 h-4" /> Edit
-                        </button>
-                        <button 
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); onDelete(e); }}
-                            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
-                        >
-                            <Trash2 className="w-4 h-4" /> Delete
-                        </button>
-                    </div>
-                </>
-            )}
-        </div>
-    );
-};
+import { Network, Server, Box, Layers, Building2, MapPin, Plus, X, Trash2, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -44,7 +11,9 @@ export default function InfrastructureTopologyPage() {
     const [topology, setTopology] = useState<any[]>([]);
     const [regions, setRegions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
+    
+    // activeRooms maps datacenterId -> roomId currently active in the tab
+    const [activeRooms, setActiveRooms] = useState<Record<number, number>>({});
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<{type: string, id: number} | null>(null);
@@ -72,10 +41,6 @@ export default function InfrastructureTopologyPage() {
     useEffect(() => {
         loadData();
     }, []);
-
-    const toggleNode = (id: string) => {
-        setExpandedNodes(prev => ({ ...prev, [id]: !prev[id] }));
-    };
 
     const handleEditClick = (e: any, type: string, entity: any, parentId?: string) => {
         e.stopPropagation();
@@ -178,9 +143,6 @@ export default function InfrastructureTopologyPage() {
                      <p className="text-slate-400 mt-1">Full hierarchical view of regions, datacenters, rooms, rows, and racks.</p>
                  </div>
                  <div className="flex gap-3">
-                     <button onClick={() => setExpandedNodes({})} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold border border-slate-700 transition-all">
-                         Collapse All
-                     </button>
                      {canEdit && (
                          <button onClick={() => { setEditEntityId(null); setIsAddModalOpen(true); }} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
                              <Plus className="w-4 h-4" /> Add Facility
@@ -190,147 +152,134 @@ export default function InfrastructureTopologyPage() {
             </div>
 
             {/* Topology Rendering */}
-            <div className="grid grid-cols-1 gap-6">
-                 {topology.map((dc, i) => (
+            <div className="grid grid-cols-1 gap-8">
+                 {topology.map((dc, i) => {
+                      const currentRoomId = activeRooms[dc.id] || (dc.rooms?.[0]?.id);
+                      const currentRoom = dc.rooms?.find((r:any) => r.id === currentRoomId);
+
+                      return (
                       <motion.div 
                           key={dc.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.1 }}
-                          className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl"
+                          className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl relative group"
                       >
-                           <div 
-                               className="p-5 flex items-center justify-between bg-gradient-to-r from-neutral-900 to-indigo-900/20 cursor-pointer hover:bg-neutral-800/80 transition-colors"
-                               onClick={() => toggleNode(`dc-${dc.id}`)}
-                           >
+                           {/* Datacenter Header */}
+                           <div className="p-6 flex flex-col md:flex-row md:items-center justify-between border-b border-neutral-800 bg-gradient-to-r from-neutral-900 to-indigo-900/10 hover:to-indigo-900/20 transition-colors">
                                <div className="flex items-center gap-4">
-                                   <div className="p-3 bg-indigo-500/10 rounded-xl">
-                                       <Building2 className="w-6 h-6 text-indigo-400" />
+                                   <div className="p-4 bg-indigo-500/10 rounded-2xl">
+                                       <Building2 className="w-8 h-8 text-indigo-400" />
                                    </div>
                                    <div>
-                                       <h2 className="text-xl font-bold text-white">{dc.name} <span className="text-indigo-400 font-mono text-sm ml-2">[{dc.code}]</span></h2>
+                                       <h2 className="text-2xl font-bold text-white tracking-tight">{dc.name} <span className="text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded text-sm ml-2">[{dc.code}]</span></h2>
                                        <p className="text-sm text-neutral-400 flex items-center gap-1 mt-1">
-                                           <MapPin className="w-3 h-3" /> {dc.region?.name || 'Global'}
+                                           <MapPin className="w-3.5 h-3.5" /> {dc.region?.name || 'Global'}
                                        </p>
                                    </div>
                                </div>
-                               <div className="flex gap-4 items-center">
-                                   <div className="text-right">
+                               <div className="flex gap-6 items-center mt-4 md:mt-0">
+                                   <div className="text-center">
                                        <p className="text-2xl font-black text-white">{dc.rooms?.length || 0}</p>
                                        <p className="text-xs text-neutral-500 uppercase tracking-widest font-bold">Rooms</p>
                                    </div>
-                                   <div className="ml-4">
-                                       {canEdit && (
-                                           <ActionMenu 
-                                               onEdit={(e) => handleEditClick(e, 'datacenter', dc, dc.regionId?.toString())}
-                                               onDelete={(e) => triggerDelete(e, 'datacenter', dc.id)} 
-                                           />
-                                       )}
-                                   </div>
+                                   {canEdit && (
+                                       <div className="flex gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={(e) => handleEditClick(e, 'datacenter', dc, dc.regionId?.toString())} className="p-2 bg-neutral-800 hover:bg-indigo-600 text-neutral-400 hover:text-white rounded-lg transition-colors" title="Edit Datacenter"><Edit2 className="w-4 h-4" /></button>
+                                            <button onClick={(e) => triggerDelete(e, 'datacenter', dc.id)} className="p-2 bg-neutral-800 hover:bg-red-600 text-neutral-400 hover:text-white rounded-lg transition-colors" title="Delete Datacenter"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                   )}
                                </div>
                            </div>
 
-                           <AnimatePresence>
-                               {(expandedNodes[`dc-${dc.id}`] ?? true) && (
-                                   <motion.div 
-                                       initial={{ height: 0, opacity: 0 }}
-                                       animate={{ height: 'auto', opacity: 1 }}
-                                       exit={{ height: 0, opacity: 0 }}
-                                       className="border-t border-neutral-800"
-                                   >
-                                        <div className="p-6 space-y-6 bg-black/20">
-                                            {dc.rooms?.map((room: any) => (
-                                                <div key={room.id} className="border border-neutral-800 rounded-xl overflow-hidden bg-neutral-900/50">
-                                                    <div 
-                                                        className="p-4 flex items-center justify-between cursor-pointer hover:bg-neutral-800/80 transition-colors"
-                                                        onClick={() => toggleNode(`room-${room.id}`)}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <Layers className="w-5 h-5 text-blue-400" />
-                                                            <h3 className="text-lg font-bold text-neutral-200">Room: {room.name}</h3>
+                           <div className="p-0 bg-neutral-950">
+                                {/* Room Horizontal Tabs */}
+                                {dc.rooms && dc.rooms.length > 0 ? (
+                                    <div className="flex overflow-x-auto border-b border-neutral-800 custom-scrollbar">
+                                        {dc.rooms.map((room: any) => (
+                                            <div 
+                                                key={room.id}
+                                                onClick={() => setActiveRooms(prev => ({ ...prev, [dc.id]: room.id }))}
+                                                className={`px-6 py-4 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer transition-colors relative group/tab ${currentRoomId === room.id ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5' : 'border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900'}`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Layers className="w-4 h-4" />
+                                                    <span className="mt-0.5">Room: {room.name}</span>
+                                                    {canEdit && (
+                                                        <div className="flex items-center gap-1 ml-3 opacity-0 group-hover/tab:opacity-100 transition-opacity">
+                                                            <button onClick={(e) => handleEditClick(e, 'room', room, dc.id.toString())} className="p-1 hover:text-indigo-300 transition-colors" title="Edit Room"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                            <button onClick={(e) => triggerDelete(e, 'room', room.id)} className="p-1 hover:text-red-400 transition-colors" title="Delete Room"><Trash2 className="w-3.5 h-3.5" /></button>
                                                         </div>
-                                                        <div className="flex items-center gap-4">
-                                                            <span className="text-xs bg-neutral-800 text-neutral-300 px-3 py-1 rounded-full">{room.rows?.length || 0} Rows</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-8 text-center text-neutral-500">No rooms mapped in this datacenter.</div>
+                                )}
+
+                                {/* Row & Rack Grid Area */}
+                                {currentRoom && (
+                                    <div className="p-6 bg-neutral-950">
+                                        <div className="space-y-10">
+                                            {currentRoom.rows?.map((row: any) => (
+                                                <div key={row.id} className="relative group/row">
+                                                    {/* Row Divider Header */}
+                                                    <div className="flex items-center gap-4 mb-5">
+                                                        <div className="h-px bg-neutral-800 flex-grow"></div>
+                                                        <h4 className="text-sm font-bold text-neutral-300 uppercase tracking-widest flex items-center gap-2 px-5 py-2 bg-neutral-900 border border-neutral-800 rounded-full shadow-inner">
+                                                            <Box className="w-4 h-4 text-emerald-400" /> Row {row.name}
+                                                        </h4>
+                                                        <div className="h-px bg-neutral-800 flex-grow relative">
                                                             {canEdit && (
-                                                                <ActionMenu 
-                                                                    onEdit={(e) => handleEditClick(e, 'room', room, dc.id.toString())}
-                                                                    onDelete={(e) => triggerDelete(e, 'room', room.id)} 
-                                                                />
+                                                                <div className="absolute right-0 -top-4 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-neutral-900 px-2 py-1 rounded-full border border-neutral-800">
+                                                                    <button onClick={(e) => handleEditClick(e, 'row', row, currentRoom.id.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400 transition-colors" title="Edit Row"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                                    <button onClick={(e) => triggerDelete(e, 'row', row.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors" title="Delete Row"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </div>
-
-                                                    <AnimatePresence>
-                                                        {(expandedNodes[`room-${room.id}`]) && (
-                                                            <motion.div 
-                                                                initial={{ height: 0 }}
-                                                                animate={{ height: 'auto' }}
-                                                                exit={{ height: 0 }}
-                                                                className="overflow-hidden border-t border-neutral-800 bg-neutral-950/50"
-                                                            >
-                                                                <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                                                                    {room.rows?.map((row: any) => (
-                                                                        <div key={row.id} className="border border-neutral-800 rounded-lg p-4 bg-neutral-900 shadow-inner">
-                                                                            <div className="flex justify-between items-center mb-4">
-                                                                                <h4 className="text-sm font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
-                                                                                    <Box className="w-4 h-4 text-emerald-400" /> Row {row.name}
-                                                                                </h4>
-                                                                                {canEdit && (
-                                                                                    <ActionMenu 
-                                                                                        onEdit={(e) => handleEditClick(e, 'row', row, room.id.toString())}
-                                                                                        onDelete={(e) => triggerDelete(e, 'row', row.id)} 
-                                                                                    />
-                                                                                )}
-                                                                            </div>
-                                                                            <div className="space-y-3">
-                                                                                {row.racks?.map((rack: any) => (
-                                                                                    <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group">
-                                                                                        <div className="bg-black border border-neutral-800 p-3 rounded-lg flex items-center justify-between group-hover:border-emerald-500/50 transition-colors">
-                                                                                            <div className="flex items-center gap-3">
-                                                                                                <Server className="w-4 h-4 text-neutral-500 group-hover:text-emerald-400 transition-colors" />
-                                                                                                <div>
-                                                                                                    <p className="text-sm font-bold text-neutral-200">{rack.name}</p>
-                                                                                                    <p className="text-[10px] text-neutral-500 uppercase tracking-widest">{rack.equipments?.length || 0} Assets</p>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div className="text-right flex items-center gap-3">
-                                                                                                <span className="text-xs text-neutral-400 font-mono">{rack.uCapacity}U Capacity</span>
-                                                                                                {canEdit && (
-                                                                                                    <div onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
-                                                                                                        <ActionMenu 
-                                                                                                            onEdit={(e) => handleEditClick(e, 'rack', rack, row.id.toString())}
-                                                                                                            onDelete={(e) => triggerDelete(e, 'rack', rack.id)} 
-                                                                                                        />
-                                                                                                    </div>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </Link>
-                                                                                ))}
-                                                                                {row.racks?.length === 0 && (
-                                                                                    <p className="text-xs text-neutral-600 text-center py-2">No racks.</p>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                    {room.rows?.length === 0 && (
-                                                                        <div className="col-span-full py-4 text-center text-sm text-neutral-600">No rows configured.</div>
-                                                                    )}
+                                                    
+                                                    {/* Modular Rack Tiles */}
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 pl-4 pr-4">
+                                                        {row.racks?.map((rack: any) => (
+                                                            <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
+                                                                <div className="bg-black border border-neutral-800 p-5 rounded-xl flex flex-col items-center justify-center aspect-square hover:border-emerald-500/50 hover:bg-emerald-500/5 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all text-center">
+                                                                    <Server className="w-8 h-8 text-neutral-600 group-hover/rack:text-emerald-400 mb-3 transition-colors" />
+                                                                    <p className="text-sm font-bold text-neutral-200 truncate w-full px-2">{rack.name}</p>
+                                                                    <p className="text-[10px] text-neutral-500 uppercase font-mono mt-1">
+                                                                        {rack.uCapacity}U • <span className="text-emerald-500/80">{rack.equipments?.length || 0} Assets</span>
+                                                                    </p>
                                                                 </div>
-                                                            </motion.div>
+                                                                
+                                                                {/* Floating Rack Actions */}
+                                                                {canEdit && (
+                                                                    <div 
+                                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                        className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover/rack:opacity-100 transition-opacity z-10"
+                                                                    >
+                                                                        <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-900/90 backdrop-blur-sm hover:bg-indigo-600 border border-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button>
+                                                                        <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-900/90 backdrop-blur-sm hover:bg-red-600 border border-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors shadow-lg"><Trash2 className="w-3 h-3" /></button>
+                                                                    </div>
+                                                                )}
+                                                            </Link>
+                                                        ))}
+                                                        {row.racks?.length === 0 && (
+                                                            <div className="col-span-full py-8 text-center border-2 border-dashed border-neutral-800 rounded-xl text-neutral-600 text-sm">Empty Space: No racks deployed in this row.</div>
                                                         )}
-                                                    </AnimatePresence>
+                                                    </div>
                                                 </div>
                                             ))}
-                                            {dc.rooms?.length === 0 && (
-                                                <div className="text-center py-8 text-neutral-500">No rooms mapped in this datacenter.</div>
+                                            {currentRoom.rows?.length === 0 && (
+                                                <div className="text-center py-12 text-sm text-neutral-600 border-2 border-dashed border-neutral-800/50 rounded-xl">Area is empty. No rows built inside {currentRoom.name}.</div>
                                             )}
                                         </div>
-                                   </motion.div>
-                               )}
-                           </AnimatePresence>
+                                    </div>
+                                )}
+                           </div>
                       </motion.div>
-                 ))}
+                 )})}
                  
                  {topology.length === 0 && (
                      <div className="text-center py-12 bg-neutral-900 border border-neutral-800 rounded-2xl">
