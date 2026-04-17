@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Network, Server, Box, Layers, Building2, MapPin, Plus, X, Trash2, Edit2 } from 'lucide-react';
+import { Network, Server, Box, Layers, Building2, MapPin, Plus, X, Trash2, Edit2, Search, LayoutGrid, List } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -12,6 +12,10 @@ export default function InfrastructureTopologyPage() {
     const [regions, setRegions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     
+    // View and search states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
     // activeRooms maps datacenterId -> roomId currently active in the tab
     const [activeRooms, setActiveRooms] = useState<Record<number, number>>({});
 
@@ -133,6 +137,35 @@ export default function InfrastructureTopologyPage() {
     const isSuperAdmin = userRoleRaw.replace(/\s+/g, '').toLowerCase() === 'superadmin';
     const canEdit = isSuperAdmin || userPermissions.includes('infrastructure:edit');
 
+    const filteredTopology = topology.map(dc => {
+        if (!searchQuery) return dc;
+        const q = searchQuery.toLowerCase();
+        const dcMatch = dc.name.toLowerCase().includes(q) || dc.code?.toLowerCase().includes(q) || (dc.region?.name && dc.region.name.toLowerCase().includes(q));
+        
+        const matchedRooms = dc.rooms?.map((room:any) => {
+            const roomMatch = room.name.toLowerCase().includes(q);
+            const matchedRows = room.rows?.map((row:any) => {
+                const rowMatch = row.name.toLowerCase().includes(q);
+                const matchedRacks = row.racks?.filter((rack:any) => rack.name.toLowerCase().includes(q) || rowMatch || roomMatch || dcMatch);
+                
+                if (matchedRacks?.length > 0 || rowMatch || roomMatch || dcMatch) {
+                    return { ...row, racks: matchedRacks };
+                }
+                return null;
+            }).filter((r:any) => r !== null);
+            
+            if (matchedRows?.length > 0 || roomMatch || dcMatch) {
+                return { ...room, rows: matchedRows };
+            }
+            return null;
+        }).filter((r:any) => r !== null);
+        
+        if (matchedRooms?.length > 0 || dcMatch) {
+            return { ...dc, rooms: matchedRooms };
+        }
+        return null;
+    }).filter(dc => dc !== null);
+
     return (
         <div className="space-y-8 max-w-[1600px] mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -141,6 +174,32 @@ export default function InfrastructureTopologyPage() {
                          <Network className="w-8 h-8 text-indigo-500" /> Infrastructure Topology
                      </h1>
                      <p className="text-slate-400 mt-1">Full hierarchical view of regions, datacenters, rooms, rows, and racks.</p>
+                 </div>
+                 <div className="flex bg-neutral-900 border border-neutral-800 rounded-lg p-1 mr-3">
+                     <button 
+                         onClick={() => setViewMode('grid')} 
+                         className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-neutral-800 text-emerald-400' : 'text-neutral-500 hover:text-neutral-300'}`}
+                         title="Grid View"
+                     >
+                         <LayoutGrid className="w-4 h-4" />
+                     </button>
+                     <button 
+                         onClick={() => setViewMode('list')} 
+                         className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-neutral-800 text-emerald-400' : 'text-neutral-500 hover:text-neutral-300'}`}
+                         title="List View"
+                     >
+                         <List className="w-4 h-4" />
+                     </button>
+                 </div>
+                 <div className="relative w-full md:w-64">
+                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                     <input 
+                         type="text" 
+                         className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                         placeholder="Search facility..."
+                         value={searchQuery}
+                         onChange={e => setSearchQuery(e.target.value)}
+                     />
                  </div>
                  <div className="flex gap-3">
                      {canEdit && (
@@ -153,7 +212,7 @@ export default function InfrastructureTopologyPage() {
 
             {/* Topology Rendering */}
             <div className="grid grid-cols-1 gap-8">
-                 {topology.map((dc, i) => {
+                 {filteredTopology.map((dc, i) => {
                       const currentRoomId = activeRooms[dc.id] || (dc.rooms?.[0]?.id);
                       const currentRoom = dc.rooms?.find((r:any) => r.id === currentRoomId);
 
@@ -242,28 +301,53 @@ export default function InfrastructureTopologyPage() {
                                                     </div>
                                                     
                                                     {/* Modular Rack Tiles */}
-                                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 pl-4 pr-4">
+                                                    <div className={viewMode === 'grid' ? "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 pl-4 pr-4" : "flex flex-col gap-2 pl-4 pr-4"}>
                                                         {row.racks?.map((rack: any) => (
-                                                            <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
-                                                                <div className="bg-black border border-neutral-800 p-5 rounded-xl flex flex-col items-center justify-center aspect-square hover:border-emerald-500/50 hover:bg-emerald-500/5 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all text-center">
-                                                                    <Server className="w-8 h-8 text-neutral-600 group-hover/rack:text-emerald-400 mb-3 transition-colors" />
-                                                                    <p className="text-sm font-bold text-neutral-200 truncate w-full px-2">{rack.name}</p>
-                                                                    <p className="text-[10px] text-neutral-500 uppercase font-mono mt-1">
-                                                                        {rack.uCapacity}U • <span className="text-emerald-500/80">{rack.equipments?.length || 0} Assets</span>
-                                                                    </p>
-                                                                </div>
-                                                                
-                                                                {/* Floating Rack Actions */}
-                                                                {canEdit && (
-                                                                    <div 
-                                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                                                        className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover/rack:opacity-100 transition-opacity z-10"
-                                                                    >
-                                                                        <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-900/90 backdrop-blur-sm hover:bg-indigo-600 border border-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button>
-                                                                        <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-900/90 backdrop-blur-sm hover:bg-red-600 border border-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors shadow-lg"><Trash2 className="w-3 h-3" /></button>
+                                                            viewMode === 'grid' ? (
+                                                                <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
+                                                                    <div className="bg-black border border-neutral-800 p-5 rounded-xl flex flex-col items-center justify-center aspect-square hover:border-emerald-500/50 hover:bg-emerald-500/5 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all text-center">
+                                                                        <Server className="w-8 h-8 text-neutral-600 group-hover/rack:text-emerald-400 mb-3 transition-colors" />
+                                                                        <p className="text-sm font-bold text-neutral-200 truncate w-full px-2">{rack.name}</p>
+                                                                        <p className="text-[10px] text-neutral-500 uppercase font-mono mt-1">
+                                                                            {rack.uCapacity}U • <span className="text-emerald-500/80">{rack.equipments?.length || 0} Assets</span>
+                                                                        </p>
                                                                     </div>
-                                                                )}
-                                                            </Link>
+                                                                    
+                                                                    {/* Floating Rack Actions */}
+                                                                    {canEdit && (
+                                                                        <div 
+                                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                            className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover/rack:opacity-100 transition-opacity z-10"
+                                                                        >
+                                                                            <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-900/90 backdrop-blur-sm hover:bg-indigo-600 border border-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors shadow-lg"><Edit2 className="w-3 h-3" /></button>
+                                                                            <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-900/90 backdrop-blur-sm hover:bg-red-600 border border-neutral-800 rounded-md text-neutral-400 hover:text-white transition-colors shadow-lg"><Trash2 className="w-3 h-3" /></button>
+                                                                        </div>
+                                                                    )}
+                                                                </Link>
+                                                            ) : (
+                                                                <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
+                                                                    <div className="bg-black border border-neutral-800 p-3 rounded-lg flex items-center justify-between hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all">
+                                                                        <div className="flex items-center gap-4">
+                                                                            <Server className="w-5 h-5 text-neutral-600 group-hover/rack:text-emerald-400 transition-colors" />
+                                                                            <div>
+                                                                                <p className="text-sm font-bold text-neutral-200">{rack.name}</p>
+                                                                                <p className="text-[10px] text-neutral-500 uppercase font-mono">{rack.uCapacity}U • <span className="text-emerald-500/80">{rack.equipments?.length || 0} Assets</span></p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-3">
+                                                                            {canEdit && (
+                                                                                <div 
+                                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                                    className="flex gap-2 opacity-0 group-hover/rack:opacity-100 transition-opacity"
+                                                                                >
+                                                                                    <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400 transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                                                    <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </Link>
+                                                            )
                                                         ))}
                                                         {row.racks?.length === 0 && (
                                                             <div className="col-span-full py-8 text-center border-2 border-dashed border-neutral-800 rounded-xl text-neutral-600 text-sm">Empty Space: No racks deployed in this row.</div>
