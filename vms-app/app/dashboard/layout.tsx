@@ -251,7 +251,7 @@ export default function DashboardLayout({
                          )}
                     </div>
                     <button 
-                        onClick={() => signOut({ callbackUrl: '/login' })} 
+                        onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })} 
                         className={cn(
                             "flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0 overflow-hidden",
                             isCollapsed && !isMobile && "justify-center"
