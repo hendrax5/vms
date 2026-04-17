@@ -1,6 +1,6 @@
 'use client';
 
-import { Network, Search, ArrowRightLeft, ShieldAlert, Plus, X, Trash2, CheckCircle, Clock } from 'lucide-react';
+import { Network, Search, ArrowRightLeft, ShieldAlert, Plus, X, Trash2, CheckCircle, Clock, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
@@ -15,6 +15,7 @@ export default function CrossConnectsPage() {
     // Complex state for Port selection
     // We select Rack -> Equipment -> Port
     const [formData, setFormData] = useState({
+        id: undefined as number | undefined,
         datacenterId: '',
         customerId: '',
         mediaType: 'Singlemode Fiber',
@@ -75,10 +76,10 @@ export default function CrossConnectsPage() {
         }
     };
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const payload = {
+            const payload: any = {
                 datacenterId: parseInt(formData.datacenterId),
                 customerId: formData.customerId ? parseInt(formData.customerId) : null,
                 mediaType: formData.mediaType,
@@ -86,8 +87,14 @@ export default function CrossConnectsPage() {
                 sideZPortId: parseInt(formData.sideZPortId),
             };
 
+            const isEdit = !!formData.id;
+            if (isEdit) {
+                payload.id = formData.id;
+                payload.action = 'full_update';
+            }
+
             const res = await fetch('/api/cross-connects', {
-                method: 'POST',
+                method: isEdit ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
@@ -95,7 +102,7 @@ export default function CrossConnectsPage() {
             if (res.ok) {
                 setIsModalOpen(false);
                 setFormData({ 
-                    datacenterId: '', customerId: '', mediaType: 'Singlemode Fiber', 
+                    id: undefined, datacenterId: '', customerId: '', mediaType: 'Singlemode Fiber', 
                     sideARackId: '', sideAEquipmentId: '', sideAPortId: '', 
                     sideZRackId: '', sideZEquipmentId: '', sideZPortId: '' 
                 });
@@ -105,8 +112,29 @@ export default function CrossConnectsPage() {
                 alert(data.error);
             }
         } catch (error) {
-            console.error('Failed to create cross-connect', error);
+            console.error('Failed to process cross-connect', error);
         }
+    };
+
+    const handleEditClick = (cx: any) => {
+        const sideARackId = cx.sideAPort?.equipment?.rackId?.toString() || '';
+        const sideAEquipmentId = cx.sideAPort?.equipmentId?.toString() || '';
+        const sideZRackId = cx.sideZPort?.equipment?.rackId?.toString() || '';
+        const sideZEquipmentId = cx.sideZPort?.equipmentId?.toString() || '';
+
+        setFormData({
+            id: cx.id,
+            datacenterId: cx.datacenterId?.toString() || '',
+            customerId: cx.customerId?.toString() || '',
+            mediaType: cx.mediaType || 'Singlemode Fiber',
+            sideARackId,
+            sideAEquipmentId,
+            sideAPortId: cx.sideAPortId?.toString() || '',
+            sideZRackId,
+            sideZEquipmentId,
+            sideZPortId: cx.sideZPortId?.toString() || ''
+        });
+        setIsModalOpen(true);
     };
 
     const handleDelete = async (id: number) => {
@@ -222,6 +250,9 @@ export default function CrossConnectsPage() {
                                                     <CheckCircle className="w-4 h-4" />
                                                 </button>
                                              )}
+                                             <button onClick={() => handleEditClick(cx)} className="text-indigo-400 hover:text-indigo-300 p-1.5 rounded-lg hover:bg-indigo-500/10 transition-colors" title="Edit">
+                                                 <Pencil className="w-4 h-4" />
+                                             </button>
                                              <button onClick={() => handleDelete(cx.id)} className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors" title="Delete">
                                                  <Trash2 className="w-4 h-4" />
                                              </button>
@@ -265,13 +296,13 @@ export default function CrossConnectsPage() {
                             className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden my-auto"
                         >
                             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                                <h2 className="text-xl font-semibold text-slate-100">Order New Cross-Connect</h2>
+                                <h2 className="text-xl font-semibold text-slate-100">{formData.id ? 'Edit Cross-Connect' : 'Order New Cross-Connect'}</h2>
                                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-200">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
                             
-                            <form onSubmit={handleCreate} className="p-6 space-y-6">
+                            <form onSubmit={handleSubmit} className="p-6 space-y-6">
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-300 mb-1">Datacenter</label>
@@ -446,7 +477,7 @@ export default function CrossConnectsPage() {
                                         type="submit"
                                         className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-colors"
                                     >
-                                        Submit Request
+                                        {formData.id ? 'Save Changes' : 'Submit Request'}
                                     </button>
                                 </div>
                             </form>
