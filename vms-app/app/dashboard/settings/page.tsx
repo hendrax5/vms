@@ -313,9 +313,11 @@ function SettingsContent() {
     }, {});
 
     const userRoleRaw = (session?.user as any)?.role as string || '';
-    const isSuperAdmin = userRoleRaw.replace(/\s+/g, '').toLowerCase() === 'superadmin';
+    const userRoleLower = userRoleRaw.replace(/\s+/g, '').toLowerCase();
+    const isSuperAdmin = userRoleLower === 'superadmin';
+    const isTenantAdmin = userRoleLower.includes('admin') && userRoleLower.includes('tenant');
     const userPermissions = (session?.user as any)?.permissions || [];
-    const canManageUsers = isSuperAdmin || userPermissions.includes('users:manage');
+    const canManageUsers = isSuperAdmin || isTenantAdmin || userPermissions.includes('users:manage');
     const sessionCustomerId = (session?.user as any)?.customerId;
     const availableRoles = sessionCustomerId ? roles.filter(r => r.name.toLowerCase().includes('tenant')) : roles;
 

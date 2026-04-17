@@ -15,10 +15,12 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const userRoleRaw = (session?.user as any)?.role as string || '';
-        const isSuperAdmin = userRoleRaw.replace(/\s+/g, '').toLowerCase() === 'superadmin';
+        const userRoleLower = userRoleRaw.replace(/\s+/g, '').toLowerCase();
+        const isSuperAdmin = userRoleLower === 'superadmin';
+        const isTenantAdmin = userRoleLower.includes('admin') && userRoleLower.includes('tenant');
         const userPermissions = (session?.user as any)?.permissions || [];
 
-        if (!isSuperAdmin && !userPermissions.includes('users:manage')) {
+        if (!isSuperAdmin && !isTenantAdmin && !userPermissions.includes('users:manage')) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
@@ -56,10 +58,12 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const userRoleRaw = (session?.user as any)?.role as string || '';
-        const isSuperAdmin = userRoleRaw.replace(/\s+/g, '').toLowerCase() === 'superadmin';
+        const userRoleLower = userRoleRaw.replace(/\s+/g, '').toLowerCase();
+        const isSuperAdmin = userRoleLower === 'superadmin';
+        const isTenantAdmin = userRoleLower.includes('admin') && userRoleLower.includes('tenant');
         const userPermissions = (session?.user as any)?.permissions || [];
 
-        if (!isSuperAdmin && !userPermissions.includes('users:manage')) {
+        if (!isSuperAdmin && !isTenantAdmin && !userPermissions.includes('users:manage')) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
