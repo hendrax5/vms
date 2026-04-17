@@ -520,15 +520,15 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
             <AnimatePresence>
                 {selectedQR && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-slate-100 w-[340px] shadow-2xl relative overflow-hidden">
+                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="!bg-white w-[340px] shadow-2xl relative overflow-hidden rounded-xl border border-slate-200" style={{ background: '#FFFFFF' }}>
                              <div className={`h-2 w-full ${selectedQR.type === 'Visit' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
-                             <div className="p-6 text-center text-slate-900 border-b border-slate-300">
+                             <div className="p-6 text-center !bg-white !text-slate-900 border-b border-slate-100" style={{ background: '#FFFFFF', color: '#0F172A' }}>
                                  {selectedQR.type === 'Visit' ? <ShieldCheck className="w-8 h-8 mx-auto text-red-600 mb-2" /> : <Package className="w-8 h-8 mx-auto text-blue-600 mb-2" />}
-                                 <h2 className="text-xl font-extrabold uppercase tracking-widest">{selectedQR.title}</h2>
+                                 <h2 className="text-xl font-extrabold uppercase tracking-widest !text-slate-900">{selectedQR.title}</h2>
                                  <p className="text-[10px] font-bold text-slate-500 uppercase mt-1 tracking-widest">{selectedQR.type === 'Visit' ? 'Visitor Entry Permit' : 'Logistics Waybill Tracking'}</p>
                              </div>
-                             <div className="p-10 bg-white flex flex-col items-center">
-                                 <div className="p-4 bg-white shadow-[0_0_40px_rgba(0,0,0,0.1)] border border-slate-100 rounded-sm">
+                             <div className="p-10 !bg-white flex flex-col items-center" style={{ background: '#FFFFFF' }}>
+                                 <div className="p-6 !bg-white shadow-[0_0_50px_rgba(0,0,0,0.05)] border border-slate-100 rounded-2xl" style={{ background: '#FFFFFF' }}>
                                     <QRCodeSVG 
                                         value={selectedQR.code} 
                                         size={220} 
@@ -538,10 +538,10 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                         bgColor="#FFFFFF"
                                     />
                                  </div>
-                                 <p className="mt-8 text-xs text-slate-400 font-mono tracking-[0.3em] font-bold uppercase">{selectedQR.code}</p>
+                                 <p className="mt-8 text-xs !text-slate-500 font-mono tracking-[0.3em] font-bold uppercase" style={{ color: '#64748B' }}>{selectedQR.code}</p>
                              </div>
-                             <div className="bg-slate-900 p-4">
-                                <button onClick={() => setSelectedQR(null)} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold uppercase text-xs tracking-wider transition-colors">Close ID Badge</button>
+                             <div className="!bg-slate-50 p-4 border-t border-slate-100" style={{ background: '#F8FAFC' }}>
+                                <button onClick={() => setSelectedQR(null)} className="w-full py-4 bg-slate-900 hover:bg-black text-white font-bold uppercase text-xs tracking-widest transition-colors rounded-lg shadow-lg">Close ID Badge</button>
                              </div>
                         </motion.div>
                     </div>
