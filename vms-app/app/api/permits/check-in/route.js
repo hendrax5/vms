@@ -57,7 +57,7 @@ export async function POST(req) {
                 // Don't allow check-ins more than 2 hours early for future days
                 if (timeDiffMins > 120) {
                     return NextResponse.json({ 
-                        error: `Check-in is too early. Your permit is scheduled for ${scheduled.toLocaleDateString()} at ${scheduled.toLocaleTimeString([], {hour: '2-bit', minute:'2-bit'})}.` 
+                        error: `Check-in is too early. Your permit is scheduled for ${scheduled.toLocaleDateString()} at ${scheduled.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}.` 
                     }, { status: 403 });
                 }
 
