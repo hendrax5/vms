@@ -34,7 +34,7 @@ async function main() {
     console.log('Seeding Permissions & Roles...');
 
     // 1. Ensure core roles exist
-    const rolesToEnsure = ['Super Admin', 'NOC', 'Manager', 'Staff'];
+    const rolesToEnsure = ['Super Admin', 'NOC', 'Manager', 'Staff', 'Tenant Admin', 'Tenant Staff', 'Tenant Read-Only'];
     const roleMap = {};
     for (const roleName of rolesToEnsure) {
         const role = await prisma.role.upsert({
@@ -74,7 +74,7 @@ async function main() {
         });
     }
 
-    // // Default NOC Permissions Setup
+    // Default NOC Permissions Setup
     const nocPermissions = [
         'dashboard:view', 'infrastructure:view', 'racks:manage',
         'tickets:view', 'tickets:edit', 'permits:view', 'permits:approve',
@@ -93,6 +93,44 @@ async function main() {
                 roleId: roleMap['NOC'].id,
                 permissionId: permMap[key].id
             }
+        });
+    }
+
+    // Default Tenant Permissions Setup
+    const tenantAdminPermissions = [
+        'dashboard:view', 'infrastructure:view', 'racks:manage',
+        'tickets:view', 'tickets:create', 'tickets:edit', 
+        'permits:view', 'permits:approve', 'users:manage'
+    ];
+    for (const key of tenantAdminPermissions) {
+        await prisma.rolePermission.upsert({
+            where: { roleId_permissionId: { roleId: roleMap['Tenant Admin'].id, permissionId: permMap[key].id } },
+            update: {},
+            create: { roleId: roleMap['Tenant Admin'].id, permissionId: permMap[key].id }
+        });
+    }
+
+    const tenantStaffPermissions = [
+        'dashboard:view', 'infrastructure:view', 'racks:manage',
+        'tickets:view', 'tickets:create', 'tickets:edit', 
+        'permits:view'
+    ];
+    for (const key of tenantStaffPermissions) {
+        await prisma.rolePermission.upsert({
+            where: { roleId_permissionId: { roleId: roleMap['Tenant Staff'].id, permissionId: permMap[key].id } },
+            update: {},
+            create: { roleId: roleMap['Tenant Staff'].id, permissionId: permMap[key].id }
+        });
+    }
+
+    const tenantReadOnlyPermissions = [
+        'dashboard:view', 'infrastructure:view', 'tickets:view', 'permits:view'
+    ];
+    for (const key of tenantReadOnlyPermissions) {
+        await prisma.rolePermission.upsert({
+            where: { roleId_permissionId: { roleId: roleMap['Tenant Read-Only'].id, permissionId: permMap[key].id } },
+            update: {},
+            create: { roleId: roleMap['Tenant Read-Only'].id, permissionId: permMap[key].id }
         });
     }
 

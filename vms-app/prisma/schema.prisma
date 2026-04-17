@@ -118,6 +118,8 @@ model Rack {
   id         Int                 @id @default(autoincrement())
   rowId      Int
   row        Row                 @relation(fields: [rowId], references: [id], onDelete: Cascade)
+  customerId Int?
+  customer   Customer?           @relation(fields: [customerId], references: [id])
   name       String
   uCapacity  Int                 @default(42)
   equipments RackEquipment[]
@@ -134,6 +136,7 @@ model Customer {
   code           String?         @unique
   contactEmail   String?
   contactPhone   String?
+  racks          Rack[]
   rackEquipments RackEquipment[]
   crossConnects  CrossConnect[]
   permits        VisitPermit[]
