@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, Calendar, Package, ArrowRight, ShieldCheck, X, Plus, Users, Search, Truck, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function TenantAccess({ permits, goods, customerId, onRefresh, datacenters, equipments = [] }: any) {
+export default function TenantAccess({ permits, goods, customerId, onRefresh, datacenters, equipments = [], tenantUsers = [] }: any) {
     const [activeTab, setActiveTab] = useState<'VISIT' | 'GOODS'>('VISIT');
     const [selectedQR, setSelectedQR] = useState<{ type: string, code: string, title: string } | null>(null);
     
@@ -70,11 +70,11 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
     };
 
     // --- Personnel Builder Logic ---
-    const PERMANENT_PICS = [
-        { id: 'uid-1', name: 'John Admin', role: 'Network Engineering' },
-        { id: 'uid-2', name: 'Jane Operator', role: 'Smart Hands' },
-        { id: 'uid-3', name: 'Alex Supervisor', role: 'Security' },
-    ];
+    const PERMANENT_PICS = tenantUsers.map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        role: u.role?.name || 'Staff'
+    }));
     const [authorizedPersonnel, setAuthorizedPersonnel] = useState<{name: string, role: string}[]>([]);
     const [customName, setCustomName] = useState('');
     const [customRole, setCustomRole] = useState('Vendor');
@@ -116,7 +116,10 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
             // Build the Master Activity String for the Visit Permit
             let masterActivity = accessFormData.activity;
             if (accessFormData.intent !== 'Visit Only') {
-                masterActivity = `[${accessFormData.intent.toUpperCase()}] ${accessFormData.name} | SN: ${accessFormData.sn} | Target Rack: ${accessFormData.targetRackName}`;
+                masterActivity = `[${accessFormData.intent.toUpperCase()}] ${accessFormData.name} | SN: ${accessFormData.sn}`;
+                if (accessFormData.targetRackName) {
+                    masterActivity += ` | Target Rack: ${accessFormData.targetRackName}`;
+                }
                 if (accessFormData.isLeavingBuilding) {
                     masterActivity += ` | LEAVING BUILDING PERMIT REQ`;
                 }
@@ -332,14 +335,20 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                                 </select>
                                             </div>
                                             <div className="col-span-2 sm:col-span-1">
+                                                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Target Rack (Optional)</label>
+                                                <select value={accessFormData.targetRackName} onChange={e => setAccessFormData({...accessFormData, targetRackName: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-2 text-sm text-slate-100 focus:border-red-500 outline-none rounded-sm">
+                                                    <option value="">Select Rack...</option>
+                                                    {filteredRacks.map((rack: any) => <option key={rack.id} value={rack.name}>{rack.name}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="col-span-2 sm:col-span-1">
                                                 <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Arrival Date</label>
                                                 <input type="date" required value={accessFormData.scheduledAt} onChange={e => setAccessFormData({...accessFormData, scheduledAt: e.target.value})} onClick={(e) => { try { (e.currentTarget as any).showPicker() } catch(err) {} }} className="w-full bg-slate-900 border border-slate-700 p-2 text-sm text-slate-100 focus:border-red-500 outline-none rounded-sm" style={{colorScheme: 'dark'}}/>
                                             </div>
-                                         </div>
-
-                                         <div className="col-span-2">
-                                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Activities / Justification</label>
-                                            <input type="text" required={accessFormData.intent === 'Visit Only'} value={accessFormData.activity} onChange={e => setAccessFormData({...accessFormData, activity: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-2 text-sm text-slate-100 focus:border-red-500 outline-none rounded-sm" placeholder={accessFormData.intent !== 'Visit Only' ? "(Optional) Additional context..." : "e.g. Server maintenance"}/>
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Activities / Justification</label>
+                                                <input type="text" required={accessFormData.intent === 'Visit Only'} value={accessFormData.activity} onChange={e => setAccessFormData({...accessFormData, activity: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-2 text-sm text-slate-100 focus:border-red-500 outline-none rounded-sm" placeholder={accessFormData.intent !== 'Visit Only' ? "(Optional) Context..." : "e.g. Server maintenance"}/>
+                                            </div>
                                          </div>
 
                                          {/* DYNAMIC LOGISTICS MODULE */}
@@ -382,14 +391,7 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Dimension/U</label>
                                                         <input type="text" readOnly={accessFormData.intent === 'Outbound Logistics'} required value={accessFormData.dimension} onChange={e => setAccessFormData({...accessFormData, dimension: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-2 text-xs text-slate-100 outline-none rounded-sm read-only:opacity-50" placeholder="e.g. 1U"/>
                                                     </div>
-                                                    <div className="col-span-1">
-                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Target Rack (Slot)</label>
-                                                        <select disabled={accessFormData.intent === 'Outbound Logistics'} required value={accessFormData.targetRackName} onChange={e => setAccessFormData({...accessFormData, targetRackName: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-2 text-xs text-slate-100 outline-none rounded-sm disabled:opacity-50">
-                                                            <option value="">Select Rack...</option>
-                                                            {filteredRacks.map((rack: any) => <option key={rack.id} value={rack.name}>{rack.name}</option>)}
-                                                        </select>
-                                                    </div>
-                                                    <div className="col-span-1">
+                                                     <div className="col-span-1">
                                                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Target Slot Info</label>
                                                         <input type="text" readOnly={accessFormData.intent === 'Outbound Logistics'} required value={accessFormData.targetU} onChange={e => setAccessFormData({...accessFormData, targetU: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-2 text-xs text-slate-100 outline-none rounded-sm read-only:opacity-50" placeholder="e.g. U14-U15"/>
                                                     </div>
@@ -464,7 +466,7 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                                 <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Permanent PIC Catalog</span>
                                            </div>
                                            <div className="grid grid-cols-1 gap-2">
-                                                {PERMANENT_PICS.map(pic => (
+                                                {PERMANENT_PICS.map((pic: any) => (
                                                     <button 
                                                         type="button"
                                                         onClick={() => addPermanentPIC(pic)}

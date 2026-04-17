@@ -22,6 +22,7 @@ export default function TenantDashboard() {
     const [crossConnects, setCrossConnects] = useState<any[]>([]);
     const [permits, setPermits] = useState<any[]>([]);
     const [goods, setGoods] = useState<any[]>([]);
+    const [tenantUsers, setTenantUsers] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(true);
 
     const customerId = (session?.user as any)?.customerId;
@@ -30,12 +31,13 @@ export default function TenantDashboard() {
         if (!customerId) return;
         setLoadingData(true);
         try {
-            const [eqRes, ccRes, prmRes, gdsRes, dcRes] = await Promise.all([
+            const [eqRes, ccRes, prmRes, gdsRes, dcRes, usersRes] = await Promise.all([
                 fetch(`/api/racks/equipments?customerId=${customerId}`),
                 fetch(`/api/cross-connects?customerId=${customerId}`),
                 fetch(`/api/permits?customerId=${customerId}`),
                 fetch(`/api/goods`), // Note: In future modify to support customerId 
-                fetch('/api/datacenters')
+                fetch('/api/datacenters'),
+                fetch(`/api/customers/${customerId}/users`)
             ]);
             
             if (eqRes.ok) setEquipments(await eqRes.json());
@@ -43,6 +45,7 @@ export default function TenantDashboard() {
             if (prmRes.ok) setPermits(await prmRes.json());
             if (gdsRes.ok) setGoods(await gdsRes.json());
             if (dcRes.ok) setDatacenters(await dcRes.json());
+            if (usersRes.ok) setTenantUsers(await usersRes.json());
 
         } catch (error) {
             console.error("Failed to load dashboard data:", error);
@@ -148,7 +151,7 @@ export default function TenantDashboard() {
 
                     {/* ACCESS MODULE */}
                     {activeModule === 'ACCESS' && (
-                        <TenantAccess permits={permits} goods={goods} customerId={customerId} datacenters={datacenters} equipments={equipments} onRefresh={fetchDashboardData} />
+                        <TenantAccess permits={permits} goods={goods} customerId={customerId} datacenters={datacenters} equipments={equipments} tenantUsers={tenantUsers} onRefresh={fetchDashboardData} />
                     )}
                 </div>
             )}
