@@ -36,9 +36,10 @@ function SettingsContent() {
 
     // Users States
     const [users, setUsers] = useState<any[]>([]);
+    const [customers, setCustomers] = useState<any[]>([]);
     const [usersLoading, setUsersLoading] = useState(false);
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-    const [newUserForm, setNewUserForm] = useState({ name: '', email: '', password: '', roleId: '' });
+    const [newUserForm, setNewUserForm] = useState({ name: '', email: '', password: '', roleId: '', customerId: '' });
 
     const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
     const [newRoleName, setNewRoleName] = useState('');
@@ -46,7 +47,7 @@ function SettingsContent() {
     const [newPermissionForm, setNewPermissionForm] = useState({ key: '', label: '', group: 'Custom' });
 
     const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
-    const [editUserForm, setEditUserForm] = useState<{ id: number, roleId: string, explicitPermissions: string[], password?: string }>({ id: 0, roleId: '', explicitPermissions: [], password: '' });
+    const [editUserForm, setEditUserForm] = useState<{ id: number, roleId: string, explicitPermissions: string[], password?: string, customerId: string }>({ id: 0, roleId: '', explicitPermissions: [], password: '', customerId: '' });
 
     // Activity Logs States
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -95,11 +96,14 @@ function SettingsContent() {
     const loadUsersData = async () => {
         setUsersLoading(true);
         try {
-            const res = await fetch('/api/users');
-            const data = await res.json();
-            if (!data.error) setUsers(data);
+            const [usersRes, customersRes] = await Promise.all([
+                fetch('/api/users').then(r => r.json()),
+                fetch('/api/customers').then(r => r.json())
+            ]);
+            if (!usersRes.error) setUsers(usersRes);
+            if (!customersRes.error) setCustomers(customersRes);
         } catch (error) {
-            console.error('Failed to load users', error);
+            console.error('Failed to load users or customers', error);
         }
         setUsersLoading(false);
     };
@@ -115,7 +119,7 @@ function SettingsContent() {
             });
             if (res.ok) {
                 setIsAddUserModalOpen(false);
-                setNewUserForm({ name: '', email: '', password: '', roleId: '' });
+                setNewUserForm({ name: '', email: '', password: '', roleId: '', customerId: '' });
                 loadUsersData();
                 toast.success('User created successfully');
             } else {
@@ -258,7 +262,12 @@ function SettingsContent() {
             const res = await fetch(`/api/users/${editUserForm.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roleId: editUserForm.roleId, permissions: editUserForm.explicitPermissions, password: editUserForm.password })
+                body: JSON.stringify({ 
+                    roleId: editUserForm.roleId, 
+                    permissions: editUserForm.explicitPermissions, 
+                    password: editUserForm.password,
+                    customerId: editUserForm.customerId
+                })
             });
             if (res.ok) {
                 setIsEditUserModalOpen(false);
@@ -603,6 +612,7 @@ function SettingsContent() {
                                                     <th className="px-4 py-3">Name</th>
                                                     <th className="px-4 py-3">Email</th>
                                                     <th className="px-4 py-3">Role</th>
+                                                    <th className="px-4 py-3">Tenant</th>
                                                     <th className="px-4 py-3 text-right">Actions</th>
                                                 </tr>
                                             </thead>
@@ -614,13 +624,19 @@ function SettingsContent() {
                                                         <td className="px-4 py-3">
                                                             <span className="px-2 py-1 bg-slate-800 rounded text-xs font-mono">{u.role?.name || 'N/A'}</span>
                                                         </td>
+                                                        <td className="px-4 py-3">
+                                                            <span className="px-2 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded text-xs font-medium">
+                                                                {u.customer?.name || 'Internal'}
+                                                            </span>
+                                                        </td>
                                                         <td className="px-4 py-3 text-right space-x-4">
                                                             <button onClick={() => {
                                                                 setEditUserForm({
                                                                     id: u.id,
                                                                     roleId: u.roleId?.toString() || '',
                                                                     explicitPermissions: u.explicitPermissions || [],
-                                                                    password: ''
+                                                                    password: '',
+                                                                    customerId: u.customerId?.toString() || ''
                                                                 });
                                                                 setIsEditUserModalOpen(true);
                                                             }} className="text-indigo-400 hover:underline">Edit</button>
@@ -664,6 +680,15 @@ function SettingsContent() {
                                                 </select>
                                             </div>
                                             <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Assign to Tenant</label>
+                                                <p className="text-xs text-slate-500 mb-2">Leave blank for Internal/NOC users.</p>
+                                                <select className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
+                                                    value={newUserForm.customerId} onChange={e => setNewUserForm({...newUserForm, customerId: e.target.value})}>
+                                                    <option value="">No Tenant (Internal)</option>
+                                                    {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                </select>
+                                            </div>
+                                            <div>
                                                 <label className="block text-sm text-slate-400 mb-1">Password</label>
                                                 <input type="password" placeholder="Defaults to password123" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
                                                     value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})} />
@@ -690,6 +715,16 @@ function SettingsContent() {
                                                     value={editUserForm.roleId} onChange={e => setEditUserForm({...editUserForm, roleId: e.target.value})}>
                                                     <option value="">Select Role</option>
                                                     {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Assign to Tenant</label>
+                                                <p className="text-xs text-slate-500 mb-2">Assign this user to a customer company.</p>
+                                                <select className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
+                                                    value={editUserForm.customerId} onChange={e => setEditUserForm({...editUserForm, customerId: e.target.value})}>
+                                                    <option value="">No Tenant (Internal)</option>
+                                                    {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                 </select>
                                             </div>
 

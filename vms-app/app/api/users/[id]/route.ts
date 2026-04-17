@@ -54,12 +54,15 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
 
         const userId = parseInt(params.id);
         const body = await request.json();
-        const { roleId, permissions, password } = body;
+        const { roleId, permissions, password, customerId } = body;
 
         let updateData: any = {};
         if (roleId) updateData.roleId = parseInt(roleId);
         if (password && password.trim() !== '') {
             updateData.password = await bcrypt.hash(password, 10);
+        }
+        if (customerId !== undefined) {
+            updateData.customerId = customerId ? parseInt(customerId) : null;
         }
 
         if (Object.keys(updateData).length > 0) {
