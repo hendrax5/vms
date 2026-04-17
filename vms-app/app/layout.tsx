@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'Premium Data Center Infrastructure & Visitor Management System',
 };
 
+import { Toaster } from 'react-hot-toast';
+
 export default function RootLayout({
   children,
 }: {
@@ -20,6 +22,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen selection:bg-primary selection:text-primary-foreground">
         <Providers>
             {children}
+            <Toaster position="bottom-right" />
         </Providers>
       </body>
     </html>

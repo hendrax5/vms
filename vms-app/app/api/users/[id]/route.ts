@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -53,12 +54,18 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
 
         const userId = parseInt(params.id);
         const body = await request.json();
-        const { roleId, permissions } = body;
+        const { roleId, permissions, password } = body;
 
-        if (roleId) {
+        let updateData: any = {};
+        if (roleId) updateData.roleId = parseInt(roleId);
+        if (password && password.trim() !== '') {
+            updateData.password = await bcrypt.hash(password, 10);
+        }
+
+        if (Object.keys(updateData).length > 0) {
             await prisma.user.update({
                 where: { id: userId },
-                data: { roleId: parseInt(roleId) }
+                data: updateData
             });
         }
 

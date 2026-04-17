@@ -24,15 +24,15 @@ export default function NocDashboard() {
     const pendingPermits = permits.filter((p: any) => p.status === 'Pending').slice(0, 5);
 
     const statsConfig = realStats ? [
-        { name: 'Active Visit Permits', value: realStats.activePermits.toString(), change: `+${realStats.todayPermits} today`, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-        { name: 'Racks Utilizing > 80%', value: realStats.racksOver80.toString(), change: realStats.racksOver80 > 0 ? 'critical capacity' : 'Healthy Load', icon: Server, color: realStats.racksOver80 > 0 ? 'text-rose-400' : 'text-emerald-400', bg: realStats.racksOver80 > 0 ? 'bg-rose-500/10' : 'bg-emerald-500/10' },
-        { name: 'Cross Connects Provisioned', value: realStats.activeCrossConnects.toString(), change: `+${realStats.weekCrossConnects} this week`, icon: Network, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-        { name: 'Total Downtime Mins (YTD)', value: '0', change: '100% Uptime', icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+        { name: 'Active Visit Permits', href: '/dashboard/permits', value: realStats.activePermits.toString(), change: `+${realStats.todayPermits} today`, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { name: 'Racks Utilizing > 80%', href: '/dashboard/racks', value: realStats.racksOver80.toString(), change: realStats.racksOver80 > 0 ? 'critical capacity' : 'Healthy Load', icon: Server, color: realStats.racksOver80 > 0 ? 'text-rose-400' : 'text-emerald-400', bg: realStats.racksOver80 > 0 ? 'bg-rose-500/10' : 'bg-emerald-500/10' },
+        { name: 'Cross Connects Provisioned', href: '/dashboard/cross-connects', value: realStats.activeCrossConnects.toString(), change: `+${realStats.weekCrossConnects} this week`, icon: Network, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+        { name: 'Total Downtime Mins (YTD)', href: '#', value: '0', change: '100% Uptime', icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     ] : [
-        { name: 'Active Visit Permits', value: '-', change: 'Loading...', icon: Users, color: 'text-slate-400', bg: 'bg-slate-500/10' },
-        { name: 'Racks Utilizing > 80%', value: '-', change: 'Loading...', icon: Server, color: 'text-slate-400', bg: 'bg-slate-500/10' },
-        { name: 'Cross Connects Provisioned', value: '-', change: 'Loading...', icon: Network, color: 'text-slate-400', bg: 'bg-slate-500/10' },
-        { name: 'Total Downtime Mins (YTD)', value: '-', change: 'Loading...', icon: Activity, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+        { name: 'Active Visit Permits', href: '/dashboard/permits', value: '-', change: 'Loading...', icon: Users, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+        { name: 'Racks Utilizing > 80%', href: '/dashboard/racks', value: '-', change: 'Loading...', icon: Server, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+        { name: 'Cross Connects Provisioned', href: '/dashboard/cross-connects', value: '-', change: 'Loading...', icon: Network, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+        { name: 'Total Downtime Mins (YTD)', href: '#', value: '-', change: 'Loading...', icon: Activity, color: 'text-slate-400', bg: 'bg-slate-500/10' },
     ];
 
     const utilizedPercent = realStats ? realStats.utilizationPercent : 0;
@@ -53,14 +53,14 @@ export default function NocDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statsConfig.map((stat, i) => (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1, duration: 0.5 }}
-                        key={stat.name} 
-                        className="bg-card/50 border border-border/50 rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden group"
-                    >
-                        <div className="flex items-start justify-between">
+                    <Link href={stat.href} key={stat.name} className="block group transition-transform hover:-translate-y-1">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1, duration: 0.5 }}
+                            className="bg-card/50 border border-border/50 rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden h-full hover:border-slate-500/80 hover:bg-card/80 transition-all cursor-pointer shadow-sm hover:shadow-lg"
+                        >
+                            <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground mb-1">{stat.name}</p>
                                 <p className="text-3xl font-bold text-slate-100">{stat.value}</p>
@@ -73,7 +73,8 @@ export default function NocDashboard() {
                         <div className="absolute -right-6 -bottom-6 opacity-5 group-hover:scale-125 transition-transform duration-500 pointer-events-none">
                             <stat.icon className="w-32 h-32" />
                         </div>
-                    </motion.div>
+                        </motion.div>
+                    </Link>
                 ))}
             </div>
 

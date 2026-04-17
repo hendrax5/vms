@@ -3,6 +3,7 @@
 import { Server, Zap, Search, Plus, Trash2, X, LayoutGrid, List } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 export default function RacksPage() {
     const [racks, setRacks] = useState<any[]>([]);
@@ -81,12 +82,13 @@ export default function RacksPage() {
                 setShowModal(false);
                 setFormData({ name: '', rowId: rows[0]?.id.toString() || '', uCapacity: 42 });
                 fetchRacks();
+                toast.success('Rack provisioned successfully');
             } else {
-                alert('Failed to add rack');
+                toast.error('Failed to add rack');
             }
         } catch (error) {
             console.error(error);
-            alert('An error occurred.');
+            toast.error('An error occurred.');
         } finally {
             setSaving(false);
         }
@@ -99,8 +101,9 @@ export default function RacksPage() {
             if (res.ok) {
                 setDeleteTarget(null);
                 fetchRacks();
+                toast.success('Rack decommissioned successfully');
             } else {
-                alert('Failed to delete rack');
+                toast.error('Failed to delete rack');
             }
         } catch (error) {
             console.error(error);

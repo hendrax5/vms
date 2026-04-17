@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { User, Bell, Shield, Key, Save, Lock, Network, Mail, Trash2, Activity } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 import InterconnectionProviders from './InterconnectionProviders';
 import DatacenterMailSettings from './DatacenterMailSettings';
 
@@ -45,7 +46,7 @@ function SettingsContent() {
     const [newPermissionForm, setNewPermissionForm] = useState({ key: '', label: '', group: 'Custom' });
 
     const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
-    const [editUserForm, setEditUserForm] = useState<{ id: number, roleId: string, explicitPermissions: string[] }>({ id: 0, roleId: '', explicitPermissions: [] });
+    const [editUserForm, setEditUserForm] = useState<{ id: number, roleId: string, explicitPermissions: string[], password?: string }>({ id: 0, roleId: '', explicitPermissions: [], password: '' });
 
     // Activity Logs States
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -116,9 +117,10 @@ function SettingsContent() {
                 setIsAddUserModalOpen(false);
                 setNewUserForm({ name: '', email: '', password: '', roleId: '' });
                 loadUsersData();
+                toast.success('User created successfully');
             } else {
                 const data = await res.json();
-                alert(data.error);
+                toast.error(data.error || 'Failed to create user');
             }
         } catch (error) {
             console.error(error);
@@ -132,9 +134,10 @@ function SettingsContent() {
             const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 loadUsersData();
+                toast.success('User deleted successfully');
             } else {
                 const data = await res.json();
-                alert(data.error);
+                toast.error(data.error || 'Failed to delete user');
             }
         } catch (error) {
             console.error(error);
@@ -156,9 +159,9 @@ function SettingsContent() {
             });
             if (!res.ok) {
                 const data = await res.json();
-                alert(data.error || 'Failed to update permissions');
+                toast.error(data.error || 'Failed to update permissions');
             } else {
-                alert('Permissions updated successfully!');
+                toast.success('Permissions updated successfully!');
             }
         } catch (error) {
             console.error(error);
@@ -196,9 +199,10 @@ function SettingsContent() {
             const res = await fetch(`/api/roles/${roleId}`, { method: 'DELETE' });
             if (res.ok) {
                 loadRbacData();
+                toast.success('Role deleted successfully');
             } else {
                 const data = await res.json();
-                alert(data.error);
+                toast.error(data.error || 'Failed to delete role');
             }
         } catch (error) {
             console.error(error);
@@ -237,9 +241,10 @@ function SettingsContent() {
             const res = await fetch(`/api/permissions/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 loadRbacData();
+                toast.success('Permission deleted');
             } else {
                 const data = await res.json();
-                alert(data.error);
+                toast.error(data.error || 'Failed to delete');
             }
         } catch (error) {
             console.error(error);
@@ -253,14 +258,15 @@ function SettingsContent() {
             const res = await fetch(`/api/users/${editUserForm.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roleId: editUserForm.roleId, permissions: editUserForm.explicitPermissions })
+                body: JSON.stringify({ roleId: editUserForm.roleId, permissions: editUserForm.explicitPermissions, password: editUserForm.password })
             });
             if (res.ok) {
                 setIsEditUserModalOpen(false);
                 loadUsersData();
+                toast.success('User updated successfully');
             } else {
                 const data = await res.json();
-                alert(data.error || 'Failed to update user');
+                toast.error(data.error || 'Failed to update user');
             }
         } catch (error) {
             console.error(error);
@@ -613,7 +619,8 @@ function SettingsContent() {
                                                                 setEditUserForm({
                                                                     id: u.id,
                                                                     roleId: u.roleId?.toString() || '',
-                                                                    explicitPermissions: u.explicitPermissions || []
+                                                                    explicitPermissions: u.explicitPermissions || [],
+                                                                    password: ''
                                                                 });
                                                                 setIsEditUserModalOpen(true);
                                                             }} className="text-indigo-400 hover:underline">Edit</button>
@@ -684,6 +691,13 @@ function SettingsContent() {
                                                     <option value="">Select Role</option>
                                                     {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                                                 </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-1">Update Password</label>
+                                                <p className="text-xs text-slate-500 mb-2">Leave blank to keep current password.</p>
+                                                <input type="password" placeholder="New password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
+                                                    value={editUserForm.password || ''} onChange={e => setEditUserForm({...editUserForm, password: e.target.value})} />
                                             </div>
 
                                             <div>
