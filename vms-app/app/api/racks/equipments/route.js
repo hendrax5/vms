@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
@@ -18,10 +20,29 @@ export async function POST(req) {
         }
 
         // Check if Rack exists and has capacity
-        const rack = await prisma.rack.findUnique({ where: { id: rackId } });
+        const rack = await prisma.rack.findUnique({ where: { id: parseInt(rackId) } });
         if (!rack) {
             return NextResponse.json({ error: 'Rack not found' }, { status: 404 });
         }
+
+        // --- RBAC AUTHORIZATION ---
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        
+        const userRole = (session.user?.role || '').toLowerCase().replace(/\s+/g, '');
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+        const isTenantAdmin = ['tenantadmin', 'tenantstaff'].includes(userRole);
+        
+        if (!isInternalAdmin) {
+            if (!isTenantAdmin) {
+                return NextResponse.json({ error: 'Forbidden. Read-Only users cannot add equipment.' }, { status: 403 });
+            }
+            if (rack.customerId !== session.user.customerId) {
+                return NextResponse.json({ error: 'Forbidden. You do not own this rack.' }, { status: 403 });
+            }
+        }
+        // -------------------------
+
         if (uEnd > rack.uCapacity || uStart < 1) {
             return NextResponse.json({ error: `Invalid U values. Rack capacity is 1 to ${rack.uCapacity}` }, { status: 400 });
         }

@@ -18,10 +18,26 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
         // Fetch existing configuration for Audit Logs
         const existingEq = await prisma.rackEquipment.findUnique({
-            where: { id: equipmentId }
+            where: { id: equipmentId },
+            include: { rack: true }
         });
 
         if (!existingEq) return NextResponse.json({ error: 'Equipment not found' }, { status: 404 });
+
+        // --- RBAC AUTHORIZATION ---
+        const userRole = ((session.user as any)?.role || '').toLowerCase().replace(/\s+/g, '');
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+        const isTenantAdmin = ['tenantadmin', 'tenantstaff'].includes(userRole);
+        
+        if (!isInternalAdmin) {
+            if (!isTenantAdmin) {
+                return NextResponse.json({ error: 'Forbidden. Read-Only users cannot edit equipment.' }, { status: 403 });
+            }
+            if (existingEq.rack?.customerId !== (session.user as any).customerId) {
+                return NextResponse.json({ error: 'Forbidden. You do not own the rack this equipment is in.' }, { status: 403 });
+            }
+        }
+        // -------------------------
 
         // Calculate if position actually changed
         let isRelocated = false;
@@ -88,10 +104,26 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
         const equipmentId = parseInt(resolvedParams.id);
 
         const existingEq = await prisma.rackEquipment.findUnique({
-            where: { id: equipmentId }
+            where: { id: equipmentId },
+            include: { rack: true }
         });
 
         if (!existingEq) return NextResponse.json({ error: 'Equipment not found' }, { status: 404 });
+
+        // --- RBAC AUTHORIZATION ---
+        const userRole = ((session.user as any)?.role || '').toLowerCase().replace(/\s+/g, '');
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+        const isTenantAdmin = ['tenantadmin', 'tenantstaff'].includes(userRole);
+        
+        if (!isInternalAdmin) {
+            if (!isTenantAdmin) {
+                return NextResponse.json({ error: 'Forbidden. Read-Only users cannot delete equipment.' }, { status: 403 });
+            }
+            if (existingEq.rack?.customerId !== (session.user as any).customerId) {
+                return NextResponse.json({ error: 'Forbidden. You do not own the rack this equipment is in.' }, { status: 403 });
+            }
+        }
+        // -------------------------
 
         await prisma.infrastructureAuditLog.create({
              data: {

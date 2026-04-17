@@ -4,6 +4,7 @@ import { ArrowLeft, Server, Plus, Info, LayoutTemplate, Activity, X, Network, Sh
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export default function RackElevationPage() {
     const params = useParams();
@@ -20,6 +21,21 @@ export default function RackElevationPage() {
     // Manual CRUD states
     const [isEqModalOpen, setIsEqModalOpen] = useState(false);
     const [eqFormData, setEqFormData] = useState({ id: null, name: '', equipmentType: 'SERVER', uStart: 1, uEnd: 1, orientation: 'FRONT' });
+
+    // Session and Permissions
+    const { data: session } = useSession();
+    const userRole = (session?.user as any)?.role?.toLowerCase()?.replace(/\s+/g, '') || '';
+    const userCustomerId = (session?.user as any)?.customerId || null;
+    
+    const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+    const isTenantAdmin = ['tenantadmin', 'tenantstaff'].includes(userRole);
+    
+    let canEdit = false;
+    if (isInternalAdmin) {
+        canEdit = true;
+    } else if (isTenantAdmin && rack && rack.customerId === userCustomerId) {
+        canEdit = true;
+    }
 
     useEffect(() => {
         fetchRackDetails();
@@ -94,6 +110,10 @@ export default function RackElevationPage() {
 
     const handleDrop = async (e: React.DragEvent, targetU: number) => {
         e.preventDefault();
+        if (!canEdit) {
+            alert("You do not have permission to edit this rack.");
+            return;
+        }
         if (!draggedEq) return;
 
         const size = draggedEq.uEnd - draggedEq.uStart + 1;
@@ -206,6 +226,7 @@ export default function RackElevationPage() {
                         Datacenter: {rack.row?.room?.datacenter?.name} | Room: {rack.row?.room?.name} | Row: {rack.row?.name}
                     </p>
                 </div>
+                {canEdit && (
                 <button
                     onClick={() => {
                         setEqFormData({ id: null, name: '', equipmentType: 'SERVER', uStart: 1, uEnd: 1, orientation: perspective });
@@ -215,6 +236,7 @@ export default function RackElevationPage() {
                 >
                     <Plus className="w-4 h-4" /> Add Equipment
                 </button>
+                )}
             </div>
 
             {/* View Toggle */}
@@ -269,8 +291,8 @@ export default function RackElevationPage() {
                                 >
                                     <div className="w-6 text-right text-[10px] font-mono text-slate-500">{u}</div>
                                     <div 
-                                        draggable={isTop} // Only drag by the top edge to move whole block
-                                        onDragStart={(e) => eq && isTop ? handleDragStart(e, eq) : e.preventDefault()}
+                                        draggable={isTop && canEdit} // Only drag by the top edge to move whole block
+                                        onDragStart={(e) => eq && isTop && canEdit ? handleDragStart(e, eq) : e.preventDefault()}
                                         className={`flex-1 h-6 flex items-center justify-center text-xs font-semibold overflow-hidden transition-all ${eq ? eqClasses : 'bg-slate-900/40 border border-slate-800/30 border-dashed rounded-sm text-slate-600 hover:border-slate-500/50 hover:bg-slate-800/40'}`}
                                     >
                                         {eq && isTop && (
@@ -328,6 +350,7 @@ export default function RackElevationPage() {
                                         </div>
                                         
                                         {/* Action buttons */}
+                                        {canEdit && (
                                         <div className="flex flex-row md:flex-col gap-2 items-end justify-start">
                                             <button 
                                                 onClick={() => {
@@ -345,6 +368,7 @@ export default function RackElevationPage() {
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
+                                        )}
                                         
                                         {eq.ports && eq.ports.length > 0 && (
                                             <div className="flex-1 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-6">
