@@ -84,16 +84,22 @@ export async function GET(req) {
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        const sessionCustomerId = session?.user?.customerId;
 
         const { searchParams } = new URL(req.url);
         const datacenterId = searchParams.get('datacenterId');
         const customerId = searchParams.get('customerId');
 
+        const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+
         const params = {};
         if (datacenterId) params.datacenterId = parseInt(datacenterId);
         
-        if (sessionCustomerId) {
+        if (!isInternalAdmin) {
+            const sessionCustomerId = session?.user?.customerId;
+            if (!sessionCustomerId) {
+                return NextResponse.json({ error: 'Forbidden: No Customer ID' }, { status: 403 });
+            }
             params.customerId = sessionCustomerId;
         } else if (customerId) {
             params.customerId = parseInt(customerId);

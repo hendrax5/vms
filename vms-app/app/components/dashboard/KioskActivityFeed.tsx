@@ -3,8 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Scan, UserCheck, Package, Clock, AlertCircle, BellRing, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 
 export default function KioskActivityFeed({ userRole }: { userRole?: string }) {
+    const { data: session } = useSession();
+    const currentUserId = session?.user?.id ? parseInt(session.user.id) : null;
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [newLogAlert, setNewLogAlert] = useState<any>(null);
@@ -12,7 +15,7 @@ export default function KioskActivityFeed({ userRole }: { userRole?: string }) {
     const isFirstLoad = useRef(true);
 
     const fetchLogs = () => {
-        fetch('/api/audit-logs?limit=10&action=KIOSK_CHECKIN,GOODS_SCAN')
+        fetch('/api/audit-logs?limit=10&action=KIOSK_CHECKIN,KIOSK_CHECKOUT,GOODS_SCAN')
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.logs.length > 0) {
@@ -20,8 +23,8 @@ export default function KioskActivityFeed({ userRole }: { userRole?: string }) {
                     
                     // Check for new logs
                     if (!isFirstLoad.current && lastLogId.current !== null && latestLog.id > lastLogId.current) {
-                        // ONLY SHOW POPUP FOR SUPERADMIN (Kiosk Operator)
-                        if (userRole === 'SuperAdmin') {
+                        // ONLY SHOW POPUP FOR THE USER WHO PERFORMED THE SCAN (Session-Specific)
+                        if (latestLog.userId === currentUserId) {
                             setNewLogAlert(latestLog);
                             // Auto hide after 8 seconds
                             setTimeout(() => setNewLogAlert(null), 8000);
@@ -76,7 +79,7 @@ export default function KioskActivityFeed({ userRole }: { userRole?: string }) {
                             <div className="flex items-center gap-2">
                                 <div className={`w-2 h-2 rounded-full ${newLogAlert.action === 'KIOSK_CHECKIN' ? 'bg-blue-400' : 'bg-purple-400'}`} />
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    {newLogAlert.action === 'KIOSK_CHECKIN' ? 'Visitor Entry' : 'Logistics Scan'}
+                                    {['KIOSK_CHECKIN', 'KIOSK_CHECKOUT'].includes(newLogAlert.action) ? 'Visitor Entry/Exit' : 'Logistics Scan'}
                                 </span>
                             </div>
                             <p className="text-sm font-bold text-slate-100">{newLogAlert.resource}</p>
@@ -138,7 +141,7 @@ export default function KioskActivityFeed({ userRole }: { userRole?: string }) {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between mb-1">
                                                 <p className="text-xs font-bold text-slate-300 uppercase tracking-wide">
-                                                    {log.action === 'KIOSK_CHECKIN' ? 'Visitor Entry' : 'Logistics Scan'}
+                                                    {log.action === 'KIOSK_CHECKIN' ? 'Visitor Entry' : log.action === 'KIOSK_CHECKOUT' ? 'Visitor Exit' : 'Logistics Scan'}
                                                 </p>
                                                 <p className="text-[10px] text-slate-500 font-mono">
                                                     {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

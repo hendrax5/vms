@@ -13,6 +13,12 @@ export default function PermitsPage() {
     const userRoleLower = userRole.toLowerCase().replace(/\s+/g, '');
     const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRoleLower);
 
+    useEffect(() => {
+        if (session && !isInternalAdmin && userRoleLower !== '') {
+            window.location.href = '/dashboard';
+        }
+    }, [session, isInternalAdmin, userRoleLower]);
+
     const [permits, setPermits] = useState<any[]>([]);
     const [datacenters, setDatacenters] = useState<any[]>([]);
     const [customers, setCustomers] = useState<any[]>([]);
@@ -208,7 +214,9 @@ export default function PermitsPage() {
                                          key={permit.id} 
                                          className="border-b border-border/50 hover:bg-slate-800/30 transition-colors"
                                      >
-                                         <td className="px-6 py-4 font-semibold text-blue-400">PRM-{permit.id.toString().padStart(3, '0')}</td>
+                                         <td className="px-6 py-4 font-semibold text-blue-400">
+                                             {permit.qrCodeToken || `PRM-${permit.id.toString().padStart(3, '0')}`}
+                                         </td>
                                          <td className="px-6 py-4 text-slate-300">{permit.datacenter?.name || 'Unknown'}</td>
                                          <td className="px-6 py-4 font-medium text-slate-100">{permit.customer?.name || permit.companyName || 'Unknown'}</td>
                                          <td className="px-6 py-4">{permit.visitorNames}</td>
@@ -268,32 +276,34 @@ export default function PermitsPage() {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Customer (Tenant)</label>
-                                        <select 
-                                            value={formData.customerId}
-                                            onChange={(e) => setFormData({...formData, customerId: e.target.value, companyName: ''})}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
-                                        >
-                                            <option value="">- Internal / Specify -</option>
-                                            {customers.map(customer => (
-                                                <option key={customer.id} value={customer.id}>{customer.name}</option>
-                                            ))}
-                                        </select>
+                                {isInternalAdmin && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="block text-sm font-medium text-slate-300 mb-1">Customer (Tenant)</label>
+                                            <select 
+                                                value={formData.customerId}
+                                                onChange={(e) => setFormData({...formData, customerId: e.target.value, companyName: ''})}
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                                            >
+                                                <option value="">- Internal / Specify -</option>
+                                                {customers.map(customer => (
+                                                    <option key={customer.id} value={customer.id}>{customer.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <label className="block text-sm font-medium text-slate-300 mb-1">Or Specific Company</label>
+                                            <input 
+                                                type="text"
+                                                disabled={!!formData.customerId}
+                                                value={formData.companyName}
+                                                onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none disabled:opacity-50"
+                                                placeholder="e.g. Acme Corp"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Or Specific Company</label>
-                                        <input 
-                                            type="text"
-                                            disabled={!!formData.customerId}
-                                            value={formData.companyName}
-                                            onChange={(e) => setFormData({...formData, companyName: e.target.value})}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none disabled:opacity-50"
-                                            placeholder="e.g. Acme Corp"
-                                        />
-                                    </div>
-                                </div>
+                                )}
                                 <div>
                                     <label className="block text-sm font-medium text-slate-300 mb-1">Visitor Names</label>
                                     <input 

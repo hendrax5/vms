@@ -20,7 +20,7 @@ export default function TenantAudit({ permits, goods }: TenantAuditProps) {
             // Try to extract Rack name from activity string like "[Target Rack: RACK-01]"
             const rackMatch = p.activity.match(/\[Target Rack:\s*([^\]]+)\]/);
             return {
-                id: `PRM-${p.id}`,
+                id: p.qrCodeToken || `PRM-${p.id}`,
                 type: 'VISIT',
                 date: p.checkInAt || p.scheduledAt,
                 entity: p.visitorNames,
@@ -33,7 +33,7 @@ export default function TenantAudit({ permits, goods }: TenantAuditProps) {
     const goodsEvents = goods
         .filter(g => g.status === 'CheckedIn')
         .map(g => ({
-            id: `GDS-${g.id}`,
+            id: g.qrCode || `GDS-${g.id}`,
             type: 'LOGISTICS',
             date: g.scannedAt || g.createdAt,
             entity: g.name,

@@ -11,11 +11,17 @@ export async function GET(req) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const sessionCustomerId = session?.user?.customerId;
 
+        const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+
         const { searchParams } = new URL(req.url);
         const customerId = searchParams.get('customerId');
 
         let where = {};
-        if (sessionCustomerId) {
+        if (!isInternalAdmin) {
+            if (!sessionCustomerId) {
+                return NextResponse.json({ error: 'Forbidden: No Customer ID' }, { status: 403 });
+            }
             where.customerId = sessionCustomerId;
         } else if (customerId) {
             where.customerId = parseInt(customerId);

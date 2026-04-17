@@ -8,12 +8,30 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 const KioskScanner = ({ onScanSuccess }: { onScanSuccess: (text: string) => void }) => {
+    const [deviceId, setDeviceId] = useState<string | null>(null);
+    const [cameras, setCameras] = useState<any[]>([]);
+    const scannerRef = useRef<Html5Qrcode | null>(null);
+
     useEffect(() => {
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length > 0) {
+                setCameras(devices);
+                // Try to find front camera
+                const front = devices.find(d => d.label.toLowerCase().includes('front') || d.label.toLowerCase().includes('user'));
+                setDeviceId(front ? front.id : devices[0].id);
+            }
+        }).catch(err => console.error("Camera list failed", err));
+    }, []);
+
+    useEffect(() => {
+        if (!deviceId) return;
+        
         const scanner = new Html5Qrcode('kiosk-reader');
+        scannerRef.current = scanner;
         let isScanned = false;
         
         scanner.start(
-            { facingMode: 'environment' },
+            deviceId,
             { fps: 10, qrbox: { width: 250, height: 250 } },
             (text) => {
                 if (!isScanned) {
@@ -24,19 +42,7 @@ const KioskScanner = ({ onScanSuccess }: { onScanSuccess: (text: string) => void
             },
             () => {}
         ).catch(err => {
-            console.warn("Environment camera failed. Trying fallback...", err);
-            scanner.start(
-                { facingMode: 'user' },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (text) => {
-                    if (!isScanned) {
-                        isScanned = true;
-                        scanner.stop().then(() => scanner.clear()).catch(() => {});
-                        onScanSuccess(text);
-                    }
-                },
-                () => {}
-            ).catch(() => {});
+            console.warn("Scanner start failed", err);
         });
         
         return () => {
@@ -46,9 +52,29 @@ const KioskScanner = ({ onScanSuccess }: { onScanSuccess: (text: string) => void
                 try { scanner.clear(); } catch(e){}
             }
         };
-    }, []);
+    }, [deviceId]);
 
-    return <div id="kiosk-reader" className="w-full h-full text-white bg-slate-900 rounded-3xl overflow-hidden shadow-inner border-[1px] border-slate-700" />;
+    const flipCamera = () => {
+        if (cameras.length < 2) return;
+        const currentIndex = cameras.findIndex(c => c.id === deviceId);
+        const nextIndex = (currentIndex + 1) % cameras.length;
+        setDeviceId(cameras[nextIndex].id);
+    };
+
+    return (
+        <div className="relative w-full h-full">
+            <div id="kiosk-reader" className="w-full h-full text-white bg-slate-900 rounded-3xl overflow-hidden shadow-inner border-[1px] border-slate-700" />
+            {cameras.length > 1 && (
+                <button 
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); flipCamera(); }}
+                    className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md border border-white/20 p-3 rounded-full text-white hover:bg-indigo-500 transition-all z-50"
+                    title="Flip Camera"
+                >
+                    <Camera className="w-5 h-5" />
+                </button>
+            )}
+        </div>
+    );
 };
 
 export default function DatacenterKiosk() {
@@ -59,10 +85,15 @@ export default function DatacenterKiosk() {
     const [scannedToken, setScannedToken] = useState('');
     const [manualToken, setManualToken] = useState('');
     const [visitorName, setVisitorName] = useState('');
+    const [allVisitors, setAllVisitors] = useState<string[]>([]);
+    const [currentVisitorIndex, setCurrentVisitorIndex] = useState(0);
+    const [visitorPhotos, setVisitorPhotos] = useState<Record<string, string>>({});
+    const [livenessStage, setLivenessStage] = useState<'NONE' | 'LOOK_STRAIGHT' | 'BLINK' | 'NOD' | 'CAPTURING'>('NONE');
+    const [guidanceTimer, setGuidanceTimer] = useState(0);
     const [errorMessage, setErrorMessage] = useState('');
     const [isCheckoutQueue, setIsCheckoutQueue] = useState(false);
-    
-    // Camera Refs
+    const [activeDeviceId, setActiveDeviceId] = useState<string | null>(null);
+    const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -70,6 +101,11 @@ export default function DatacenterKiosk() {
         setStep('IDLE');
         setScannedToken('');
         setVisitorName('');
+        setAllVisitors([]);
+        setCurrentVisitorIndex(0);
+        setVisitorPhotos({});
+        setLivenessStage('NONE');
+        setGuidanceTimer(0);
         setErrorMessage('');
         setIsCheckoutQueue(false);
         stopCamera();
@@ -93,68 +129,88 @@ export default function DatacenterKiosk() {
         }
     };
 
-    const startCamera = async () => {
+    const startCamera = async (preferredId?: string) => {
         try {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 console.warn('Camera API not available. Usually requires HTTPS or localhost.');
-                return; // Gracefully do nothing, let the bypass button work
+                return;
             }
-            let stream;
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-            } catch (fallbackErr) {
-                console.warn("User-facing camera failed, falling back to any available video...", fallbackErr);
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+            // Get camera list if not already fetched
+            let devices = availableCameras;
+            if (devices.length === 0) {
+                const all = await navigator.mediaDevices.enumerateDevices();
+                devices = all.filter(d => d.kind === 'videoinput');
+                setAvailableCameras(devices);
             }
+
+            let constraints: MediaStreamConstraints = { video: { facingMode: 'user' } };
+            
+            // If a specific device is selected or we found a front camera
+            const targetId = preferredId || activeDeviceId;
+            if (targetId) {
+                constraints = { video: { deviceId: { exact: targetId } } };
+            } else {
+                // Try to find front camera label if facingMode fails
+                const front = devices.find(d => d.label.toLowerCase().includes('front') || d.label.toLowerCase().includes('user'));
+                if (front) {
+                    constraints = { video: { deviceId: { exact: front.id } } };
+                    setActiveDeviceId(front.id);
+                }
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
             }
         } catch (err) {
             console.error("Camera access failed", err);
-            // Don't error out completely, allow user to click Check In anyway without photo on Android
+            // Fallback to simple video
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                if (videoRef.current) videoRef.current.srcObject = stream;
+            } catch(e) {}
         }
+    };
+
+    const switchActiveCamera = async () => {
+        if (availableCameras.length < 2) return;
+        const currentIndex = availableCameras.findIndex(c => c.deviceId === activeDeviceId);
+        const nextIndex = (currentIndex + 1) % availableCameras.length;
+        const nextId = availableCameras[nextIndex].deviceId;
+        
+        setActiveDeviceId(nextId);
+        stopCamera();
+        await startCamera(nextId);
     };
 
     const handleQRScanned = async (token: string) => {
         setScannedToken(token);
         setStep('PROCESSING');
 
-        // Check if token is ready for Check-In or Check-Out
         try {
-            // Optimistically try check-in first. If it returns 400 'Visitor is already checked in', trigger check-out logic.
-            // Wait, we need an endpoint to "validate" the token without mutating, OR we can fetch permit status.
-            // For simplicity, we can attempt Check-Out first if they are checking out.
-            // Actually, we should validate the token by fetching /api/permits (if we expose it by token).
-            // Let's create a pseudo-check by blindly hitting Check-In without photo, and catch the "already checked in" error.
-            
+            // First, validate only to get visitor list
             const res = await fetch('/api/permits/check-in', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ qrToken: token }) // No photo yet
+                body: JSON.stringify({ qrToken: token, validateOnly: true })
             });
 
             const data = await res.json();
             
             if (res.status === 400 && data.error === 'Visitor is already checked in') {
-                // It's a check-out flow
                 setIsCheckoutQueue(true);
                 await processCheckOut(token);
             } else if (res.ok) {
-                // Wait, it succeeded but without photo!
-                // We should actually STOP it from checking in if photo is strictly required in the Kiosk?
-                // The API currently accepts check-in without photo.
-                // Assuming it succeeded via blind post (we didn't snap a photo yet):
-                // This means the user successfully authenticated.
-                // However, the rule says "they MUST take a photo". 
-                // Since this is Kiosk UI logic, we should rather FETCH the permit details to see its status, 
-                // OR we can adjust the UI: Since we already hit POST and saved them, we immediately prompt the Camera and re-post to update the photo.
+                const names = data.visitorNames.split(',').map((n: string) => n.trim());
+                setAllVisitors(names);
+                setVisitorName(names[0]);
+                setCurrentVisitorIndex(0);
+                setStep('CAMERA');
                 
-                setVisitorName(data.visitor);
-                setStep('CAMERA'); // Force them into camera
-                
-                // Add a small delay so Html5QrcodeScanner can release the media stream hardware lock on Android
                 setTimeout(() => {
                     startCamera();
+                    startLivenessSequence();
                 }, 800);
             } else {
                 setErrorMessage(data.error || 'Invalid QR Code');
@@ -166,24 +222,88 @@ export default function DatacenterKiosk() {
         }
     };
 
-    const capturePhotoAndFinalize = async () => {
-        try {
-            if (videoRef.current && videoRef.current.srcObject && canvasRef.current) {
-                const video = videoRef.current;
-                const canvas = canvasRef.current;
-                const context = canvas.getContext('2d');
-                
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                context?.drawImage(video, 0, 0, canvas.width, canvas.height);
-            }
-            stopCamera();
-            setStep('PROCESSING');
+    const startLivenessSequence = () => {
+        setLivenessStage('LOOK_STRAIGHT');
+        setGuidanceTimer(3); // 3 seconds per stage
+    };
 
-            setTimeout(() => {
-                setStep('SUCCESS_IN');
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (step === 'CAMERA' && livenessStage !== 'NONE') {
+            interval = setInterval(() => {
+                setGuidanceTimer((prev) => {
+                    if (prev <= 1) {
+                        // Transition stage
+                        if (livenessStage === 'LOOK_STRAIGHT') {
+                            setLivenessStage('BLINK');
+                            return 3;
+                        } else if (livenessStage === 'BLINK') {
+                            setLivenessStage('NOD');
+                            return 3;
+                        } else if (livenessStage === 'NOD') {
+                            setLivenessStage('CAPTURING');
+                            return 1;
+                        } else if (livenessStage === 'CAPTURING') {
+                            capturePhoto();
+                            return 0;
+                        }
+                        return 0;
+                    }
+                    return prev - 1;
+                });
             }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [step, livenessStage]);
+
+    const capturePhoto = () => {
+        if (videoRef.current && canvasRef.current) {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const photoData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            const newPhotos = { ...visitorPhotos, [allVisitors[currentVisitorIndex]]: photoData };
+            setVisitorPhotos(newPhotos);
+
+            if (currentVisitorIndex < allVisitors.length - 1) {
+                // Next visitor
+                const nextIndex = currentVisitorIndex + 1;
+                setCurrentVisitorIndex(nextIndex);
+                setVisitorName(allVisitors[nextIndex]);
+                setLivenessStage('LOOK_STRAIGHT');
+                setGuidanceTimer(3);
+            } else {
+                // All done
+                finalizeCheckIn(newPhotos);
+            }
+        }
+    };
+
+    const finalizeCheckIn = async (photos: Record<string, string>) => {
+        stopCamera();
+        setStep('PROCESSING');
+        try {
+            const res = await fetch('/api/permits/check-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    qrToken: scannedToken, 
+                    visitorPhoto: JSON.stringify(photos) 
+                })
+            });
+            if (res.ok) {
+                setStep('SUCCESS_IN');
+            } else {
+                const data = await res.json();
+                setErrorMessage(data.error || 'Submission failed');
+                setStep('ERROR');
+            }
         } catch (err) {
+            setErrorMessage('Network error during finalization');
             setStep('ERROR');
         }
     };
@@ -315,24 +435,70 @@ export default function DatacenterKiosk() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="bg-slate-900 border border-indigo-500/30 rounded-[40px] shadow-[0_40px_100px_-20px_rgba(99,102,241,0.2)] p-8 max-w-2xl mx-auto text-center"
                         >
-                            <Camera className="w-16 h-16 text-indigo-400 mx-auto mb-4 animate-bounce" />
-                            <h2 className="text-3xl font-bold text-white mb-2">Identity Verification</h2>
-                            <p className="text-slate-400 mb-8">Hello <strong className="text-white">{visitorName}</strong>.<br/> For facility security, please capture your photo.</p>
+                            <div className="flex justify-center items-center gap-3 mb-4">
+                                <Camera className="w-10 h-10 text-indigo-400" />
+                                <div className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold uppercase tracking-widest">
+                                    Visitor {currentVisitorIndex + 1} of {allVisitors.length}
+                                </div>
+                            </div>
+                            <h2 className="text-3xl font-bold text-white mb-2">Biometric Verification</h2>
+                            <p className="text-slate-400 mb-8 font-medium">
+                                Active Subject: <strong className="text-white text-xl">{visitorName}</strong>
+                            </p>
                             
                             <div className="relative rounded-3xl overflow-hidden bg-black aspect-video w-full max-w-xl mx-auto border-4 border-slate-800 mb-8">
                                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
                                 <canvas ref={canvasRef} className="hidden" />
                                 
-                                {/* Overlay crosshair */}
-                                <div className="absolute inset-0 border-[40px] border-black/30 pointer-events-none rounded-3xl"></div>
+                                {availableCameras.length > 1 && (
+                                    <button 
+                                        onClick={(e) => { e.preventDefault(); switchActiveCamera(); }}
+                                        className="absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/20 p-3 rounded-full text-white hover:bg-indigo-500 transition-all z-10"
+                                        title="Flip Camera"
+                                    >
+                                        <Camera className="w-5 h-5" />
+                                    </button>
+                                )}
+                                
+                                {/* Liveness Guidance Overlay */}
+                                <AnimatePresence mode="wait">
+                                    <motion.div 
+                                        key={livenessStage}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 1.2 }}
+                                        className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+                                    >
+                                        <div className="bg-black/60 backdrop-blur-md border border-white/10 px-6 py-4 rounded-2xl flex flex-col items-center gap-2">
+                                            <div className="text-emerald-400 text-3xl font-black mb-1">
+                                                {guidanceTimer > 0 ? guidanceTimer : 'SNAP!'}
+                                            </div>
+                                            <div className="text-white font-bold text-lg uppercase tracking-widest">
+                                                {livenessStage === 'LOOK_STRAIGHT' && "Look Straight at Camera"}
+                                                {livenessStage === 'BLINK' && "Blink your eyes"}
+                                                {livenessStage === 'NOD' && "Nod your head"}
+                                                {livenessStage === 'CAPTURING' && "Hold still..."}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </AnimatePresence>
+
+                                {/* Face Outline */}
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div className="w-48 h-64 border-2 border-indigo-500/50 rounded-full border-dashed" />
+                                    <div className="w-48 h-64 border-2 border-indigo-500/30 rounded-full border-dashed animate-pulse" />
                                 </div>
                             </div>
 
-                            <button onClick={capturePhotoAndFinalize} className="px-10 py-5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-bold text-xl transition-all shadow-[0_0_40px_-5px_rgba(99,102,241,0.6)] flex items-center gap-3 mx-auto">
-                                <Camera className="w-6 h-6" /> Confirm & Check In
-                            </button>
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden max-w-sm">
+                                    <motion.div 
+                                        className="h-full bg-indigo-500"
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: `${((currentVisitorIndex + 1) / allVisitors.length) * 100}%` }}
+                                    />
+                                </div>
+                                <p className="text-slate-500 text-xs font-bold uppercase">Automated Verification Process</p>
+                            </div>
                         </motion.div>
                     )}
 

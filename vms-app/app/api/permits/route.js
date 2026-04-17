@@ -12,13 +12,22 @@ export async function GET(req) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const sessionCustomerId = session?.user?.customerId;
 
+        const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+
         const { searchParams } = new URL(req.url);
         const customerId = searchParams.get('customerId');
         
         let whereClause = {};
-        if (sessionCustomerId) {
+        
+        if (!isInternalAdmin) {
+            // Strictly enforce isolation for non-admins
+            if (!sessionCustomerId) {
+                return NextResponse.json({ error: 'Forbidden: No Customer ID associated with this account' }, { status: 403 });
+            }
             whereClause.customerId = sessionCustomerId;
         } else if (customerId) {
+            // Admins can filter by customerId if provided
             whereClause.customerId = parseInt(customerId);
         }
 
@@ -58,7 +67,8 @@ export async function PUT(req) {
         
         // Ensure token exists for Approved or CheckIn statuses
         if (['Approved', 'CheckIn', 'Check In'].includes(status) && !existingPermit.qrCodeToken) {
-            dataToUpdate.qrCodeToken = crypto.randomBytes(32).toString('hex');
+            const shortSalt = crypto.randomBytes(4).toString('hex').toUpperCase();
+            dataToUpdate.qrCodeToken = `PRM-${existingPermit.id}-${shortSalt}`;
         }
 
         const updatedPermit = await prisma.visitPermit.update({

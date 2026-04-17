@@ -99,12 +99,9 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
-    try {
-        const { searchParams } = new URL(req.url);
-        const rackId = searchParams.get('rackId');
-        const customerId = searchParams.get('customerId');
-
-        let equipments = [];
+        const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+        const sessionCustomerId = session?.user?.customerId;
 
         const includeRelations = { 
             customer: true, 
@@ -118,12 +115,15 @@ export async function GET(req) {
             } 
         };
 
-        if (customerId) {
-            const cid = parseInt(customerId);
+        if (!isInternalAdmin) {
+            // Strictly enforce isolation for non-admins
+            if (!sessionCustomerId) {
+                return NextResponse.json({ error: 'Forbidden: No Customer ID' }, { status: 403 });
+            }
             
             // Get customer's own equipments
             const customerEqs = await prisma.rackEquipment.findMany({
-                where: { customerId: cid },
+                where: { customerId: sessionCustomerId },
                 include: includeRelations
             });
             
@@ -145,13 +145,22 @@ export async function GET(req) {
 
             equipments = [...customerEqs, ...facilityPanels];
         } else {
-            const params = {};
-            if (rackId) params.rackId = parseInt(rackId);
+            // Admin logic
+            if (customerId) {
+                const cid = parseInt(customerId);
+                equipments = await prisma.rackEquipment.findMany({
+                    where: { customerId: cid },
+                    include: includeRelations
+                });
+            } else {
+                const params = {};
+                if (rackId) params.rackId = parseInt(rackId);
 
-            equipments = await prisma.rackEquipment.findMany({
-                where: params,
-                include: includeRelations
-            });
+                equipments = await prisma.rackEquipment.findMany({
+                    where: params,
+                    include: includeRelations
+                });
+            }
         }
 
         return NextResponse.json(equipments);

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
@@ -7,7 +9,10 @@ export async function POST(req) {
     let body;
     try {
         body = await req.json();
-        const { qrToken, visitorPhoto } = body;
+        const { qrToken, visitorPhoto, validateOnly } = body;
+
+        const session = await getServerSession(authOptions);
+        const operatorId = session?.user?.id ? parseInt(session.user.id) : null;
 
         if (!qrToken) {
             return NextResponse.json({ error: 'QR Token is required' }, { status: 400 });
@@ -20,8 +25,19 @@ export async function POST(req) {
         });
 
         if (permit) {
-            if (permit.status === 'CheckIn') {
+            if (permit.status === 'CheckIn' && !validateOnly) {
                 return NextResponse.json({ error: 'Visitor is already checked in' }, { status: 400 });
+            }
+
+            if (validateOnly) {
+                return NextResponse.json({
+                    success: true,
+                    type: 'PERMIT',
+                    permitId: permit.id,
+                    visitorNames: permit.visitorNames,
+                    status: permit.status,
+                    datacenter: permit.datacenter?.name
+                });
             }
 
             if (permit.status !== 'NDASigned' && permit.status !== 'Approved') {
@@ -31,11 +47,24 @@ export async function POST(req) {
             // Validate time
             const now = new Date();
             const scheduled = new Date(permit.scheduledAt);
-            const timeDiffMins = (scheduled.getTime() - now.getTime()) / 60000;
+            
+            // Allow check-in anytime on the same calendar day
+            const isSameDay = now.toDateString() === scheduled.toDateString();
+            
+            if (!isSameDay) {
+                const timeDiffMins = (scheduled.getTime() - now.getTime()) / 60000;
+                
+                // Don't allow check-ins more than 2 hours early for future days
+                if (timeDiffMins > 120) {
+                    return NextResponse.json({ 
+                        error: `Check-in is too early. Your permit is scheduled for ${scheduled.toLocaleDateString()} at ${scheduled.toLocaleTimeString([], {hour: '2-bit', minute:'2-bit'})}.` 
+                    }, { status: 403 });
+                }
 
-            // Don't allow check-ins more than 2 hours early
-            if (timeDiffMins > 120) {
-                return NextResponse.json({ error: 'Check-in is too early. Please return closer to your scheduled time.' }, { status: 403 });
+                // If it's a past day, it's expired
+                if (timeDiffMins < -1440) { // More than 24 hours late
+                    return NextResponse.json({ error: 'Permit has expired. Please schedule a new visit.' }, { status: 403 });
+                }
             }
 
             // Process Check-in
@@ -60,6 +89,7 @@ export async function POST(req) {
                 // CREATE SYSTEM AUDIT LOG FOR DC TEAM NOTIFICATION
                 await tx.systemAuditLog.create({
                     data: {
+                        userId: operatorId,
                         action: 'KIOSK_CHECKIN',
                         resource: `VisitPermit PRM-${permit.id}`,
                         details: `Visitor: ${permit.visitorNames} | Company: ${permit.customer?.name || permit.companyName} | DC: ${permit.datacenter?.name}`,
@@ -97,6 +127,7 @@ export async function POST(req) {
                 // CREATE SYSTEM AUDIT LOG FOR DC TEAM NOTIFICATION
                 await tx.systemAuditLog.create({
                     data: {
+                        userId: operatorId,
                         action: 'GOODS_SCAN',
                         resource: `GoodsItem ${goods.qrCode}`,
                         details: `Item: ${goods.name} | Status: ${goods.status} -> CheckedIn | Company: ${goods.customer?.name} | DC: ${goods.datacenter?.name}`,

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
@@ -7,6 +9,9 @@ export async function POST(req) {
     try {
         const body = await req.json();
         const { qrToken } = body;
+
+        const session = await getServerSession(authOptions);
+        const operatorId = session?.user?.id ? parseInt(session.user.id) : null;
 
         if (!qrToken) {
             return NextResponse.json({ error: 'QR Token is required' }, { status: 400 });
@@ -42,6 +47,15 @@ export async function POST(req) {
                     permitId: permit.id,
                     status: 'CheckOut',
                     message: 'Visitor scanned QR at Kiosk and checked out of the premises.'
+                }
+            });
+
+            await tx.systemAuditLog.create({
+                data: {
+                    userId: operatorId,
+                    action: 'KIOSK_CHECKOUT',
+                    resource: `VisitPermit PRM-${permit.id}`,
+                    details: `Visitor: ${permit.visitorNames} | Status: CheckOut | DC: ${permit.datacenter?.name}`,
                 }
             });
 

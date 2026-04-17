@@ -203,7 +203,7 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                         <table className="w-full text-sm text-left text-slate-300">
                              <thead className="text-xs text-slate-400 uppercase bg-slate-950/80 border-b border-slate-800">
                                  <tr>
-                                     <th className="px-5 py-3">ID</th>
+                                     <th className="px-5 py-3">Badge ID</th>
                                      <th className="px-5 py-3">Facility</th>
                                      <th className="px-5 py-3">Manifest</th>
                                      <th className="px-5 py-3">Date</th>
@@ -231,18 +231,24 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                                 {p.status}
                                             </span>
                                          </td>
-                                         <td className="px-5 py-4 text-right">
-                                             <button 
-                                                onClick={() => setSelectedQR({ 
-                                                    type: 'Visit', 
-                                                    code: p.qrCodeToken || `VMS-PRM-C${customerId}-${p.id}`, 
-                                                    title: `Visit PRM-${p.id}` 
-                                                })}
-                                                className="text-slate-400 hover:text-red-400 transition-colors inline-flex items-center gap-1.5 font-semibold text-xs border border-transparent hover:border-red-900 px-2 py-1 bg-slate-950 shadow-sm"
-                                             >
-                                                 <QrCode className="w-4 h-4" /> ACCESS QR
-                                             </button>
-                                         </td>
+                                                                                   <td className="px-5 py-4 text-right">
+                                              {p.status === 'Approved' || p.status === 'NDASigned' || p.status === 'CheckIn' ? (
+                                                  <button 
+                                                      onClick={() => setSelectedQR({ 
+                                                          type: 'Visit', 
+                                                          code: p.qrCodeToken || `PRM-${p.id}-PENDING`, 
+                                                          title: `Access Badge PRM-${p.id}` 
+                                                      })}
+                                                      className="text-slate-400 hover:text-red-400 transition-colors inline-flex items-center gap-1.5 font-semibold text-xs border border-transparent hover:border-red-900 px-2 py-1 bg-slate-950 shadow-sm"
+                                                  >
+                                                      <QrCode className="w-4 h-4" /> ACCESS QR
+                                                  </button>
+                                              ) : (
+                                                  <div className="flex items-center justify-end gap-2 text-slate-500 font-bold text-[10px] uppercase tracking-wider">
+                                                      <AlertTriangle className="w-3 h-3 text-amber-500" /> Waiting Approval
+                                                  </div>
+                                              )}
+                                          </td>
                                      </tr>
                                  ))}
                              </tbody>
@@ -311,7 +317,7 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                              {/* Left Side: Policy & Form */}
                              <div className="w-full md:w-7/12 flex flex-col border-r border-slate-800">
                                  <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900 text-slate-100">
-                                      <h3 className="font-bold uppercase tracking-wide text-sm flex gap-2 items-center"><ShieldCheck className="w-4 h-4 text-red-500"/> Smart Access Request</h3>
+                                      <h3 className="font-bold uppercase tracking-wide text-sm flex gap-2 items-center"><ShieldCheck className="w-4 h-4 text-red-500"/> Submit New Access Request</h3>
                                       <button onClick={() => setIsSmartRequestOpen(false)} className="md:hidden"><X className="w-5 h-5 text-slate-500 hover:text-white" /></button>
                                  </div>
                                  <div className="p-6 bg-slate-950 flex-grow space-y-5">
@@ -434,7 +440,7 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                  <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-between">
                                      <button type="button" onClick={() => setIsSmartRequestOpen(false)} className="text-xs uppercase font-bold text-slate-400 hover:text-white">Cancel</button>
                                      <button form="smartAccessForm" type="submit" className="px-6 py-2 bg-red-600 hover:bg-red-700 font-bold uppercase text-white text-xs tracking-wider">
-                                         Confirm & Spawn Master QR
+                                         Submit Access Request
                                      </button>
                                  </div>
                              </div>
