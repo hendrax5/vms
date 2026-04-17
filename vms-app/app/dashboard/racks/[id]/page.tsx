@@ -122,7 +122,8 @@ export default function RackElevationPage() {
         // Dynamic equipment-level check for Tenant Admins in shared racks
         if (!isInternalAdmin && isTenantAdmin) {
             const ownsRack = rack.customerId === Number(userCustomerId);
-            const ownsEq = draggedEq.customerId === Number(userCustomerId);
+            // Allow them to move old equipments that got stuck with null customerId, as long as it's not a Datacenter Patch Panel
+            const ownsEq = draggedEq.customerId === Number(userCustomerId) || (draggedEq.customerId === null && draggedEq.equipmentType !== 'PATCH_PANEL');
             if (!ownsRack && !ownsEq) {
                 alert("You do not have permission to move this specific equipment.");
                 setDraggedEq(null);
@@ -213,7 +214,7 @@ export default function RackElevationPage() {
         const eqToDelete = equipments.find((eq: any) => eq.id === id);
         if (eqToDelete && !isInternalAdmin && isTenantAdmin) {
             const ownsRack = rack.customerId === Number(userCustomerId);
-            const ownsEq = eqToDelete.customerId === Number(userCustomerId);
+            const ownsEq = eqToDelete.customerId === Number(userCustomerId) || (eqToDelete.customerId === null && eqToDelete.equipmentType !== 'PATCH_PANEL');
             if (!ownsRack && !ownsEq) {
                 alert("You do not have permission to delete this specific equipment.");
                 return;
@@ -374,7 +375,7 @@ export default function RackElevationPage() {
                                         </div>
                                         
                                         {/* Action buttons */}
-                                        {(isInternalAdmin || (isTenantAdmin && (rack?.customerId === Number(userCustomerId) || eq.customerId === Number(userCustomerId)))) && (
+                                        {(isInternalAdmin || (isTenantAdmin && (rack?.customerId === Number(userCustomerId) || eq.customerId === Number(userCustomerId) || (eq.customerId === null && eq.equipmentType !== 'PATCH_PANEL')))) && (
                                         <div className="flex flex-row md:flex-col gap-2 items-end justify-start">
                                             <button 
                                                 onClick={() => {

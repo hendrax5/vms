@@ -14,7 +14,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
         const resolvedParams = await params;
         const equipmentId = parseInt(resolvedParams.id);
-        const { uStart, uEnd, orientation, rackId, name } = await req.json();
+        const { uStart, uEnd, orientation, rackId, name, equipmentType } = await req.json();
 
         // Fetch existing configuration for Audit Logs
         const existingEq = await prisma.rackEquipment.findUnique({
@@ -34,7 +34,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                 return NextResponse.json({ error: 'Forbidden. Read-Only users cannot edit equipment.' }, { status: 403 });
             }
             const ownsRack = existingEq.rack?.customerId === Number((session.user as any).customerId);
-            const ownsEquipment = existingEq.customerId === Number((session.user as any).customerId);
+            const ownsEquipment = existingEq.customerId === Number((session.user as any).customerId) || (existingEq.customerId === null && existingEq.equipmentType !== 'PATCH_PANEL');
             if (!ownsRack && !ownsEquipment) {
                 return NextResponse.json({ error: 'Forbidden. You do not own this equipment or its rack.' }, { status: 403 });
             }
@@ -58,6 +58,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         if (orientation !== undefined) updateData.orientation = orientation;
         if (rackId !== undefined) updateData.rackId = rackId;
         if (name !== undefined) updateData.name = name;
+        if (equipmentType !== undefined) updateData.equipmentType = equipmentType;
+        
+        // Automatically assign to Tenant Admin if they edit their legacy equipment
+        if (!isInternalAdmin && isTenantAdmin) {
+            updateData.customerId = Number((session.user as any).customerId);
+        }
 
         // Perform Update
         const updated = await prisma.rackEquipment.update({
@@ -122,7 +128,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
                 return NextResponse.json({ error: 'Forbidden. Read-Only users cannot delete equipment.' }, { status: 403 });
             }
             const ownsRack = existingEq.rack?.customerId === Number((session.user as any).customerId);
-            const ownsEquipment = existingEq.customerId === Number((session.user as any).customerId);
+            const ownsEquipment = existingEq.customerId === Number((session.user as any).customerId) || (existingEq.customerId === null && existingEq.equipmentType !== 'PATCH_PANEL');
             if (!ownsRack && !ownsEquipment) {
                 return NextResponse.json({ error: 'Forbidden. You do not own this equipment or its rack.' }, { status: 403 });
             }
