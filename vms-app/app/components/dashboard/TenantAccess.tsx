@@ -333,7 +333,7 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                             </div>
                                             <div className="col-span-2 sm:col-span-1">
                                                 <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Arrival Date</label>
-                                                <input type="date" required value={accessFormData.scheduledAt} onChange={e => setAccessFormData({...accessFormData, scheduledAt: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-2 text-sm text-slate-100 focus:border-red-500 outline-none rounded-sm" style={{colorScheme: 'dark'}}/>
+                                                <input type="date" required value={accessFormData.scheduledAt} onChange={e => setAccessFormData({...accessFormData, scheduledAt: e.target.value})} onClick={(e) => { try { (e.currentTarget as any).showPicker() } catch(err) {} }} className="w-full bg-slate-900 border border-slate-700 p-2 text-sm text-slate-100 focus:border-red-500 outline-none rounded-sm" style={{colorScheme: 'dark'}}/>
                                             </div>
                                          </div>
 

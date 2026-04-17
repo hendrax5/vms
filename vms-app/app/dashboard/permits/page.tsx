@@ -315,7 +315,9 @@ export default function PermitsPage() {
                                         required
                                         value={formData.scheduledAt}
                                         onChange={(e) => setFormData({...formData, scheduledAt: e.target.value})}
+                                        onClick={(e) => { try { (e.currentTarget as any).showPicker() } catch(err) {} }}
                                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                                        style={{colorScheme: 'dark'}}
                                     />
                                 </div>
                                 
