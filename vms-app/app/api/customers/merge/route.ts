@@ -56,7 +56,7 @@ export async function POST(request: Request) {
             // Log the action
             prisma.systemAuditLog.create({
                 data: {
-                    userId: (session.user as any).id,
+                    userId: parseInt((session.user as any).id),
                     action: 'MERGE_TENANT',
                     resource: 'Customer',
                     details: `Merged tenant ${sourceCustomer.name} (ID: ${sourceIdInt}) into ${targetCustomer.name} (ID: ${targetIdInt})`,
