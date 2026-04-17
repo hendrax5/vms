@@ -527,11 +527,18 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                  <h2 className="text-xl font-extrabold uppercase tracking-widest">{selectedQR.title}</h2>
                                  <p className="text-[10px] font-bold text-slate-500 uppercase mt-1 tracking-widest">{selectedQR.type === 'Visit' ? 'Visitor Entry Permit' : 'Logistics Waybill Tracking'}</p>
                              </div>
-                             <div className="p-8 bg-white flex flex-col items-center">
-                                 <div className="p-3 border-2 border-slate-200">
-                                    <QRCodeSVG value={selectedQR.code} size={200} level="H" />
+                             <div className="p-10 bg-white flex flex-col items-center">
+                                 <div className="p-4 bg-white shadow-[0_0_40px_rgba(0,0,0,0.1)] border border-slate-100 rounded-sm">
+                                    <QRCodeSVG 
+                                        value={selectedQR.code} 
+                                        size={220} 
+                                        level="H" 
+                                        includeMargin={true}
+                                        fgColor="#000000"
+                                        bgColor="#FFFFFF"
+                                    />
                                  </div>
-                                 <p className="mt-6 text-xs text-slate-500 font-mono tracking-[0.2em]">{selectedQR.code}</p>
+                                 <p className="mt-8 text-xs text-slate-400 font-mono tracking-[0.3em] font-bold uppercase">{selectedQR.code}</p>
                              </div>
                              <div className="bg-slate-900 p-4">
                                 <button onClick={() => setSelectedQR(null)} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold uppercase text-xs tracking-wider transition-colors">Close ID Badge</button>
