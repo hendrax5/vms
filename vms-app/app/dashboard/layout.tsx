@@ -172,9 +172,16 @@ export default function DashboardLayout({
                 </div>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-4 space-y-6">
                      {(isCustomer ? customerNavCategories : navCategories).map((category, idx) => {
-                         const visibleItems = category.items.filter(item => 
-                             isSuperAdmin || userPermissions.includes(item.permission)
-                         );
+                         const visibleItems = category.items.filter(item => {
+                             if (isSuperAdmin) return true;
+                             if (isCustomer) {
+                                 if (item.label === 'User Management') {
+                                     return userRoleLower.includes('admin');
+                                 }
+                                 return true;
+                             }
+                             return userPermissions.includes(item.permission);
+                         });
 
                          if (visibleItems.length === 0) return null;
 

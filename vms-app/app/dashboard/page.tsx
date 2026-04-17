@@ -13,7 +13,9 @@ export default async function DashboardOverview() {
 
     const userRole = (session.user as any)?.role as string;
 
-    if (userRole === "Customer") {
+    const userRoleLower = (userRole || '').toLowerCase();
+
+    if (userRoleLower === "customer" || userRoleLower.includes("tenant")) {
         return <TenantDashboard />;
     }
 
