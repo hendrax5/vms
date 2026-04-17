@@ -1,12 +1,18 @@
+'use client';
+
 import { Activity, Users, Network, Settings, Package, Server } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import KioskActivityFeed from './KioskActivityFeed';
 
 export default function NocDashboard() {
+    const { data: session } = useSession();
     const [permits, setPermits] = useState<any[]>([]);
     const [realStats, setRealStats] = useState<any>(null);
+
+    const userRole = (session?.user as any)?.role || 'NOC';
 
     useEffect(() => {
         fetch('/api/permits')
@@ -120,7 +126,7 @@ export default function NocDashboard() {
 
                  {/* LIVE KIOSK ACTIVITY */}
                  <div className="min-h-[400px]">
-                     <KioskActivityFeed />
+                     <KioskActivityFeed userRole={userRole} />
                  </div>
 
                  {/* Capacity Donut Chart */}
