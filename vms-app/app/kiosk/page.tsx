@@ -154,8 +154,8 @@ export default function DatacenterKiosk() {
                 // Try to find front camera label if facingMode fails
                 const front = devices.find(d => d.label.toLowerCase().includes('front') || d.label.toLowerCase().includes('user'));
                 if (front) {
-                    constraints = { video: { deviceId: { exact: front.id } } };
-                    setActiveDeviceId(front.id);
+                    constraints = { video: { deviceId: { exact: front.deviceId } } };
+                    setActiveDeviceId(front.deviceId);
                 }
             }
 
