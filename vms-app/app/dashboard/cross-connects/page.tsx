@@ -44,7 +44,11 @@ export default function CrossConnectsPage() {
     sideZPortId: "",
     sideACompany: "",
     sideZCompany: "",
+    targetType: "internal",
+    targetProvider: "",
   });
+
+  const [isApprovalMode, setIsApprovalMode] = useState(false);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -116,9 +120,14 @@ export default function CrossConnectsPage() {
         sideZPortId: formData.sideZPortId ? parseInt(formData.sideZPortId) : null,
         sideACompany: formData.sideACompany || null,
         sideZCompany: formData.sideZCompany || null,
+        targetType: formData.targetType,
+        targetProvider: formData.targetType === 'tenant' ? formData.targetProvider : formData.sideZCompany || "Internal",
       };
 
-      if (formData.id) {
+      if (isApprovalMode && formData.id) {
+        payload.id = formData.id;
+        payload.action = "approve_target";
+      } else if (formData.id) {
         payload.id = formData.id;
         payload.action = "full_update";
       }
@@ -156,10 +165,13 @@ export default function CrossConnectsPage() {
       sideZPortId: "",
       sideACompany: "",
       sideZCompany: "",
+      targetType: "internal",
+      targetProvider: "",
     });
+    setIsApprovalMode(false);
   };
 
-  const openModal = (cx?: any) => {
+  const openModal = (cx?: any, approvalMode: boolean = false) => {
     if (cx) {
       setFormData({
         id: cx.id,
@@ -172,12 +184,15 @@ export default function CrossConnectsPage() {
         sideZRackId: cx.sideZPort?.equipment?.rackId?.toString() || "",
         sideZEquipmentId: cx.sideZPort?.equipmentId?.toString() || "",
         sideZPortId: cx.sideZPortId?.toString() || "",
-        sideACompany: cx.sideACompany || "",
+        sideACompany: cx.sideACompany || cx.customer?.name || "",
         sideZCompany: cx.sideZCompany || "",
+        targetType: cx.targetType || "internal",
+        targetProvider: cx.targetProvider || "",
       });
     } else {
       resetForm();
     }
+    setIsApprovalMode(approvalMode);
     setIsModalOpen(true);
   };
 
@@ -282,18 +297,26 @@ export default function CrossConnectsPage() {
 
                     {/* Status & Actions */}
                     <div className="flex items-center justify-between lg:justify-end gap-4">
-                      <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${cx.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                      <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${cx.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : cx.status === 'Pending Target Approval' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
                         {cx.status}
                       </div>
-                      {isInternalAdmin && (
-                        <div className="flex gap-1.5">
-                          {cx.status === 'Requested' && (
-                            <button onClick={() => handleUpdateStatus(cx.id, 'Active')} className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all" title="Activate"><CheckCircle className="w-4 h-4" /></button>
-                          )}
-                          <button onClick={() => openModal(cx)} className="p-2 bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-all"><Pencil className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(cx.id)} className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      )}
+                      <div className="flex gap-1.5">
+                        {/* Target Tenant Approval Action */}
+                        {!isInternalAdmin && cx.status === 'Pending Target Approval' && cx.targetType === 'tenant' && cx.targetProvider === sessionCustomerId?.toString() && (
+                          <button onClick={() => openModal(cx, true)} className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-indigo-500/20">
+                            Approve & Assign Port
+                          </button>
+                        )}
+                        {isInternalAdmin && (
+                          <>
+                            {cx.status === 'Requested' && (
+                              <button onClick={() => handleUpdateStatus(cx.id, 'Active')} className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all" title="Activate"><CheckCircle className="w-4 h-4" /></button>
+                            )}
+                            <button onClick={() => openModal(cx, false)} className="p-2 bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-all"><Pencil className="w-4 h-4" /></button>
+                            <button onClick={() => handleDelete(cx.id)} className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -366,11 +389,11 @@ export default function CrossConnectsPage() {
                       <div className="space-y-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] text-slate-500 font-bold uppercase">Company Name</label>
-                          <input type="text" placeholder="Owner of Side A..." value={formData.sideACompany} onChange={(e) => setFormData({ ...formData, sideACompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none" />
+                          <input type="text" placeholder="Owner of Side A..." disabled={!isInternalAdmin || isApprovalMode} value={formData.sideACompany} onChange={(e) => setFormData({ ...formData, sideACompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-50" />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] text-slate-500 font-bold uppercase">Rack Selection</label>
-                          <select required value={formData.sideARackId} onChange={(e) => setFormData({ ...formData, sideARackId: e.target.value, sideAEquipmentId: "", sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                          <select required disabled={isApprovalMode} value={formData.sideARackId} onChange={(e) => setFormData({ ...formData, sideARackId: e.target.value, sideAEquipmentId: "", sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-50">
                             <option value="">Select Rack...</option>
                             {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                           </select>
@@ -378,14 +401,14 @@ export default function CrossConnectsPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-slate-500 font-bold uppercase">Equipment</label>
-                            <select required disabled={!formData.sideARackId} value={formData.sideAEquipmentId} onChange={(e) => setFormData({ ...formData, sideAEquipmentId: e.target.value, sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-30">
+                            <select required disabled={!formData.sideARackId || isApprovalMode} value={formData.sideAEquipmentId} onChange={(e) => setFormData({ ...formData, sideAEquipmentId: e.target.value, sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-50">
                               <option value="">Select...</option>
                               {racks.find(r => r.id === parseInt(formData.sideARackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
                             </select>
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-slate-500 font-bold uppercase">Port</label>
-                            <select required disabled={!formData.sideAEquipmentId} value={formData.sideAPortId} onChange={(e) => setFormData({ ...formData, sideAPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-30">
+                            <select required disabled={!formData.sideAEquipmentId || isApprovalMode} value={formData.sideAPortId} onChange={(e) => setFormData({ ...formData, sideAPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-50">
                               <option value="">Select...</option>
                               {racks.find(r => r.id === parseInt(formData.sideARackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.sideAEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
                             </select>
@@ -401,33 +424,82 @@ export default function CrossConnectsPage() {
                         <div className="w-8 h-8 rounded bg-emerald-500/10 flex items-center justify-center text-xs font-black text-emerald-400 border border-emerald-500/20">Z</div>
                       </div>
                       <div className="space-y-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] text-slate-500 font-bold uppercase">Company Name</label>
-                          <input type="text" placeholder="Owner of Side Z..." value={formData.sideZCompany} onChange={(e) => setFormData({ ...formData, sideZCompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none text-right" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Rack Selection</label>
-                          <select required value={formData.sideZRackId} onChange={(e) => setFormData({ ...formData, sideZRackId: e.target.value, sideZEquipmentId: "", sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right">
-                            <option value="">Select Rack...</option>
-                            {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Equipment</label>
-                            <select required disabled={!formData.sideZRackId} value={formData.sideZEquipmentId} onChange={(e) => setFormData({ ...formData, sideZEquipmentId: e.target.value, sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
-                              <option value="">Select...</option>
-                              {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
-                            </select>
+                        {!isApprovalMode && (
+                          <div className="flex gap-2 justify-end mb-4 bg-slate-950 rounded-lg p-1 w-max ml-auto">
+                            <button type="button" onClick={() => setFormData({...formData, targetType: "internal"})} className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${formData.targetType === "internal" ? "bg-emerald-600 text-white" : "text-slate-500 hover:text-slate-300"}`}>Internal Provider</button>
+                            <button type="button" onClick={() => setFormData({...formData, targetType: "tenant"})} className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${formData.targetType === "tenant" ? "bg-emerald-600 text-white" : "text-slate-500 hover:text-slate-300"}`}>Another Tenant</button>
                           </div>
+                        )}
+
+                        {formData.targetType === "internal" && !isApprovalMode ? (
+                          <>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] text-slate-500 font-bold uppercase">Company/Provider Name</label>
+                              <input type="text" placeholder="Owner of Side Z..." value={formData.sideZCompany} onChange={(e) => setFormData({ ...formData, sideZCompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none text-right" />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Rack Selection</label>
+                              <select required={!!formData.sideZEquipmentId} value={formData.sideZRackId} onChange={(e) => setFormData({ ...formData, sideZRackId: e.target.value, sideZEquipmentId: "", sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right">
+                                <option value="">Select Rack...</option>
+                                {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                              </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Equipment</label>
+                                <select required={!!formData.sideZRackId} disabled={!formData.sideZRackId} value={formData.sideZEquipmentId} onChange={(e) => setFormData({ ...formData, sideZEquipmentId: e.target.value, sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
+                                  <option value="">Select...</option>
+                                  {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
+                                </select>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Port</label>
+                                <select required={!!formData.sideZEquipmentId} disabled={!formData.sideZEquipmentId} value={formData.sideZPortId} onChange={(e) => setFormData({ ...formData, sideZPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
+                                  <option value="">Select...</option>
+                                  {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.sideZEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
+                                </select>
+                              </div>
+                            </div>
+                          </>
+                        ) : formData.targetType === "tenant" && !isApprovalMode ? (
                           <div className="space-y-1.5">
-                            <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Port</label>
-                            <select required disabled={!formData.sideZEquipmentId} value={formData.sideZPortId} onChange={(e) => setFormData({ ...formData, sideZPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
-                              <option value="">Select...</option>
-                              {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.sideZEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
+                            <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Select Destination Tenant</label>
+                            <select required value={formData.targetProvider} onChange={(e) => setFormData({ ...formData, targetProvider: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right">
+                              <option value="">Select Tenant...</option>
+                              {customers.filter(c => c.id !== sessionCustomerId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
+                            <p className="text-[10px] text-slate-500 text-right mt-2">The destination tenant will receive an approval request to assign their ports.</p>
                           </div>
-                        </div>
+                        ) : isApprovalMode ? (
+                          <>
+                            <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs text-indigo-300 text-right mb-4">
+                              <strong>Action Required:</strong> Please assign a Rack, Patch Panel, and Port to accept this connection.
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Rack Selection</label>
+                              <select required value={formData.sideZRackId} onChange={(e) => setFormData({ ...formData, sideZRackId: e.target.value, sideZEquipmentId: "", sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right">
+                                <option value="">Select Rack...</option>
+                                {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                              </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Equipment</label>
+                                <select required disabled={!formData.sideZRackId} value={formData.sideZEquipmentId} onChange={(e) => setFormData({ ...formData, sideZEquipmentId: e.target.value, sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
+                                  <option value="">Select...</option>
+                                  {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
+                                </select>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Port</label>
+                                <select required disabled={!formData.sideZEquipmentId} value={formData.sideZPortId} onChange={(e) => setFormData({ ...formData, sideZPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
+                                  <option value="">Select...</option>
+                                  {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.sideZEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
+                                </select>
+                              </div>
+                            </div>
+                          </>
+                        ) : null}
                       </div>
                     </div>
 
