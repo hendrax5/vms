@@ -17,6 +17,7 @@ export async function GET(req) {
 
         const { searchParams } = new URL(req.url);
         const customerId = searchParams.get('customerId');
+        const view = searchParams.get('view'); // 'live' or 'archive'
         
         let whereClause = {};
         
@@ -29,6 +30,14 @@ export async function GET(req) {
         } else if (customerId) {
             // Admins can filter by customerId if provided
             whereClause.customerId = parseInt(customerId);
+        }
+
+        // Handle Archive vs Live view
+        if (view === 'archive') {
+            whereClause.status = { in: ['Checked Out', 'CheckedOut', 'Cancelled', 'Expired', 'Rejected'] };
+        } else {
+            // Default to live view: Pending, Approved, Check In
+            whereClause.status = { notIn: ['Checked Out', 'CheckedOut', 'Cancelled', 'Expired', 'Rejected'] };
         }
 
         const permits = await prisma.visitPermit.findMany({

@@ -18,6 +18,7 @@ export default function PermitsPage() {
     const [customers, setCustomers] = useState<any[]>([]);
     const [accessCards, setAccessCards] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'live' | 'archive'>('live');
     
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isCardModalOpen, setIsCardModalOpen] = useState(false);
@@ -28,13 +29,13 @@ export default function PermitsPage() {
             window.location.href = '/dashboard';
         }
         fetchAllData();
-    }, [session, isInternalAdmin, userRoleLower]);
+    }, [session, isInternalAdmin, userRoleLower, activeTab]);
 
     const fetchAllData = async () => {
         setLoading(true);
         try {
             const [p, dc, c, ac] = await Promise.all([
-                fetch('/api/permits').then(res => res.json()),
+                fetch(`/api/permits?view=${activeTab}`).then(res => res.json()),
                 fetch('/api/datacenters').then(res => res.json()),
                 fetch('/api/customers').then(res => res.json()),
                 fetch('/api/access-cards').then(res => res.json())
@@ -100,8 +101,14 @@ export default function PermitsPage() {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                  <div>
-                     <h1 className="text-3xl font-bold tracking-tight text-slate-100">Live Visit Permits</h1>
-                     <p className="text-muted-foreground mt-1">Manage data center physical access requests in real-time.</p>
+                     <h1 className="text-3xl font-bold tracking-tight text-slate-100">
+                         {activeTab === 'live' ? 'Live Visit Permits' : 'Permit Archive & Logs'}
+                     </h1>
+                     <p className="text-muted-foreground mt-1">
+                         {activeTab === 'live' 
+                            ? 'Manage data center physical access requests in real-time.' 
+                            : 'Review past visit records and audit logs for compliance.'}
+                     </p>
                  </div>
                  <div className="flex gap-3">
                      <button onClick={fetchAllData} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold border border-slate-700 transition-all">Refresh</button>
@@ -109,6 +116,21 @@ export default function PermitsPage() {
                          <Plus className="w-4 h-4" /> Create Request
                      </button>
                  </div>
+            </div>
+
+            <div className="flex gap-1 p-1 bg-slate-900/50 border border-slate-800 rounded-xl w-fit">
+                <button 
+                    onClick={() => setActiveTab('live')}
+                    className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'live' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+                >
+                    Live Permits
+                </button>
+                <button 
+                    onClick={() => setActiveTab('archive')}
+                    className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'archive' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+                >
+                    Archive & History
+                </button>
             </div>
 
             <div className="bg-card/50 border border-border/50 rounded-2xl backdrop-blur-xl overflow-hidden">
