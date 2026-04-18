@@ -99,7 +99,7 @@ export class EquipmentService {
             });
             
             const rackIds = [...new Set(customerEqs.map((e: any) => e.rackId))];
-            let facilityPanels = [];
+            let facilityPanels: any[] = [];
             if (rackIds.length > 0) {
                 facilityPanels = await this.repo.findManyEquipments({
                     where: { 
