@@ -44,6 +44,7 @@ export default function CrossConnectsPage() {
     sideZPortId: "",
     sideACompany: "",
     sideZCompany: "",
+    targetType: "internal",
     targetProvider: "",
     mmrSideARackId: "",
     mmrSideAEquipmentId: "",
