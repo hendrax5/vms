@@ -24,6 +24,7 @@ export default function RackElevationPage() {
     const [isEqModalOpen, setIsEqModalOpen] = useState(false);
     const [modalData, setModalData] = useState<any>(null);
     const [draggedEq, setDraggedEq] = useState<any>(null);
+    const [customers, setCustomers] = useState<any[]>([]);
 
     const userRole = ((session?.user as any)?.role?.name || (session?.user as any)?.role || '').toLowerCase().replace(/\s+/g, '');
     const userCustomerId = (session?.user as any)?.customerId || null;
@@ -37,11 +38,19 @@ export default function RackElevationPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [r, a] = await Promise.all([
+            const promises: any[] = [
                 fetch(`/api/racks/${rackId}`).then(res => res.json()),
                 fetch(`/api/racks/${rackId}/audit`).then(res => res.json())
-            ]);
-            setRack(r); setAuditLogs(a);
+            ];
+            if (isInternalAdmin) {
+                promises.push(fetch('/api/customers').then(res => res.json()));
+            }
+            const results = await Promise.all(promises);
+            setRack(results[0]); 
+            setAuditLogs(results[1]);
+            if (isInternalAdmin && results[2]) {
+                setCustomers(results[2]);
+            }
         } catch (e) { console.error(e); }
         setLoading(false);
     };
@@ -138,7 +147,16 @@ export default function RackElevationPage() {
             </div>
 
             <PortModal isOpen={!!selectedEquipment} onClose={() => setSelectedEquipment(null)} selectedEquipment={selectedEquipment} />
-            <DeviceModal isOpen={isEqModalOpen} onClose={() => setIsEqModalOpen(false)} onSubmit={handleSaveEq} initialData={modalData} perspective={perspective} />
+            <DeviceModal 
+                isOpen={isEqModalOpen} 
+                onClose={() => setIsEqModalOpen(false)} 
+                onSubmit={handleSaveEq} 
+                initialData={modalData} 
+                perspective={perspective} 
+                isMmrRack={rack?.customerId === null}
+                isInternalAdmin={isInternalAdmin}
+                customers={customers}
+            />
         </div>
     );
 }

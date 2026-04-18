@@ -14,7 +14,7 @@ export async function POST(req) {
         const sessionCustomerId = session?.user?.customerId;
 
         const body = await req.json();
-        const { datacenterId, customerId, mediaType, sideAPortId, sideZPortId, destination, targetType, targetProvider, targetNotes, sideACompany, sideZCompany } = body;
+        const { datacenterId, customerId, mediaType, sideAPortId, sideZPortId, destination, targetType, targetProvider, targetNotes, sideACompany, sideZCompany, mmrSideAPortId, mmrSideZPortId, status } = body;
 
         if (!datacenterId || !sideAPortId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -26,6 +26,8 @@ export async function POST(req) {
 
         const pSideA = parseInt(sideAPortId);
         const pSideZ = sideZPortId ? parseInt(sideZPortId) : null;
+        const pMmrSideA = mmrSideAPortId ? parseInt(mmrSideAPortId) : null;
+        const pMmrSideZ = mmrSideZPortId ? parseInt(mmrSideZPortId) : null;
 
         const existingConnections = await prisma.crossConnect.findMany({
             where: {
@@ -59,8 +61,8 @@ export async function POST(req) {
             finalCustomerId = sessionCustomerId;
         }
 
-        let initialStatus = 'Requested';
-        if (targetType === 'tenant') {
+        let initialStatus = status || 'Requested';
+        if (!status && targetType === 'tenant') {
             initialStatus = 'Pending Target Approval';
         }
 
@@ -75,7 +77,9 @@ export async function POST(req) {
                 sideZCompany: sideZCompany || null,
                 targetType: targetType || null,
                 targetProvider: finalProvider || destination || null,
-                status: initialStatus
+                status: initialStatus,
+                mmrSideAPortId: pMmrSideA,
+                mmrSideZPortId: pMmrSideZ
             },
             include: { customer: true }
         });
@@ -170,7 +174,13 @@ export async function GET(req) {
                 }, 
                 sideZPort: {
                     include: { equipment: { include: { rack: true } } }
-                } 
+                },
+                mmrSideAPort: {
+                    include: { equipment: { include: { rack: true } } }
+                },
+                mmrSideZPort: {
+                    include: { equipment: { include: { rack: true } } }
+                }
             }
         });
 
@@ -187,7 +197,7 @@ export async function PUT(req) {
         const sessionCustomerId = session?.user?.customerId;
 
         const body = await req.json();
-        const { action, id, status, datacenterId, customerId, mediaType, sideAPortId, sideZPortId, destination, targetType, targetProvider, targetNotes, sideACompany, sideZCompany } = body;
+        const { action, id, status, datacenterId, customerId, mediaType, sideAPortId, sideZPortId, destination, targetType, targetProvider, targetNotes, sideACompany, sideZCompany, mmrSideAPortId, mmrSideZPortId } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'Missing Cross Connect ID' }, { status: 400 });
@@ -308,6 +318,8 @@ export async function PUT(req) {
 
         const pSideA = parseInt(sideAPortId);
         const pSideZ = sideZPortId ? parseInt(sideZPortId) : null;
+        const pMmrSideA = mmrSideAPortId ? parseInt(mmrSideAPortId) : null;
+        const pMmrSideZ = mmrSideZPortId ? parseInt(mmrSideZPortId) : null;
 
         // Port Anti-Collision Validation (excluding the current connection itself)
         const existingConnections = await prisma.crossConnect.findMany({
@@ -355,6 +367,8 @@ export async function PUT(req) {
                 sideZCompany: sideZCompany || null,
                 targetType: targetType || null,
                 targetProvider: finalProvider || destination || null,
+                mmrSideAPortId: pMmrSideA,
+                mmrSideZPortId: pMmrSideZ
             }
         });
 

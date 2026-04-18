@@ -29,18 +29,27 @@ export class EquipmentService {
         const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
         const isTenantAdmin = ['tenantadmin', 'tenantstaff'].includes(userRole);
 
-        if (!isInternalAdmin) {
-            if (!isTenantAdmin) {
-                throw new Error('Forbidden. Read-Only users cannot add equipment.');
-            }
-            if (rack.customerId !== null && rack.customerId !== Number(sessionUser.customerId)) {
-                throw new Error('Forbidden. You cannot add equipment to another tenant\'s private rack.');
-            }
+        if (!isInternalAdmin && !isTenantAdmin) {
+            throw new Error('Forbidden. Read-Only users cannot add equipment.');
         }
 
-        let finalCustomerId = customerId ? parseInt(customerId) : null;
-        if (isTenantAdmin && !isInternalAdmin) {
-            finalCustomerId = Number(sessionUser.customerId);
+        // Equipment Ownership Logic
+        let finalCustomerId: number | null = null;
+        
+        if (rack.customerId) {
+            // Rule 1: Tenant Rack -> Any equipment inherits the Rack's Customer ID
+            if (!isInternalAdmin && rack.customerId !== Number(sessionUser.customerId)) {
+                throw new Error('Forbidden. You cannot add equipment to another tenant\'s private rack.');
+            }
+            finalCustomerId = rack.customerId;
+        } else {
+            // Rule 2: MMR / Datacenter Rack (rack.customerId is null)
+            if (!isInternalAdmin) {
+                throw new Error('Forbidden. Only datacenter admins can add equipment to Datacenter racks.');
+            }
+            // For active equipment, NOC can assign it to a customer.
+            // For standard infrastructure/OTB, they can leave it null.
+            finalCustomerId = customerId ? parseInt(customerId) : null;
         }
 
         if (uEnd > rack.uCapacity || uStart < 1) {

@@ -173,6 +173,8 @@ model EquipmentPort {
   portName      String
   crossConnectA CrossConnect[] @relation("CrossConnectSideAPort")
   crossConnectZ CrossConnect[] @relation("CrossConnectSideZPort")
+  crossConnectMmrA CrossConnect[] @relation("CrossConnectMmrSideAPort")
+  crossConnectMmrZ CrossConnect[] @relation("CrossConnectMmrSideZPort")
   equipment     RackEquipment  @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 }
 
@@ -249,6 +251,10 @@ model CrossConnect {
   datacenter     Datacenter     @relation(fields: [datacenterId], references: [id])
   sideAPort      EquipmentPort  @relation("CrossConnectSideAPort", fields: [sideAPortId], references: [id], onDelete: Cascade)
   sideZPort      EquipmentPort? @relation("CrossConnectSideZPort", fields: [sideZPortId], references: [id], onDelete: Cascade)
+  mmrSideAPortId Int?
+  mmrSideZPortId Int?
+  mmrSideAPort   EquipmentPort? @relation("CrossConnectMmrSideAPort", fields: [mmrSideAPortId], references: [id], onDelete: SetNull)
+  mmrSideZPort   EquipmentPort? @relation("CrossConnectMmrSideZPort", fields: [mmrSideZPortId], references: [id], onDelete: SetNull)
 }
 
 model InterconnectionProvider {

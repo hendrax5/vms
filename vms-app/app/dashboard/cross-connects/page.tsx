@@ -44,8 +44,14 @@ export default function CrossConnectsPage() {
     sideZPortId: "",
     sideACompany: "",
     sideZCompany: "",
-    targetType: "internal",
     targetProvider: "",
+    mmrSideARackId: "",
+    mmrSideAEquipmentId: "",
+    mmrSideAPortId: "",
+    mmrSideZRackId: "",
+    mmrSideZEquipmentId: "",
+    mmrSideZPortId: "",
+    status: "",
   });
 
   const [isApprovalMode, setIsApprovalMode] = useState(false);
@@ -122,6 +128,9 @@ export default function CrossConnectsPage() {
         sideZCompany: formData.sideZCompany || null,
         targetType: formData.targetType,
         targetProvider: formData.targetType === 'tenant' ? formData.targetProvider : formData.sideZCompany || "Internal",
+        mmrSideAPortId: formData.mmrSideAPortId ? parseInt(formData.mmrSideAPortId) : null,
+        mmrSideZPortId: formData.mmrSideZPortId ? parseInt(formData.mmrSideZPortId) : null,
+        status: isInternalAdmin && formData.status ? formData.status : undefined,
       };
 
       if (isApprovalMode && formData.id) {
@@ -167,6 +176,13 @@ export default function CrossConnectsPage() {
       sideZCompany: "",
       targetType: "internal",
       targetProvider: "",
+      mmrSideARackId: "",
+      mmrSideAEquipmentId: "",
+      mmrSideAPortId: "",
+      mmrSideZRackId: "",
+      mmrSideZEquipmentId: "",
+      mmrSideZPortId: "",
+      status: "",
     });
     setIsApprovalMode(false);
   };
@@ -188,6 +204,13 @@ export default function CrossConnectsPage() {
         sideZCompany: cx.sideZCompany || "",
         targetType: cx.targetType || "internal",
         targetProvider: cx.targetProvider || "",
+        mmrSideARackId: cx.mmrSideAPort?.equipment?.rackId?.toString() || "",
+        mmrSideAEquipmentId: cx.mmrSideAPort?.equipmentId?.toString() || "",
+        mmrSideAPortId: cx.mmrSideAPortId?.toString() || "",
+        mmrSideZRackId: cx.mmrSideZPort?.equipment?.rackId?.toString() || "",
+        mmrSideZEquipmentId: cx.mmrSideZPort?.equipmentId?.toString() || "",
+        mmrSideZPortId: cx.mmrSideZPortId?.toString() || "",
+        status: cx.status || "",
       });
     } else {
       resetForm();
@@ -379,6 +402,19 @@ export default function CrossConnectsPage() {
                 </div>
 
                 <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-8 relative">
+                  {isInternalAdmin && (
+                    <div className="flex gap-4 mb-6 pb-6 border-b border-slate-800">
+                      <div className="flex-1 space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Initial Status (Retroactive)</label>
+                        <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                          <option value="">-- Auto Determine --</option>
+                          <option value="Active">Active (Retro-active)</option>
+                          <option value="Requested">Requested</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
                     {/* SIDE A */}
                     <div className="space-y-6">
@@ -508,6 +544,51 @@ export default function CrossConnectsPage() {
                     </div>
                   </div>
                 </div>
+
+                {isInternalAdmin && (
+                  <div className="bg-emerald-950/20 border border-emerald-500/20 rounded-2xl p-6 relative mt-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center"><Network className="w-4 h-4 text-emerald-400" /></div>
+                      <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-widest">Physical MMR Mapping (Optional)</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-widest">MMR Side A Interface</label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <select value={formData.mmrSideARackId} onChange={(e) => setFormData({ ...formData, mmrSideARackId: e.target.value, mmrSideAEquipmentId: "", mmrSideAPortId: "" })} className="w-full bg-slate-950 border border-emerald-500/20 rounded-xl px-3 py-2 text-xs text-emerald-100 focus:border-emerald-500 outline-none">
+                            <option value="">Rack...</option>
+                            {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                          </select>
+                          <select disabled={!formData.mmrSideARackId} value={formData.mmrSideAEquipmentId} onChange={(e) => setFormData({ ...formData, mmrSideAEquipmentId: e.target.value, mmrSideAPortId: "" })} className="w-full bg-slate-950 border border-emerald-500/20 rounded-xl px-3 py-2 text-xs text-emerald-100 focus:border-emerald-500 outline-none disabled:opacity-50">
+                            <option value="">OTB...</option>
+                            {racks.find(r => r.id === parseInt(formData.mmrSideARackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
+                          </select>
+                          <select disabled={!formData.mmrSideAEquipmentId} value={formData.mmrSideAPortId} onChange={(e) => setFormData({ ...formData, mmrSideAPortId: e.target.value })} className="w-full bg-slate-950 border border-emerald-500/20 rounded-xl px-3 py-2 text-xs text-emerald-100 focus:border-emerald-500 outline-none disabled:opacity-50">
+                            <option value="">Port...</option>
+                            {racks.find(r => r.id === parseInt(formData.mmrSideARackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.mmrSideAEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-widest text-right block">MMR Side Z Interface</label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <select value={formData.mmrSideZRackId} onChange={(e) => setFormData({ ...formData, mmrSideZRackId: e.target.value, mmrSideZEquipmentId: "", mmrSideZPortId: "" })} className="w-full bg-slate-950 border border-emerald-500/20 rounded-xl px-3 py-2 text-xs text-emerald-100 focus:border-emerald-500 outline-none">
+                            <option value="">Rack...</option>
+                            {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                          </select>
+                          <select disabled={!formData.mmrSideZRackId} value={formData.mmrSideZEquipmentId} onChange={(e) => setFormData({ ...formData, mmrSideZEquipmentId: e.target.value, mmrSideZPortId: "" })} className="w-full bg-slate-950 border border-emerald-500/20 rounded-xl px-3 py-2 text-xs text-emerald-100 focus:border-emerald-500 outline-none disabled:opacity-50">
+                            <option value="">OTB...</option>
+                            {racks.find(r => r.id === parseInt(formData.mmrSideZRackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
+                          </select>
+                          <select disabled={!formData.mmrSideZEquipmentId} value={formData.mmrSideZPortId} onChange={(e) => setFormData({ ...formData, mmrSideZPortId: e.target.value })} className="w-full bg-slate-950 border border-emerald-500/20 rounded-xl px-3 py-2 text-xs text-emerald-100 focus:border-emerald-500 outline-none disabled:opacity-50">
+                            <option value="">Port...</option>
+                            {racks.find(r => r.id === parseInt(formData.mmrSideZRackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.mmrSideZEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-4 pt-4">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-sm font-semibold text-slate-400 hover:text-white transition-colors">Discard</button>

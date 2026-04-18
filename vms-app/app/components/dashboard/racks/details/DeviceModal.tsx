@@ -10,10 +10,13 @@ interface DeviceModalProps {
     onSubmit: (data: any) => void;
     initialData: any;
     perspective: string;
+    isMmrRack?: boolean;
+    isInternalAdmin?: boolean;
+    customers?: any[];
 }
 
-const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, initialData, perspective }) => {
-    const [formData, setFormData] = useState({ id: null, name: '', equipmentType: 'SERVER', uStart: 1, uEnd: 1, orientation: 'FRONT', status: 'Active' });
+const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, initialData, perspective, isMmrRack, isInternalAdmin, customers = [] }) => {
+    const [formData, setFormData] = useState({ id: null, name: '', equipmentType: 'SERVER', uStart: 1, uEnd: 1, orientation: 'FRONT', status: 'Active', portCount: 24, customerId: '' });
 
     useEffect(() => {
         if (initialData) {
@@ -24,7 +27,9 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                 uStart: initialData.uStart || 1,
                 uEnd: initialData.uEnd || 1,
                 orientation: initialData.orientation || (perspective === 'BOTH' ? 'FRONT' : perspective),
-                status: initialData.status || 'Active'
+                status: initialData.status || 'Active',
+                portCount: initialData.ports ? initialData.ports.length : 24,
+                customerId: initialData.customerId ? initialData.customerId.toString() : ''
             });
         }
     }, [initialData, perspective]);
@@ -62,6 +67,23 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                             </select>
                         </div>
                     </div>
+                    {isMmrRack && isInternalAdmin && !['PATCH_PANEL', 'OTB'].includes(formData.equipmentType) && (
+                        <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Assign to Customer (Optional)</label>
+                            <select value={formData.customerId} onChange={e => setFormData({...formData, customerId: e.target.value})} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none">
+                                <option value="">-- Datacenter / Internal --</option>
+                                {customers.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    {['PATCH_PANEL', 'OTB'].includes(formData.equipmentType) && !formData.id && (
+                        <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Port Capacity</label>
+                            <input type="number" min="1" max="1000" value={formData.portCount} onChange={e => setFormData({...formData, portCount: parseInt(e.target.value) || 0})} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none" />
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">U-Start</label>

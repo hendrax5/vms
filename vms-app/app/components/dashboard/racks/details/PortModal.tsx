@@ -30,15 +30,43 @@ const PortModal: React.FC<PortModalProps> = ({ isOpen, onClose, selectedEquipmen
                         <X className="w-6 h-6" />
                     </button>
                 </div>
-                <div className="p-8 max-h-[60vh] overflow-y-auto grid grid-cols-4 md:grid-cols-6 gap-3">
-                    {selectedEquipment.ports?.map((port: any) => (
-                        <div key={port.id} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all hover:scale-105
-                            ${port.status === 'AVAILABLE' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'}
-                        `}>
-                            <span className="text-[10px] font-mono font-bold">P{port.portNumber}</span>
-                            <div className={`w-2 h-2 rounded-full ${port.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-emerald-500'} shadow-[0_0_10px_currentColor]`}></div>
-                        </div>
-                    ))}
+                <div className="p-8 max-h-[60vh] overflow-y-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {selectedEquipment.ports?.map((port: any) => {
+                        const isConnected = port.crossConnectA?.length > 0 || port.crossConnectZ?.length > 0 || port.crossConnectMmrA?.length > 0 || port.crossConnectMmrZ?.length > 0;
+                        const connections = [...(port.crossConnectA || []), ...(port.crossConnectZ || []), ...(port.crossConnectMmrA || []), ...(port.crossConnectMmrZ || [])];
+                        const activeConnection = connections.find(c => c.status !== 'Terminated');
+                        
+                        let connectionLabel = 'Available';
+                        let statusColor = 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400';
+                        let dotColor = 'bg-emerald-500';
+
+                        if (activeConnection) {
+                            connectionLabel = `CX-${activeConnection.id} (${activeConnection.status})`;
+                            statusColor = activeConnection.status === 'Active' ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' : 'bg-amber-500/5 border-amber-500/20 text-amber-400';
+                            dotColor = activeConnection.status === 'Active' ? 'bg-blue-500' : 'bg-amber-500';
+                        } else if (port.status !== 'AVAILABLE') {
+                            connectionLabel = port.status;
+                            statusColor = 'bg-rose-500/5 border-rose-500/20 text-rose-400';
+                            dotColor = 'bg-rose-500';
+                        }
+
+                        return (
+                            <div key={port.id} className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 group relative ${statusColor}`}>
+                                <span className="text-[10px] font-mono font-bold">P{port.portNumber}</span>
+                                <div className={`w-2 h-2 rounded-full ${dotColor} shadow-[0_0_10px_currentColor]`}></div>
+                                
+                                {activeConnection && (
+                                    <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-white/10 rounded-xl p-3 shadow-2xl z-50 text-left w-max min-w-[200px] pointer-events-none -top-full left-1/2 -translate-x-1/2 mt-2">
+                                        <div className="text-[10px] text-white font-bold mb-1 border-b border-white/10 pb-1">Connection Details</div>
+                                        <div className="text-[10px] text-slate-400 mb-1">CX ID: <span className="text-white">CX-{activeConnection.id}</span></div>
+                                        <div className="text-[10px] text-slate-400 mb-1">Status: <span className="text-white">{activeConnection.status}</span></div>
+                                        {activeConnection.customer && <div className="text-[10px] text-slate-400 mb-1">Tenant: <span className="text-white">{activeConnection.customer.name}</span></div>}
+                                        {activeConnection.targetProvider && <div className="text-[10px] text-slate-400">Target: <span className="text-white">{activeConnection.targetProvider}</span></div>}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </motion.div>
         </div>
