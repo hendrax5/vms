@@ -24,9 +24,12 @@ RUN apk add --no-cache openssl
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy prisma schema so we can run push/migrate on startup if needed
+# Copy prisma schema and scripts for runtime db push
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 COPY --from=builder /app/public ./public
 
@@ -38,12 +41,13 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Switch to nextjs, but if we need to run npx prisma we might need to copy node_modules or use the generated client.
-# Next.js standalone includes dependencies. We can just run the server.
+# Make start script executable
+RUN chmod +x scripts/start.sh
+
 USER nextjs
 
 EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["sh", "scripts/start.sh"]
