@@ -18,17 +18,12 @@ export async function GET(req) {
 
         let whereClause = {};
 
-        // If not internal admin, filter by customerId OR null (internal infrastructure)
+        // If not internal admin, strictly filter by customerId
         if (!isInternalAdmin) {
             if (!sessionCustomerId) {
                 return NextResponse.json({ error: 'Forbidden: No Customer ID assigned to this tenant admin' }, { status: 403 });
             }
-            whereClause = {
-                OR: [
-                    { customerId: sessionCustomerId },
-                    { customerId: null }
-                ]
-            };
+            whereClause = { customerId: sessionCustomerId };
         }
 
         const racks = await prisma.rack.findMany({
