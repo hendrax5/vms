@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { 
     LayoutDashboard, Users, Activity, Settings, 
     LogOut, Package, Network, LifeBuoy, ShieldAlert, Building2, Mail,
-    Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown
+    Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown, Server
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -31,6 +31,7 @@ const navCategories = [
         items: [
             { label: 'Infrastructure Map', href: '/dashboard/infrastructure', icon: Building2, permission: 'infrastructure:view' },
             { label: 'Rack Management', href: '/dashboard/racks', icon: Package, permission: 'racks:manage' },
+            { label: 'Asset Inventory', href: '/dashboard/assets', icon: Server, permission: 'infrastructure:view' },
             { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' }
         ]
     },

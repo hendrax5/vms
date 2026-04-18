@@ -5,6 +5,7 @@ import { Network, Server, Box, Layers, Building2, MapPin, Plus, X, Trash2, Edit2
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import AssetContextPanel from '../../components/dashboard/AssetContextPanel';
 
 export default function InfrastructureTopologyPage() {
     const { data: session } = useSession();
@@ -19,6 +20,8 @@ export default function InfrastructureTopologyPage() {
     // Track selected node in the master-detail Floor Plan view
     const [activeDcId, setActiveDcId] = useState<number | null>(null);
     const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
+
+    const [selectedAsset, setSelectedAsset] = useState<{ type: string; data: any } | null>(null);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<{type: string, id: number} | null>(null);
@@ -47,8 +50,7 @@ export default function InfrastructureTopologyPage() {
         loadData();
     }, []);
 
-    const handleEditClick = (e: any, type: string, entity: any, parentId?: string) => {
-        e.stopPropagation();
+    const handleEditClick = (type: string, entity: any, parentId?: string) => {
         setAddType(type);
         setEditEntityId(entity.id);
         const newData = {
@@ -108,9 +110,32 @@ export default function InfrastructureTopologyPage() {
         }
     };
 
-    const triggerDelete = (e: React.MouseEvent, type: string, id: number) => {
-        e.stopPropagation();
+    const triggerDelete = (type: string, id: number, name: string) => {
         setDeleteTarget({ type, id });
+    };
+
+    const handleContextAddChild = (parentType: string, parentData: any) => {
+        let childType = '';
+        let initialData = { name: '', code: '', regionId: '', datacenterId: '', roomId: '', rowId: '', uCapacity: '42' };
+        
+        if (parentType === 'datacenter') {
+            childType = 'room';
+            initialData.datacenterId = parentData.id.toString();
+        } else if (parentType === 'room') {
+            childType = 'row';
+            initialData.roomId = parentData.id.toString();
+        } else if (parentType === 'row') {
+            childType = 'rack';
+            initialData.rowId = parentData.id.toString();
+        }
+
+        if (childType) {
+            setAddType(childType);
+            setEditEntityId(null);
+            setFormData(initialData);
+            setIsAddModalOpen(true);
+            setSelectedAsset(null);
+        }
     };
 
     const confirmDeleteEntity = async () => {
@@ -227,7 +252,7 @@ export default function InfrastructureTopologyPage() {
                              <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                  <Building2 className="w-4 h-4" /> Datacenters
                              </h2>
-                             <button onClick={() => { setEditEntityId(null); setAddType('datacenter'); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-md transition-colors" title="Add Datacenter">
+                             <button onClick={() => { setEditEntityId(null); setAddType('datacenter'); setFormData({ name: '', code: '', regionId: '', datacenterId: '', roomId: '', rowId: '', uCapacity: '42' }); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-md transition-colors" title="Add Datacenter">
                                  <Plus className="w-3 h-3" /> Add
                              </button>
                          </div>
@@ -248,7 +273,7 @@ export default function InfrastructureTopologyPage() {
                              >
                                  <div 
                                      className="p-4 cursor-pointer flex items-center justify-between group"
-                                     onClick={() => { setActiveDcId(dc.id); setActiveRoomId(null); }}
+                                     onClick={() => { setActiveDcId(dc.id); setActiveRoomId(null); setSelectedAsset({ type: 'datacenter', data: dc }); }}
                                  >
                                      <div className="flex items-center gap-3">
                                          <div className={`p-2 rounded-lg ${currentDcId === dc.id ? 'bg-emerald-500/20 text-emerald-400' : 'bg-neutral-800 text-neutral-500'}`}>
@@ -259,44 +284,32 @@ export default function InfrastructureTopologyPage() {
                                              <p className="text-[10px] text-neutral-500 font-mono tracking-wider">{dc.code} • {dc.region?.name || 'Global'}</p>
                                          </div>
                                      </div>
-                                     {canEdit && (
-                                         <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                             <button onClick={(e) => handleEditClick(e, 'datacenter', dc, dc.regionId?.toString())} className="p-1.5 text-neutral-400 hover:text-emerald-400"><Edit2 className="w-3 h-3" /></button>
-                                             <button onClick={(e) => triggerDelete(e, 'datacenter', dc.id)} className="p-1.5 text-neutral-400 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
-                                         </div>
-                                     )}
                                  </div>
                                  
                                  {/* Expanded Rooms List */}
                                  {currentDcId === dc.id && (
                                      <div className="bg-[#0a0a0a] border-t border-neutral-800/50 p-2">
-                                         {canEdit && (
-                                             <div className="px-3 pb-2 pt-1 flex justify-between items-center">
-                                                 <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Rooms</span>
-                                                 <button onClick={(e) => { e.stopPropagation(); setEditEntityId(null); setAddType('room'); setFormData({...formData, datacenterId: dc.id.toString()}); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-md transition-colors">
-                                                     <Plus className="w-3 h-3" /> Add Room
-                                                 </button>
-                                             </div>
-                                         )}
                                          {dc.rooms?.length > 0 ? (
                                              <div className="space-y-1">
                                                  {dc.rooms.map((room:any) => (
-                                                     <div 
-                                                         key={room.id}
-                                                         onClick={(e) => { e.stopPropagation(); setActiveRoomId(room.id); }}
-                                                         className={`px-3 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer group/room transition-colors ${currentRoomId === room.id ? 'bg-emerald-600 border-emerald-500 text-white shadow-sm' : 'text-neutral-400 hover:bg-neutral-900 border-transparent hover:text-neutral-300'}`}
-                                                     >
-                                                         <div className="flex items-center gap-2">
-                                                             <Layers className={`w-3.5 h-3.5 ${currentRoomId === room.id ? 'text-emerald-200' : 'text-neutral-500'}`} />
-                                                             {room.name}
-                                                         </div>
-                                                         {canEdit && (
-                                                             <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover/room:opacity-100 transition-opacity">
-                                                                 <button onClick={(e) => handleEditClick(e, 'room', room, dc.id.toString())} className="p-1 text-neutral-400 hover:text-emerald-400"><Edit2 className="w-3 h-3" /></button>
-                                                                 <button onClick={(e) => triggerDelete(e, 'room', room.id)} className="p-1 text-neutral-400 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
-                                                             </div>
-                                                         )}
-                                                     </div>
+                                                    <div 
+                                                        onClick={() => {
+                                                            setActiveDcId(dc.id); 
+                                                            setActiveRoomId(room.id);
+                                                            setSelectedAsset({ type: 'room', data: room });
+                                                        }}
+                                                        className={`p-3 rounded-xl border transition-all cursor-pointer group flex justify-between items-center ${activeRoomId === room.id ? 'bg-emerald-600/10 border-emerald-500/50 text-emerald-400 shadow-lg shadow-emerald-500/10' : 'bg-slate-800/30 border-white/5 hover:bg-slate-700/50 hover:border-white/10 text-slate-300'}`}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`p-2 rounded-lg ${activeRoomId === room.id ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
+                                                                <Layers className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-sm font-bold">{room.name}</h4>
+                                                                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">{room.rows?.length || 0} Rows</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                  ))}
                                              </div>
                                          ) : (
@@ -320,20 +333,11 @@ export default function InfrastructureTopologyPage() {
                                          <MapPin className="w-4 h-4 text-emerald-400" />
                                      </div>
                                      <div>
-                                         <h2 className="text-sm font-bold text-white tracking-wide">
-                                             <span className="text-neutral-400 font-normal">Map View:</span> {currentDc?.name} <span className="text-neutral-600">/</span> {currentRoom.name}
+                                         <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                                             <Layers className="w-6 h-6 text-emerald-400" />
+                                             {currentRoom.name} <span className="text-slate-500 font-normal">| Floor Plan</span>
                                          </h2>
                                      </div>
-                                 </div>
-                                 <div className="flex items-center gap-3">
-                                     <div className="text-xs text-neutral-500 font-mono bg-black px-3 py-1 rounded-full border border-neutral-800">
-                                         {currentRoom.rows?.length || 0} ROWS ACTIVE
-                                     </div>
-                                     {canEdit && (
-                                         <button onClick={() => { setEditEntityId(null); setAddType('row'); setFormData({...formData, roomId: currentRoom.id.toString()}); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-white hover:text-emerald-400 flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-full transition-colors shadow-lg shadow-emerald-600/20">
-                                             <Plus className="w-3 h-3" /> Add Row
-                                         </button>
-                                     )}
                                  </div>
                              </div>
                              
@@ -341,85 +345,39 @@ export default function InfrastructureTopologyPage() {
                              <div className="flex-1 p-8 overflow-auto relative bg-[radial-gradient(#1e1e1e_1px,transparent_1px)] [background-size:24px_24px]">
                                  <div className="space-y-16 max-w-6xl mx-auto pb-10">
                                      {currentRoom.rows?.map((row: any) => (
-                                         <div key={row.id} className="relative group/row">
-                                             {/* Row Divider / Aisle Marker */}
-                                             <div className="flex items-center gap-4 mb-4">
-                                                 <div className="w-2 h-8 bg-emerald-500 rounded-r-md"></div>
-                                                 <h4 className="text-sm font-black text-neutral-300 uppercase tracking-widest flex items-center gap-2">
-                                                     ROW {row.name}
-                                                 </h4>
-                                                 <div className="h-px bg-gradient-to-r from-emerald-500/50 to-transparent flex-grow"></div>
-                                                 
-                                                 <div className="absolute right-0 flex items-center gap-2 bg-neutral-900 px-2 py-1 rounded-full border border-neutral-800">
-                                                     {canEdit && (
-                                                         <>
-                                                             <button onClick={(e) => { e.stopPropagation(); setEditEntityId(null); setAddType('rack'); setFormData({...formData, rowId: row.id.toString(), uCapacity: '42'}); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-full transition-colors mr-2">
-                                                                 <Plus className="w-3 h-3" /> Add Rack
-                                                             </button>
-                                                             <button onClick={(e) => handleEditClick(e, 'row', row, currentRoom.id.toString())} className="p-1 text-neutral-400 hover:text-emerald-400 transition-colors" title="Edit Row"><Edit2 className="w-3.5 h-3.5" /></button>
-                                                             <button onClick={(e) => triggerDelete(e, 'row', row.id)} className="p-1 text-neutral-400 hover:text-red-400 transition-colors" title="Delete Row"><Trash2 className="w-3.5 h-3.5" /></button>
-                                                         </>
-                                                     )}
+                                         <div key={row.id} className="bg-slate-900/50 border border-white/5 p-6 rounded-2xl">
+                                             <div 
+                                                className="flex items-center justify-between mb-6 pb-4 border-b border-white/5 cursor-pointer group"
+                                                onClick={() => setSelectedAsset({ type: 'row', data: row })}
+                                             >
+                                                 <div className="flex items-center gap-3">
+                                                     <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl">
+                                                         <MapPin className="w-5 h-5" />
+                                                     </div>
+                                                     <div>
+                                                         <h3 className="text-lg font-bold text-slate-200 group-hover:text-amber-400 transition-colors">Row {row.name}</h3>
+                                                         <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mt-1">{row.racks?.length || 0} Racks Installed</p>
+                                                     </div>
                                                  </div>
                                              </div>
                                              
                                              {/* Racks Grouping Area */}
-                                             <div className={viewMode === 'grid' 
-                                                 ? "flex flex-wrap gap-1 md:gap-2 px-6" 
-                                                 : "flex flex-col gap-2 px-6 max-w-3xl"
-                                             }>
+                                             <div className="flex flex-wrap gap-4">
                                                  {row.racks?.map((rack: any) => (
-                                                     viewMode === 'grid' ? (
-                                                         <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
-                                                             {/* 2D Top-Down Rectangular Rack Simulation */}
-                                                             <div className="bg-neutral-900 border border-neutral-800 w-20 h-28 sm:w-24 sm:h-32 rounded-sm flex flex-col items-center justify-between py-3 hover:border-emerald-500 hover:bg-neutral-800 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all overflow-hidden relative">
-                                                                 {/* Intake indicator */}
-                                                                 <div className="w-full h-1 bg-emerald-500/20 absolute top-0"></div>
-                                                                 
-                                                                 <Server className="w-6 h-6 text-neutral-600 group-hover/rack:text-emerald-400 transition-colors mt-2" />
-                                                                 
-                                                                 <div className="text-center w-full px-1">
-                                                                     <p className="text-[11px] sm:text-xs font-bold text-neutral-300 truncate w-full">{rack.name}</p>
-                                                                     <p className="text-[9px] text-neutral-500 uppercase mt-0.5">{rack.uCapacity}U</p>
-                                                                 </div>
-                                                                 
-                                                                 {/* Exhaust indicator */}
-                                                                 <div className="w-full h-1 bg-red-500/20 absolute bottom-0"></div>
-                                                             </div>
-                                                             
-                                                             {/* Floating Ghost Actions on Hover map */}
-                                                             {canEdit && (
-                                                                 <div 
-                                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                                                     className="absolute -top-3 -right-3 flex gap-1 opacity-100 md:opacity-0 md:group-hover/rack:opacity-100 transition-opacity z-10"
-                                                                 >
-                                                                     <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-emerald-400 hover:text-white hover:bg-emerald-600 transition-colors"><Edit2 className="w-3 h-3" /></button>
-                                                                     <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-red-400 hover:text-white hover:bg-red-600 transition-colors"><Trash2 className="w-3 h-3" /></button>
-                                                                 </div>
-                                                             )}
-                                                         </Link>
-                                                     ) : (
-                                                         <Link href={`/dashboard/racks/${rack.id}`} key={rack.id} className="block group/rack relative">
-                                                             <div className="bg-neutral-900 border border-neutral-800 p-3 rounded-lg flex items-center justify-between hover:border-emerald-500/50 hover:bg-neutral-800 transition-all">
-                                                                 <div className="flex items-center gap-4">
-                                                                     <Server className="w-5 h-5 text-neutral-500 group-hover/rack:text-emerald-400 transition-colors" />
-                                                                     <div>
-                                                                         <p className="text-sm font-bold text-neutral-200">{rack.name}</p>
-                                                                         <p className="text-xs text-neutral-500 font-mono mt-0.5">{rack.uCapacity}U • {rack.equipments?.length || 0} Assets deployed</p>
-                                                                     </div>
-                                                                 </div>
-                                                                 {canEdit && (
-                                                                     <div 
-                                                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                                                         className="flex gap-2 opacity-100 md:opacity-0 md:group-hover/rack:opacity-100 transition-opacity"
-                                                                     >
-                                                                         <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 text-emerald-500 hover:text-emerald-400 transition-colors"><Edit2 className="w-4 h-4" /></button>
-                                                                         <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 text-red-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                                                                     </div>
-                                                                 )}
-                                                             </div>
-                                                         </Link>
-                                                     )
+                                                    <div 
+                                                        key={rack.id} 
+                                                        className="w-24 h-32 bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-slate-700/50 rounded-xl relative group cursor-pointer hover:border-purple-500/50 transition-all flex flex-col overflow-hidden shadow-lg"
+                                                        onClick={() => setSelectedAsset({ type: 'rack', data: rack })}
+                                                    >
+                                                        <div className="bg-slate-950/80 p-1.5 text-center border-b border-white/5">
+                                                            <div className="text-[10px] font-bold text-white uppercase tracking-wider">{rack.name}</div>
+                                                        </div>
+                                                        <div className="flex-1 p-2 grid grid-cols-2 gap-1 content-center">
+                                                            {Array.from({ length: 6 }).map((_, i) => (
+                                                                <div key={i} className="h-1 bg-white/5 rounded-full" />
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                  ))}
                                                  {row.racks?.length === 0 && (
                                                      <div className="py-6 text-center border border-dashed border-neutral-800 rounded-lg text-neutral-600 text-xs tracking-wider uppercase font-bold w-full max-w-sm">No racks deployed</div>
@@ -563,8 +521,8 @@ export default function InfrastructureTopologyPage() {
                                     <button type="button" onClick={() => { setIsAddModalOpen(false); setEditEntityId(null); }} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
                                         Cancel
                                     </button>
-                                    <button type="submit" className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-colors">
-                                        {editEntityId ? 'Save Changes' : 'Create Entity'}
+                                    <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold uppercase tracking-widest text-sm shadow-lg shadow-emerald-500/20">
+                                        Save Facility
                                     </button>
                                 </div>
                             </form>
@@ -572,6 +530,16 @@ export default function InfrastructureTopologyPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <AssetContextPanel 
+                isOpen={!!selectedAsset} 
+                asset={selectedAsset} 
+                onClose={() => setSelectedAsset(null)} 
+                onEdit={handleEditClick} 
+                onDelete={triggerDelete}
+                onAddChild={handleContextAddChild}
+                canEdit={canEdit}
+            />
 
             {/* Delete Confirmation Modal */}
             <AnimatePresence>
