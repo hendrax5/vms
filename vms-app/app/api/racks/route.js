@@ -23,7 +23,7 @@ export async function GET(req) {
             if (!sessionCustomerId) {
                 return NextResponse.json({ error: 'Forbidden: No Customer ID assigned to this tenant admin' }, { status: 403 });
             }
-            whereClause = { customerId: sessionCustomerId };
+            whereClause = { customerId: parseInt(sessionCustomerId, 10) };
         }
 
         const racks = await prisma.rack.findMany({
