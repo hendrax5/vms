@@ -131,7 +131,7 @@ export class EquipmentService {
             if (!sessionCustomerId) throw new Error('Forbidden: No Customer ID');
             
             const customerEqs = await this.repo.findManyEquipments({
-                where: { customerId: sessionCustomerId },
+                where: { customerId: parseInt(sessionCustomerId.toString(), 10) },
                 include: includeRelations
             });
             
