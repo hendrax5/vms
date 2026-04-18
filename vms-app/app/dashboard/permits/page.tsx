@@ -1,16 +1,19 @@
 'use client';
 
-import { Search, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import PermitTable from '../../components/dashboard/PermitTable';
 import CreatePermitModal from '../../components/dashboard/CreatePermitModal';
 import PermitDetailModal from '../../components/dashboard/PermitDetailModal';
 import AssignCardModal from '../../components/dashboard/AssignCardModal';
 
+import { Search, Plus } from 'lucide-react';
+
 export default function PermitsPage() {
-    const { data: session } = useSession();
-    const userRoleLower = ((session?.user as any)?.role || '').toLowerCase().replace(/\s+/g, '');
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const userRoleLower = (session?.user as any)?.role?.toLowerCase() || '';
     const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRoleLower);
 
     const [permits, setPermits] = useState<any[]>([]);
@@ -25,11 +28,14 @@ export default function PermitsPage() {
     const [selectedPermit, setSelectedPermit] = useState<any>(null);
 
     useEffect(() => {
-        if (session && !isInternalAdmin && userRoleLower !== '') {
-            window.location.href = '/dashboard';
+        if (status === 'unauthenticated') {
+            router.push('/login');
+            return;
         }
-        fetchAllData();
-    }, [session, isInternalAdmin, userRoleLower, activeTab]);
+        if (session) {
+            fetchAllData();
+        }
+    }, [session, status, activeTab]);
 
     const fetchAllData = async () => {
         setLoading(true);
