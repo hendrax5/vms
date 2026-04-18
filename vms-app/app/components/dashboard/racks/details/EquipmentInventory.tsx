@@ -30,7 +30,7 @@ const EquipmentInventory: React.FC<EquipmentInventoryProps> = ({
                     </div>
                 ) : (
                     visibleEquipments.map((eq: any) => {
-                        const isMine = userCustomerId !== null && (Number(eq.customerId) === Number(userCustomerId) || (eq.customerId === null && eq.equipmentType !== 'PATCH_PANEL'));
+                        const isMine = eq.isMine;
                         return (
                             <motion.div 
                                 layoutId={`eq-card-${eq.id}`}
