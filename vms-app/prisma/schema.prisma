@@ -261,6 +261,8 @@ model CrossConnect {
   sideZPortId Int?
   sideZPort   EquipmentPort? @relation("CrossConnectSideZPort", fields: [sideZPortId], references: [id], onDelete: Cascade)
 
+  sideACompany   String?
+  sideZCompany   String?
   targetType     String? // 'Internal', 'IXP', 'Carrier', 'Cloud', 'Other'
   targetProvider String? // Exact name or note about destination
   ewoCode        String?

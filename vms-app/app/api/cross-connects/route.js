@@ -14,7 +14,7 @@ export async function POST(req) {
         const sessionCustomerId = session?.user?.customerId;
 
         const body = await req.json();
-        const { datacenterId, customerId, mediaType, sideAPortId, sideZPortId, destination, targetType, targetProvider, targetNotes } = body;
+        const { datacenterId, customerId, mediaType, sideAPortId, sideZPortId, destination, targetType, targetProvider, targetNotes, sideACompany, sideZCompany } = body;
 
         if (!datacenterId || !sideAPortId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -66,6 +66,8 @@ export async function POST(req) {
                 mediaType: mediaType || 'Singlemode Fiber',
                 sideAPortId: pSideA,
                 sideZPortId: pSideZ,
+                sideACompany: sideACompany || null,
+                sideZCompany: sideZCompany || null,
                 targetType: targetType || null,
                 targetProvider: finalProvider || destination || null,
                 status: 'Requested'
@@ -116,6 +118,8 @@ export async function GET(req) {
                     { labelNumber: { contains: searchLower, mode: 'insensitive' } },
                     { notes: { contains: searchLower, mode: 'insensitive' } },
                     { targetProvider: { contains: searchLower, mode: 'insensitive' } },
+                    { sideACompany: { contains: searchLower, mode: 'insensitive' } },
+                    { sideZCompany: { contains: searchLower, mode: 'insensitive' } },
                     { customer: { name: { contains: searchLower, mode: 'insensitive' } } },
                     { sideAPort: { equipment: { name: { contains: searchLower, mode: 'insensitive' } } } },
                     { sideZPort: { equipment: { name: { contains: searchLower, mode: 'insensitive' } } } }
@@ -149,7 +153,7 @@ export async function PUT(req) {
         const sessionCustomerId = session?.user?.customerId;
 
         const body = await req.json();
-        const { action, id, status, datacenterId, customerId, mediaType, sideAPortId, sideZPortId, destination, targetType, targetProvider, targetNotes } = body;
+        const { action, id, status, datacenterId, customerId, mediaType, sideAPortId, sideZPortId, destination, targetType, targetProvider, targetNotes, sideACompany, sideZCompany } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'Missing Cross Connect ID' }, { status: 400 });
@@ -226,6 +230,8 @@ export async function PUT(req) {
                 mediaType: mediaType || 'Singlemode Fiber',
                 sideAPortId: pSideA,
                 sideZPortId: pSideZ,
+                sideACompany: sideACompany || null,
+                sideZCompany: sideZCompany || null,
                 targetType: targetType || null,
                 targetProvider: finalProvider || destination || null,
             }
