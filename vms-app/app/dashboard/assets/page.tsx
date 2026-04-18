@@ -199,7 +199,7 @@ export default function AssetInventoryPage() {
                                                 {eq.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-slate-300 font-medium capitalize">{eq.type.toLowerCase()}</td>
+                                        <td className="px-6 py-4 text-slate-300 font-medium capitalize">{(eq.equipmentType || 'Unknown').toLowerCase()}</td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col gap-1">
                                                 <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
