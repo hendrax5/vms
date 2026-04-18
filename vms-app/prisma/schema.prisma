@@ -1,4 +1,3 @@
-// Prisma Schema for Enterprise DCIM
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
@@ -9,14 +8,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// -----------------------------------------
-//  1. Security & RBAC
-// -----------------------------------------
 model Role {
   id          Int              @id @default(autoincrement())
   name        String           @unique
-  users       User[]
   permissions RolePermission[]
+  users       User[]
 }
 
 model Permission {
@@ -30,48 +26,43 @@ model Permission {
 
 model RolePermission {
   roleId       Int
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permissionId Int
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
 }
 
 model UserPermission {
   userId       Int
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   permissionId Int
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, permissionId])
 }
 
 model User {
-  id           Int         @id @default(autoincrement())
-  email        String      @unique
-  name         String?
-  password     String      @default("password123")
-  roleId       Int
-  role         Role        @relation(fields: [roleId], references: [id])
-  datacenterId Int? // For NOC local operators tied to specific site
-  datacenter   Datacenter? @relation(fields: [datacenterId], references: [id])
-  customerId   Int?
-  customer     Customer?   @relation(fields: [customerId], references: [id])
-
-  permitsApproved VisitPermit[] @relation("PermitApprover")
-  apiLogs         ApiLog[]
-
-  reportedTickets        SupportTicket[]          @relation("ReportedTickets")
-  assignedTickets        SupportTicket[]          @relation("AssignedTickets")
-  ticketComments         TicketComment[]
+  id                     Int                      @id @default(autoincrement())
+  email                  String                   @unique
+  name                   String?
+  password               String                   @default("password123")
+  roleId                 Int
+  datacenterId           Int?
+  customerId             Int?
+  apiLogs                ApiLog[]
   InfrastructureAuditLog InfrastructureAuditLog[]
-  permissions            UserPermission[]
+  assignedTickets        SupportTicket[]          @relation("AssignedTickets")
+  reportedTickets        SupportTicket[]          @relation("ReportedTickets")
   systemAuditLogs        SystemAuditLog[]
+  ticketComments         TicketComment[]
+  customer               Customer?                @relation(fields: [customerId], references: [id])
+  datacenter             Datacenter?              @relation(fields: [datacenterId], references: [id])
+  role                   Role                     @relation(fields: [roleId], references: [id])
+  permissions            UserPermission[]
+  permitsApproved        VisitPermit[]            @relation("PermitApprover")
 }
 
-// -----------------------------------------
-//  2. Multi-Datacenter Spatial Hierarchy
-// -----------------------------------------
 model Region {
   id          Int          @id @default(autoincrement())
   name        String       @unique
@@ -82,207 +73,192 @@ model Region {
 model Datacenter {
   id                       Int                       @id @default(autoincrement())
   regionId                 Int
-  region                   Region                    @relation(fields: [regionId], references: [id])
   code                     String                    @unique
   name                     String
   nocEmail                 String?
-  rooms                    DataRoom[]
-  users                    User[]
-  permits                  VisitPermit[] // Permits check-in to a datacenter
-  crossConnects            CrossConnect[] // Record boundary of cross connect
-  goods                    GoodsItem[]
-  supportTickets           SupportTicket[]
-  interconnectionProviders InterconnectionProvider[]
-  mailConfig               DatacenterMailConfig?
-  inboxMessages            InboxMessage[]
   createdAt                DateTime                  @default(now())
+  crossConnects            CrossConnect[]
+  rooms                    DataRoom[]
+  region                   Region                    @relation(fields: [regionId], references: [id])
+  mailConfig               DatacenterMailConfig?
+  goods                    GoodsItem[]
+  inboxMessages            InboxMessage[]
+  interconnectionProviders InterconnectionProvider[]
+  supportTickets           SupportTicket[]
+  users                    User[]
+  permits                  VisitPermit[]
 }
 
 model DataRoom {
   id           Int        @id @default(autoincrement())
   datacenterId Int
-  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
   name         String
+  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
   rows         Row[]
 }
 
 model Row {
   id     Int      @id @default(autoincrement())
   roomId Int
-  room   DataRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
   name   String
   racks  Rack[]
+  room   DataRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
 
 model Rack {
   id         Int                 @id @default(autoincrement())
   rowId      Int
-  row        Row                 @relation(fields: [rowId], references: [id], onDelete: Cascade)
   customerId Int?
-  customer   Customer?           @relation(fields: [customerId], references: [id])
   name       String
   uCapacity  Int                 @default(42)
+  createdAt  DateTime            @default(now())
+  customer   Customer?           @relation(fields: [customerId], references: [id])
+  row        Row                 @relation(fields: [rowId], references: [id], onDelete: Cascade)
   equipments RackEquipment[]
   affectedBy VendorMaintenance[] @relation("MaintenanceAffectedRacks")
-  createdAt  DateTime            @default(now())
 }
 
-// -----------------------------------------
-//  3. Enterprise Inventory & Devices
-// -----------------------------------------
 model Customer {
   id             Int             @id @default(autoincrement())
   name           String          @unique
   code           String?         @unique
   contactEmail   String?
   contactPhone   String?
-  racks          Rack[]
-  rackEquipments RackEquipment[]
-  crossConnects  CrossConnect[]
-  permits        VisitPermit[]
-  goods          GoodsItem[]
-  users          User[]
-  supportTickets SupportTicket[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  crossConnects  CrossConnect[]
+  goods          GoodsItem[]
+  racks          Rack[]
+  rackEquipments RackEquipment[]
+  supportTickets SupportTicket[]
+  users          User[]
+  permits        VisitPermit[]
 }
 
 model RackEquipment {
   id                     Int                      @id @default(autoincrement())
   rackId                 Int
-  rack                   Rack                     @relation(fields: [rackId], references: [id], onDelete: Cascade)
   customerId             Int?
-  customer               Customer?                @relation(fields: [customerId], references: [id])
   name                   String
-  equipmentType          String // e.g. SERVER, SWITCH, ROUTER, PATCH_PANEL, OTB
+  equipmentType          String
   uStart                 Int
   uEnd                   Int
-  orientation            String                   @default("FRONT") // 'FRONT', 'BACK', 'BOTH'
-  ports                  EquipmentPort[]
+  orientation            String                   @default("FRONT")
   status                 String                   @default("Active")
+  createdAt              DateTime                 @default(now())
+  arrivalDate            DateTime?
   serialNumber           String?
   weight                 String?
-  arrivalDate            DateTime?
-  createdAt              DateTime                 @default(now())
+  ports                  EquipmentPort[]
   InfrastructureAuditLog InfrastructureAuditLog[]
+  customer               Customer?                @relation(fields: [customerId], references: [id])
+  rack                   Rack                     @relation(fields: [rackId], references: [id], onDelete: Cascade)
 }
 
 model InfrastructureAuditLog {
   id            Int           @id @default(autoincrement())
   equipmentId   Int
-  equipment     RackEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
   userId        Int?
-  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action        String // e.g., "RELOCATE", "INSTALL", "UNINSTALL"
-  previousState String?       @db.Text
-  newState      String?       @db.Text
+  action        String
+  previousState String?
+  newState      String?
   timestamp     DateTime      @default(now())
+  equipment     RackEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  user          User?         @relation(fields: [userId], references: [id])
 }
 
 model EquipmentPort {
   id            Int            @id @default(autoincrement())
   equipmentId   Int
-  equipment     RackEquipment  @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
-  portName      String // e.g. "GE0/1", "Port 1", "Strand A"
-  // Relations for cross-connect mapping
+  portName      String
   crossConnectA CrossConnect[] @relation("CrossConnectSideAPort")
   crossConnectZ CrossConnect[] @relation("CrossConnectSideZPort")
+  equipment     RackEquipment  @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 }
 
 model GoodsItem {
   id           Int        @id @default(autoincrement())
   qrCode       String     @unique
   datacenterId Int
-  datacenter   Datacenter @relation(fields: [datacenterId], references: [id])
   customerId   Int?
-  customer     Customer?  @relation(fields: [customerId], references: [id])
   name         String
   description  String?
-  status       String // Inbound, CheckedIn, Deployed, Outbound, Disposed
-  serialNumber String?
-  weight       String?
-  arrivalDate  DateTime?
+  status       String
   scannedAt    DateTime?
   createdAt    DateTime   @default(now())
+  arrivalDate  DateTime?
+  serialNumber String?
+  weight       String?
+  customer     Customer?  @relation(fields: [customerId], references: [id])
+  datacenter   Datacenter @relation(fields: [datacenterId], references: [id])
 }
 
-// -----------------------------------------
-//  4. VMS Core (Visitor Management)
-// -----------------------------------------
 model VisitPermit {
   id             Int              @id @default(autoincrement())
   datacenterId   Int
-  datacenter     Datacenter       @relation(fields: [datacenterId], references: [id])
   customerId     Int?
-  customer       Customer?        @relation(fields: [customerId], references: [id])
   companyName    String?
   visitorNames   String
-  visitorPhoto   String?          @db.Text
+  visitorPhoto   String?
   activity       String
   scheduledAt    DateTime
   checkInAt      DateTime?
   checkOutAt     DateTime?
   status         String           @default("Pending")
   approvedById   Int?
-  approvedBy     User?            @relation("PermitApprover", fields: [approvedById], references: [id])
   ndaSignedAt    DateTime?
   qrCodeToken    String?          @unique
   requiresEscort Boolean          @default(false)
-  zoneAccess     String[] // E.g., which DataRooms or Rows they can access
-  eventLogs      PermitEventLog[]
-  accessCard     AccessCard?
+  zoneAccess     String[]
   createdAt      DateTime         @default(now())
+  accessCard     AccessCard?
+  eventLogs      PermitEventLog[]
+  approvedBy     User?            @relation("PermitApprover", fields: [approvedById], references: [id])
+  customer       Customer?        @relation(fields: [customerId], references: [id])
+  datacenter     Datacenter       @relation(fields: [datacenterId], references: [id])
 }
 
 model PermitEventLog {
   id        Int         @id @default(autoincrement())
   permitId  Int
-  permit    VisitPermit @relation(fields: [permitId], references: [id], onDelete: Cascade)
   status    String
   message   String?
   timestamp DateTime    @default(now())
+  permit    VisitPermit @relation(fields: [permitId], references: [id], onDelete: Cascade)
 }
 
-// -----------------------------------------
-//  5. Path Mapping & Logistics
-// -----------------------------------------
 model CrossConnect {
-  id           Int        @id @default(autoincrement())
-  datacenterId Int
-  datacenter   Datacenter @relation(fields: [datacenterId], references: [id])
-  customerId   Int?
-  customer     Customer?  @relation(fields: [customerId], references: [id])
-  mediaType    String     @default("Singlemode Fiber")
-
-  // Pointing precisely to ports on specific equipment (e.g. OTB and Patch Panel)
-  sideAPortId Int
-  sideAPort   EquipmentPort @relation("CrossConnectSideAPort", fields: [sideAPortId], references: [id], onDelete: Cascade)
-
-  sideZPortId Int?
-  sideZPort   EquipmentPort? @relation("CrossConnectSideZPort", fields: [sideZPortId], references: [id], onDelete: Cascade)
-
-  sideACompany   String?
-  sideZCompany   String?
-  targetType     String? // 'Internal', 'IXP', 'Carrier', 'Cloud', 'Other'
-  targetProvider String? // Exact name or note about destination
-  ewoCode        String?
+  id             Int            @id @default(autoincrement())
+  datacenterId   Int
+  customerId     Int?
+  mediaType      String         @default("Singlemode Fiber")
+  sideAPortId    Int
+  sideZPortId    Int?
+  targetType     String?
+  targetProvider String?
+  status         String         @default("Requested")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   apjiiCode      String?
+  ewoCode        String?
   labelNumber    String?
   notes          String?
-
-  status    String   @default("Requested")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sideACompany   String?
+  sideZCompany   String?
+  customer       Customer?      @relation(fields: [customerId], references: [id])
+  datacenter     Datacenter     @relation(fields: [datacenterId], references: [id])
+  sideAPort      EquipmentPort  @relation("CrossConnectSideAPort", fields: [sideAPortId], references: [id], onDelete: Cascade)
+  sideZPort      EquipmentPort? @relation("CrossConnectSideZPort", fields: [sideZPortId], references: [id], onDelete: Cascade)
 }
 
 model InterconnectionProvider {
   id           Int         @id @default(autoincrement())
   name         String
-  type         String // 'IXP', 'Carrier', 'Cloud'
+  type         String
   datacenterId Int?
-  datacenter   Datacenter? @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+  datacenter   Datacenter? @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
 }
 
 model VendorMaintenance {
@@ -291,90 +267,78 @@ model VendorMaintenance {
   startTime       DateTime
   endTime         DateTime?
   slaDowntimeMins Int       @default(0)
-  affectedRacks   Rack[]    @relation("MaintenanceAffectedRacks")
   description     String?
   createdAt       DateTime  @default(now())
+  affectedRacks   Rack[]    @relation("MaintenanceAffectedRacks")
 }
 
 model AccessCard {
   id              Int          @id @default(autoincrement())
-  cardNumber      String       @unique // e.g., "VISITOR-RED-01"
-  status          String       @default("Available") // "Available", "InUse", "Lost"
+  cardNumber      String       @unique
+  status          String       @default("Available")
   currentPermitId Int?         @unique
-  currentPermit   VisitPermit? @relation(fields: [currentPermitId], references: [id])
   updatedAt       DateTime     @updatedAt
+  currentPermit   VisitPermit? @relation(fields: [currentPermitId], references: [id])
 }
 
-// Security Audit
 model ApiLog {
   id        Int      @id @default(autoincrement())
   userId    Int?
-  user      User?    @relation(fields: [userId], references: [id])
   endpoint  String
   method    String
   action    String
   status    Int
   timestamp DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 model SystemAuditLog {
   id        Int      @id @default(autoincrement())
   userId    Int?
-  user      User?    @relation(fields: [userId], references: [id])
   action    String
   resource  String?
-  details   String?  @db.Text
+  details   String?
   ipAddress String?
   createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
-// -----------------------------------------
-//  6. SLA & Support Tickets
-// -----------------------------------------
 model SupportTicket {
-  id           Int         @id @default(autoincrement())
-  customerId   Int? // The tenant who opened the ticket
-  customer     Customer?   @relation(fields: [customerId], references: [id])
-  reporterId   Int // The specific user who filed it
-  reporter     User        @relation("ReportedTickets", fields: [reporterId], references: [id])
-  assigneeId   Int? // NOC admin handling it
-  assignee     User?       @relation("AssignedTickets", fields: [assigneeId], references: [id])
-  datacenterId Int? // Link to a specific site issue
-  datacenter   Datacenter? @relation(fields: [datacenterId], references: [id])
-
-  subject     String
-  description String
-  priority    String @default("Medium") // Low, Medium, High, Critical
-  status      String @default("Open") // Open, In Progress, Resolved, Closed
-  category    String @default("General") // Cross-Connect, Hardware, Power, Network
-
-  slaDowntimeMins Int @default(0) // Downtime counter for SLA calculation
-
-  comments TicketComment[]
-
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  resolvedAt DateTime?
+  id              Int             @id @default(autoincrement())
+  customerId      Int?
+  reporterId      Int
+  assigneeId      Int?
+  datacenterId    Int?
+  subject         String
+  description     String
+  priority        String          @default("Medium")
+  status          String          @default("Open")
+  category        String          @default("General")
+  slaDowntimeMins Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  resolvedAt      DateTime?
+  assignee        User?           @relation("AssignedTickets", fields: [assigneeId], references: [id])
+  customer        Customer?       @relation(fields: [customerId], references: [id])
+  datacenter      Datacenter?     @relation(fields: [datacenterId], references: [id])
+  reporter        User            @relation("ReportedTickets", fields: [reporterId], references: [id])
+  comments        TicketComment[]
 }
 
 model TicketComment {
   id         Int           @id @default(autoincrement())
   ticketId   Int
-  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   authorId   Int
-  author     User          @relation(fields: [authorId], references: [id])
   body       String
-  isInternal Boolean       @default(false) // NOC only chat / notes if true
+  isInternal Boolean       @default(false)
   createdAt  DateTime      @default(now())
+  author     User          @relation(fields: [authorId], references: [id])
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 }
 
-// -----------------------------------------
-//  7. Unified Inbox & Mail Automation
-// -----------------------------------------
 model DatacenterMailConfig {
   id           Int        @id @default(autoincrement())
   datacenterId Int        @unique
-  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
   imapHost     String
   imapPort     Int        @default(993)
   imapUser     String
@@ -386,20 +350,21 @@ model DatacenterMailConfig {
   isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
 }
 
 model InboxMessage {
   id           Int        @id @default(autoincrement())
   datacenterId Int
-  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
-  messageId    String     @unique // Global IMAP message ID
+  messageId    String     @unique
   threadId     String?
   from         String
   to           String
   subject      String
   bodyText     String
-  htmlContent  String? // Storing full HTML for rich rendering 
+  htmlContent  String?
   isRead       Boolean    @default(false)
   receivedAt   DateTime   @default(now())
   repliedAt    DateTime?
+  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
 }
