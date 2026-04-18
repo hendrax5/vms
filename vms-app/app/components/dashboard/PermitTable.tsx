@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, CheckCircle, Clock, XCircle, FileText, Camera } from 'lucide-react';
+import { Users, CheckCircle, Clock, XCircle, FileText, Camera, Building2 } from 'lucide-react';
 
 interface PermitTableProps {
     permits: any[];
