@@ -29,9 +29,9 @@ export default function NocDashboard() {
     const pendingPermits = permits.filter((p: any) => p.status === 'Pending').slice(0, 5);
 
     const statsConfig = realStats ? [
-        { name: 'Active Visit Permits', href: '/dashboard/permits', value: realStats.activePermits.toString(), change: `+${realStats.todayPermits} today`, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { name: 'Active Visit Permits', href: '/dashboard/permits', value: realStats.activePermits.toString(), change: `+${realStats.todayPermits} today`, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
         { name: 'Racks Utilizing > 80%', href: '/dashboard/racks', value: realStats.racksOver80.toString(), change: realStats.racksOver80 > 0 ? 'critical capacity' : 'Healthy Load', icon: Server, color: realStats.racksOver80 > 0 ? 'text-rose-400' : 'text-emerald-400', bg: realStats.racksOver80 > 0 ? 'bg-rose-500/10' : 'bg-emerald-500/10' },
-        { name: 'Cross Connects Provisioned', href: '/dashboard/cross-connects', value: realStats.activeCrossConnects.toString(), change: `+${realStats.weekCrossConnects} this week`, icon: Network, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+        { name: 'Cross Connects Provisioned', href: '/dashboard/cross-connects', value: realStats.activeCrossConnects.toString(), change: `+${realStats.weekCrossConnects} this week`, icon: Network, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
         { name: 'Total Downtime Mins (YTD)', href: '#', value: '0', change: '100% Uptime', icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     ] : [
         { name: 'Active Visit Permits', href: '/dashboard/permits', value: '-', change: 'Loading...', icon: Users, color: 'text-slate-400', bg: 'bg-slate-500/10' },
@@ -88,7 +88,7 @@ export default function NocDashboard() {
                  {/* Top Visitors List */}
                  <div className="bg-slate-900/40 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] rounded-3xl p-8 backdrop-blur-2xl min-h-[400px]">
                       <h3 className="text-lg font-semibold text-slate-100 mb-6 flex items-center gap-2">
-                          <Users className="w-5 h-5 text-blue-400" />
+                          <Users className="w-5 h-5 text-emerald-400" />
                           Pending Permits
                       </h3>
                       
@@ -118,7 +118,7 @@ export default function NocDashboard() {
                             )}
                       </div>
                       <div className="mt-6 pt-4 border-t border-white/5">
-                          <Link href="/dashboard/permits" className="text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-widest">
+                          <Link href="/dashboard/permits" className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest">
                               View All Permits
                           </Link>
                       </div>

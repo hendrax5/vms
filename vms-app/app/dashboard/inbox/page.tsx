@@ -66,7 +66,7 @@ export default function TeamInboxClient() {
             <div className="w-1/3 border-r border-slate-800 bg-slate-900/50 flex flex-col">
                 <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                     <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                        <Mail className="w-5 h-5 text-blue-400" />
+                        <Mail className="w-5 h-5 text-emerald-400" />
                         Team Inbox
                     </h2>
                     <button 
@@ -83,7 +83,7 @@ export default function TeamInboxClient() {
                         <div 
                             key={email.id} 
                             onClick={() => setSelectedEmail(email)}
-                            className={`p-4 border-b border-slate-800/50 cursor-pointer transition-all ${selectedEmail?.id === email.id ? 'bg-blue-900/20 border-l-4 border-l-blue-500 text-white' : 'hover:bg-slate-800/50 text-slate-300'}`}
+                            className={`p-4 border-b border-slate-800/50 cursor-pointer transition-all ${selectedEmail?.id === email.id ? 'bg-emerald-900/20 border-l-4 border-l-emerald-500 text-white' : 'hover:bg-slate-800/50 text-slate-300'}`}
                         >
                             <div className="flex justify-between items-start mb-1">
                                 <span className="font-semibold text-sm truncate w-3/4" title={email.from}>{email.from}</span>
@@ -137,7 +137,7 @@ export default function TeamInboxClient() {
                         <div className="p-4 border-t border-slate-800 bg-slate-900">
                             <div className="relative">
                                 <textarea
-                                    className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none h-32"
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none h-32"
                                     placeholder="Write a reply..."
                                     value={replyBody}
                                     onChange={(e) => setReplyBody(e.target.value)}
@@ -149,7 +149,7 @@ export default function TeamInboxClient() {
                                         </span>
                                     )}
                                     <button 
-                                        className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 disabled:opacity-50"
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 disabled:opacity-50"
                                         onClick={handleReply}
                                         disabled={isSending || !replyBody.trim()}
                                     >

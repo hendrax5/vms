@@ -114,7 +114,7 @@ export default function SecurityDashboard() {
                 </div>
                 <div className="w-full md:w-64 shrink-0 flex items-center justify-center">
                     {scanState === 'idle' && <p className="text-xs text-neutral-500 text-center">Awaiting scan input...</p>}
-                    {scanState === 'scanning' && <p className="text-xs text-blue-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Verifying payload...</p>}
+                    {scanState === 'scanning' && <p className="text-xs text-emerald-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Verifying payload...</p>}
                     {scanState === 'success' && <p className="text-xs text-emerald-400 flex items-center gap-2 bg-emerald-500/10 px-3 py-2 rounded border border-emerald-500/20"><CheckCircle2 className="w-4 h-4" /> {scanMessage}</p>}
                     {scanState === 'error' && <p className="text-xs text-red-400 flex items-center gap-2 bg-red-500/10 px-3 py-2 rounded border border-red-500/20"><XCircle className="w-4 h-4" /> {scanMessage}</p>}
                 </div>
@@ -128,7 +128,7 @@ export default function SecurityDashboard() {
                     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl">
                         <div className="border-b border-neutral-800 p-5 bg-neutral-900/50 flex justify-between items-center">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-blue-400" /> Active Facility Permits
+                                <Clock className="w-5 h-5 text-emerald-400" /> Active Facility Permits
                             </h2>
                         </div>
                         <div className="p-0">
@@ -158,7 +158,7 @@ export default function SecurityDashboard() {
                                                     <td className="p-4">
                                                         <div className="flex gap-2">
                                                             {permit.zoneAccess?.map((zone: string) => (
-                                                                <span key={zone} className="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-1 rounded-full uppercase border border-blue-500/20">
+                                                                <span key={zone} className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-full uppercase border border-emerald-500/20">
                                                                     {zone}
                                                                 </span>
                                                             ))}
@@ -204,8 +204,8 @@ export default function SecurityDashboard() {
                                     {/* Status Indicator Line */}
                                     <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${
                                         event.status === 'CheckIn' ? 'bg-emerald-500' :
-                                        event.status === 'NDASigned' ? 'bg-blue-500' :
-                                        event.status === 'KioskVerified' ? 'bg-indigo-500' :
+                                        event.status === 'NDASigned' ? 'bg-emerald-500' :
+                                        event.status === 'KioskVerified' ? 'bg-emerald-500' :
                                         'bg-orange-500'
                                     }`} />
                                     

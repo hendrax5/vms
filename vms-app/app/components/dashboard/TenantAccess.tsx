@@ -288,14 +288,14 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                                                 <span className="text-xs text-slate-500 block break-all">{g.description}</span>
                                             </td>
                                             <td className="px-5 py-4">
-                                                <span className={`px-2 py-0.5 rounded-sm text-[10px] uppercase font-bold border ${g.status === 'Inbound' ? 'bg-blue-950 border-blue-900 text-blue-400' : 'bg-orange-950 border-orange-900 text-orange-400'}`}>
+                                                <span className={`px-2 py-0.5 rounded-sm text-[10px] uppercase font-bold border ${g.status === 'Inbound' ? 'bg-emerald-950 border-emerald-900 text-emerald-400' : 'bg-orange-950 border-orange-900 text-orange-400'}`}>
                                                     {g.status}
                                                 </span>
                                             </td>
                                             <td className="px-5 py-4 text-right">
                                                 <button 
                                                     onClick={() => setSelectedQR({ type: 'Goods', code: g.qrCode, title: `Asset ${g.id}` })}
-                                                    className="text-slate-400 hover:text-blue-400 transition-colors inline-flex items-center gap-1.5 font-semibold text-xs border border-transparent hover:border-blue-900 px-2 py-1 bg-slate-950 shadow-sm"
+                                                    className="text-slate-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5 font-semibold text-xs border border-transparent hover:border-emerald-900 px-2 py-1 bg-slate-950 shadow-sm"
                                                 >
                                                     <QrCode className="w-4 h-4" /> WAYBILL
                                                 </button>
@@ -521,9 +521,9 @@ export default function TenantAccess({ permits, goods, customerId, onRefresh, da
                 {selectedQR && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                         <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="!bg-white w-[340px] shadow-2xl relative overflow-hidden rounded-xl border border-slate-200" style={{ background: '#FFFFFF' }}>
-                             <div className={`h-2 w-full ${selectedQR.type === 'Visit' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
+                             <div className={`h-2 w-full ${selectedQR.type === 'Visit' ? 'bg-red-600' : 'bg-emerald-600'}`}></div>
                              <div className="p-6 text-center !bg-white !text-slate-900 border-b border-slate-100" style={{ background: '#FFFFFF', color: '#0F172A' }}>
-                                 {selectedQR.type === 'Visit' ? <ShieldCheck className="w-8 h-8 mx-auto text-red-600 mb-2" /> : <Package className="w-8 h-8 mx-auto text-blue-600 mb-2" />}
+                                 {selectedQR.type === 'Visit' ? <ShieldCheck className="w-8 h-8 mx-auto text-red-600 mb-2" /> : <Package className="w-8 h-8 mx-auto text-emerald-600 mb-2" />}
                                  <h2 className="text-xl font-extrabold uppercase tracking-widest !text-slate-900">{selectedQR.title}</h2>
                                  <p className="text-[10px] font-bold text-slate-500 uppercase mt-1 tracking-widest">{selectedQR.type === 'Visit' ? 'Visitor Entry Permit' : 'Logistics Waybill Tracking'}</p>
                              </div>

@@ -77,7 +77,7 @@ export default function KioskActivityFeed({ userRole }: { userRole?: string }) {
 
                         <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
                             <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${newLogAlert.action === 'KIOSK_CHECKIN' ? 'bg-blue-400' : 'bg-purple-400'}`} />
+                                <div className={`w-2 h-2 rounded-full ${newLogAlert.action === 'KIOSK_CHECKIN' ? 'bg-emerald-400' : 'bg-purple-400'}`} />
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                     {['KIOSK_CHECKIN', 'KIOSK_CHECKOUT'].includes(newLogAlert.action) ? 'Visitor Entry/Exit' : 'Logistics Scan'}
                                 </span>
@@ -135,7 +135,7 @@ export default function KioskActivityFeed({ userRole }: { userRole?: string }) {
                                     className="group p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all"
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className={`p-2 rounded-xl ${log.action === 'KIOSK_CHECKIN' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}`}>
+                                        <div className={`p-2 rounded-xl ${log.action === 'KIOSK_CHECKIN' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-purple-500/10 text-purple-400'}`}>
                                             {log.action === 'KIOSK_CHECKIN' ? <UserCheck className="w-4 h-4" /> : <Package className="w-4 h-4" />}
                                         </div>
                                         <div className="flex-1 min-w-0">

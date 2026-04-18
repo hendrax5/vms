@@ -80,7 +80,7 @@ const EquipmentInventory: React.FC<EquipmentInventoryProps> = ({
                                                 title={`P${port.portNumber}: ${port.status}`}
                                                 onClick={() => onSelectPorts(eq)}
                                                 className={`aspect-square rounded-sm border flex items-center justify-center text-[8px] font-bold cursor-pointer transition-transform hover:scale-125
-                                                    ${port.status === 'AVAILABLE' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-blue-500/20 border-blue-500/40 text-blue-400'}
+                                                    ${port.status === 'AVAILABLE' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'}
                                                 `}
                                             >
                                                 {port.portNumber}

@@ -436,7 +436,7 @@ function SettingsContent() {
                 <div className="col-span-1 space-y-2">
                     <button 
                         onClick={() => setActiveTab('account')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'account' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'account' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
                     >
                         <User className="w-5 h-5" />
                         Account
@@ -444,7 +444,7 @@ function SettingsContent() {
                     {isSuperAdmin && (
                         <button 
                             onClick={() => setActiveTab('rbac')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'rbac' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'rbac' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
                         >
                             <Shield className="w-5 h-5" />
                             Roles & Permissions
@@ -471,7 +471,7 @@ function SettingsContent() {
                     {isSuperAdmin && (
                         <button 
                             onClick={() => setActiveTab('providers')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'providers' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'providers' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
                         >
                             <Network className="w-5 h-5" />
                             Interconnections
@@ -480,7 +480,7 @@ function SettingsContent() {
                     {isSuperAdmin && (
                         <button 
                             onClick={() => setActiveTab('mail')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'mail' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'mail' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
                         >
                             <Mail className="w-5 h-5" />
                             Mail Integration
@@ -498,7 +498,7 @@ function SettingsContent() {
                     {isDatacenterStaff && (
                         <button 
                             onClick={() => setActiveTab('access-cards')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'access-cards' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'access-cards' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
                         >
                             <Key className="w-5 h-5" />
                             Access Cards
@@ -544,7 +544,7 @@ function SettingsContent() {
                                             }
                                             setLoading(false);
                                         }}
-                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
+                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors"
                                     >
                                         Download JSON
                                     </button>
@@ -603,7 +603,7 @@ function SettingsContent() {
                         <>
                             <div className="bg-card/40 border border-border/50 rounded-2xl p-6 backdrop-blur-xl">
                                 <div className="flex items-center gap-3 mb-6 border-b border-border/50 pb-4">
-                                    <div className="w-12 h-12 bg-blue-500/20 text-blue-400 flex flex-col items-center justify-center rounded-full font-bold text-xl uppercase ring-2 ring-blue-500/30">
+                                    <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 flex flex-col items-center justify-center rounded-full font-bold text-xl uppercase ring-2 ring-emerald-500/30">
                                         {(profileForm.name || 'U').charAt(0)}
                                     </div>
                                     <div>
@@ -620,7 +620,7 @@ function SettingsContent() {
                                                 value={profileForm.name}
                                                 onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
                                                 placeholder="Your full name"
-                                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -630,7 +630,7 @@ function SettingsContent() {
                                                 value={profileForm.email}
                                                 onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
                                                 placeholder="your.email@example.com"
-                                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             />
                                         </div>
                                     </div>
@@ -642,7 +642,7 @@ function SettingsContent() {
                                                 value={profileForm.password}
                                                 onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })}
                                                 placeholder="Leave blank to keep current password"
-                                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -661,7 +661,7 @@ function SettingsContent() {
                                 <button 
                                     onClick={handleSaveProfile}
                                     disabled={loading}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
+                                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20"
                                 >
                                     {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
                                     Save Changes
@@ -672,10 +672,10 @@ function SettingsContent() {
 
                     {activeTab === 'rbac' && (
                         <div className="space-y-6">
-                            <div className="bg-gradient-to-r from-indigo-500/10 to-transparent border border-indigo-500/20 rounded-2xl p-6 backdrop-blur-xl mb-6 flex justify-between items-center">
+                            <div className="bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-2xl p-6 backdrop-blur-xl mb-6 flex justify-between items-center">
                                 <div>
                                     <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                                        <Lock className="w-5 h-5 text-indigo-400" /> Granular Access Control
+                                        <Lock className="w-5 h-5 text-emerald-400" /> Granular Access Control
                                     </h2>
                                     <p className="text-slate-400 mt-2 text-sm max-w-2xl">
                                         Assign specific read/write permissions to roles. These settings will immediately take effect for all users grouped under the respective role on their next session validation.
@@ -690,7 +690,7 @@ function SettingsContent() {
                                     </button>
                                     <button 
                                         onClick={() => setIsCreateRoleModalOpen(true)}
-                                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg shadow-indigo-600/20"
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg shadow-emerald-600/20"
                                     >
                                         Create Role
                                     </button>
@@ -699,7 +699,7 @@ function SettingsContent() {
 
                             {rbacLoading ? (
                                 <div className="flex items-center justify-center p-12">
-                                    <div className="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                                    <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
                                 </div>
                             ) : (
                                 <div className="space-y-8">
@@ -721,7 +721,7 @@ function SettingsContent() {
                                                     <button 
                                                         onClick={() => handleSaveRole(role.id, role.permissions)}
                                                         disabled={loading}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 disabled:opacity-50 border border-indigo-500/20 rounded-lg text-sm font-semibold transition-all"
+                                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50 border border-emerald-500/20 rounded-lg text-sm font-semibold transition-all"
                                                     >
                                                         {loading ? 'Saving...' : 'Save Configuration'}
                                                     </button>
@@ -744,7 +744,7 @@ function SettingsContent() {
                                                                                     checked={isChecked}
                                                                                     onChange={() => togglePermission(role.id, perm.key)}
                                                                                 />
-                                                                                <div className={`w-5 h-5 rounded border ${isChecked ? 'bg-indigo-500 border-indigo-500' : 'bg-slate-900 border-slate-700 group-hover:border-slate-500'} flex items-center justify-center transition-colors`}>
+                                                                                <div className={`w-5 h-5 rounded border ${isChecked ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-900 border-slate-700 group-hover:border-slate-500'} flex items-center justify-center transition-colors`}>
                                                                                     {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                                                                                 </div>
                                                                             </div>
@@ -784,7 +784,7 @@ function SettingsContent() {
                                             </div>
                                             <div className="mt-6 flex justify-end gap-3">
                                                 <button type="button" onClick={() => setIsCreateRoleModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
-                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Save</button>
+                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold">Save</button>
                                             </div>
                                         </form>
                                     </div>
@@ -813,7 +813,7 @@ function SettingsContent() {
                                             </div>
                                             <div className="mt-6 flex justify-end gap-3">
                                                 <button type="button" onClick={() => setIsCreatePermissionModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
-                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Save</button>
+                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold">Save</button>
                                             </div>
                                         </form>
                                     </div>
@@ -854,7 +854,7 @@ function SettingsContent() {
                                                             <span className="px-2 py-1 bg-slate-800 rounded text-xs font-mono">{u.role?.name || 'N/A'}</span>
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <span className="px-2 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded text-xs font-medium">
+                                                            <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-xs font-medium">
                                                                 {u.customer?.name || 'Internal'}
                                                             </span>
                                                         </td>
@@ -868,7 +868,7 @@ function SettingsContent() {
                                                                     customerId: u.customerId?.toString() || ''
                                                                 });
                                                                 setIsEditUserModalOpen(true);
-                                                            }} className="text-indigo-400 hover:underline">Edit</button>
+                                                            }} className="text-emerald-400 hover:underline">Edit</button>
                                                             <button onClick={() => handleDeleteUser(u.id)} className="text-red-400 hover:underline">Delete</button>
                                                         </td>
                                                     </tr>
@@ -1087,7 +1087,7 @@ function SettingsContent() {
                             <div className="bg-card/40 border border-border/50 rounded-2xl p-6 backdrop-blur-xl">
                                 <div className="flex justify-between items-center mb-6 border-b border-border/50 pb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-indigo-500/20 text-indigo-400 flex items-center justify-center rounded-full">
+                                        <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 flex items-center justify-center rounded-full">
                                             <Key className="w-6 h-6" />
                                         </div>
                                         <div>
@@ -1097,7 +1097,7 @@ function SettingsContent() {
                                     </div>
                                     <button 
                                         onClick={() => setIsAddCardModalOpen(true)}
-                                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
                                     >
                                         Register New Card
                                     </button>
@@ -1149,7 +1149,7 @@ function SettingsContent() {
                                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                                     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-full max-w-md">
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-indigo-500/20 text-indigo-400 flex items-center justify-center rounded-full">
+                                            <div className="w-10 h-10 bg-emerald-500/20 text-emerald-400 flex items-center justify-center rounded-full">
                                                 <Plus className="w-5 h-5" />
                                             </div>
                                             <h3 className="text-xl font-bold text-white">Register New Card</h3>
@@ -1169,7 +1169,7 @@ function SettingsContent() {
                                             </div>
                                             <div className="pt-4 flex justify-end gap-3">
                                                 <button type="button" onClick={() => setIsAddCardModalOpen(false)} className="px-4 py-2 text-slate-300">Cancel</button>
-                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold transition-shadow shadow-lg shadow-indigo-600/20">
+                                                <button type="submit" disabled={loading} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold transition-shadow shadow-lg shadow-emerald-600/20">
                                                     {loading ? 'Registering...' : 'Register Card'}
                                                 </button>
                                             </div>

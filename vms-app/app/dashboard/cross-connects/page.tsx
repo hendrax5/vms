@@ -213,7 +213,7 @@ export default function CrossConnectsPage() {
         </div>
         <div className="flex gap-3">
           <button onClick={fetchCrossConnects} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold border border-slate-700 transition-all">Refresh</button>
-          <button onClick={() => openModal()} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all">
+          <button onClick={() => openModal()} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">
             <Plus className="w-4 h-4" /> Order Connection
           </button>
         </div>
@@ -230,7 +230,7 @@ export default function CrossConnectsPage() {
                 placeholder="Search pathways..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 rounded-lg pl-9 pr-4 py-2 focus:border-blue-500 outline-none transition-all" 
+                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 rounded-lg pl-9 pr-4 py-2 focus:border-emerald-500 outline-none transition-all" 
               />
             </div>
           </div>
@@ -245,13 +245,13 @@ export default function CrossConnectsPage() {
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     {/* ID & Customer */}
                     <div className="flex items-center gap-4 lg:w-48">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                         <Network className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="text-sm font-bold text-slate-200">CX-{cx.id.toString().padStart(4, "0")}</p>
                         <p className="text-[10px] text-slate-500 uppercase font-black">{cx.mediaType}</p>
-                        {cx.customer && <p className="text-[10px] text-blue-400 font-medium mt-1 truncate max-w-[120px]">{cx.customer.name}</p>}
+                        {cx.customer && <p className="text-[10px] text-emerald-400 font-medium mt-1 truncate max-w-[120px]">{cx.customer.name}</p>}
                       </div>
                     </div>
 
@@ -261,7 +261,7 @@ export default function CrossConnectsPage() {
                         <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Side A</p>
                         <p className="text-xs text-slate-300 font-medium truncate">{cx.sideAPort?.equipment?.name || "Eq"} / {cx.sideAPort?.portName || "Port"}</p>
                         {cx.sideACompany && (
-                          <p className="text-[10px] font-bold text-indigo-400 flex items-center gap-1">
+                          <p className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
                             <Building2 className="w-2.5 h-2.5" /> {cx.sideACompany}
                           </p>
                         )}
@@ -275,7 +275,7 @@ export default function CrossConnectsPage() {
                           </p>
                         )}
                       </div>
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 p-1 rounded-full text-slate-500 group-hover:text-blue-400 transition-colors">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 p-1 rounded-full text-slate-500 group-hover:text-emerald-400 transition-colors">
                         <ArrowRightLeft className="w-3 h-3" />
                       </div>
                     </div>
@@ -288,7 +288,7 @@ export default function CrossConnectsPage() {
                       {isInternalAdmin && (
                         <div className="flex gap-1.5">
                           {cx.status === 'Requested' && (
-                            <button onClick={() => handleUpdateStatus(cx.id, 'Active')} className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all" title="Activate"><CheckCircle className="w-4 h-4" /></button>
+                            <button onClick={() => handleUpdateStatus(cx.id, 'Active')} className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all" title="Activate"><CheckCircle className="w-4 h-4" /></button>
                           )}
                           <button onClick={() => openModal(cx)} className="p-2 bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-all"><Pencil className="w-4 h-4" /></button>
                           <button onClick={() => handleDelete(cx.id)} className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
@@ -303,14 +303,14 @@ export default function CrossConnectsPage() {
         </div>
 
         <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 h-fit">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6">
-            <ShieldAlert className="w-6 h-6 text-indigo-400" />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+            <ShieldAlert className="w-6 h-6 text-emerald-400" />
           </div>
           <h3 className="text-lg font-bold text-slate-100 mb-2">Automated Validation</h3>
           <p className="text-sm text-slate-400 leading-relaxed mb-6">Ports are logically isolated to prevent collisions. Every connection is cross-verified against the master infrastructure map.</p>
           <div className="space-y-3 pt-6 border-t border-slate-800">
             <div className="flex justify-between text-xs"><span className="text-slate-500">System Integrity</span><span className="text-emerald-400 font-bold">100% Secure</span></div>
-            <div className="flex justify-between text-xs"><span className="text-slate-500">Active Ports</span><span className="text-blue-400 font-bold">Verified</span></div>
+            <div className="flex justify-between text-xs"><span className="text-slate-500">Active Ports</span><span className="text-emerald-400 font-bold">Verified</span></div>
           </div>
         </div>
       </div>
@@ -319,10 +319,10 @@ export default function CrossConnectsPage() {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden my-auto border-t-blue-500/50">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden my-auto border-t-emerald-500/50">
               <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
                 <h2 className="text-xl font-bold text-slate-100 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center"><Network className="w-4 h-4 text-blue-400" /></div>
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center"><Network className="w-4 h-4 text-emerald-400" /></div>
                   {formData.id ? "Modify Connection" : "Order Pathway"}
                 </h2>
                 <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-800 text-slate-500 transition-colors"><X className="w-5 h-5" /></button>
@@ -332,21 +332,21 @@ export default function CrossConnectsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Facility</label>
-                    <select required value={formData.datacenterId} onChange={(e) => setFormData({ ...formData, datacenterId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-blue-500 outline-none appearance-none">
+                    <select required value={formData.datacenterId} onChange={(e) => setFormData({ ...formData, datacenterId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none">
                       <option value="">Select Facility...</option>
                       {datacenters.map(dc => <option key={dc.id} value={dc.id}>{dc.name}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Customer Entity</label>
-                    <select value={formData.customerId} onChange={(e) => setFormData({ ...formData, customerId: e.target.value })} disabled={!isInternalAdmin} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-blue-500 outline-none appearance-none disabled:opacity-50">
+                    <select value={formData.customerId} onChange={(e) => setFormData({ ...formData, customerId: e.target.value })} disabled={!isInternalAdmin} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none disabled:opacity-50">
                       <option value="">Infrastructure Internal</option>
                       {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Transmission Media</label>
-                    <select required value={formData.mediaType} onChange={(e) => setFormData({ ...formData, mediaType: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-blue-500 outline-none appearance-none">
+                    <select required value={formData.mediaType} onChange={(e) => setFormData({ ...formData, mediaType: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none">
                       <option value="Singlemode Fiber">Singlemode Fiber (SMF)</option>
                       <option value="Multimode Fiber">Multimode Fiber (MMF)</option>
                       <option value="UTP Cat6">UTP Cat6</option>
@@ -360,17 +360,17 @@ export default function CrossConnectsPage() {
                     {/* SIDE A */}
                     <div className="space-y-6">
                       <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                        <div className="w-8 h-8 rounded bg-indigo-500/10 flex items-center justify-center text-xs font-black text-indigo-400 border border-indigo-500/20">A</div>
+                        <div className="w-8 h-8 rounded bg-emerald-500/10 flex items-center justify-center text-xs font-black text-emerald-400 border border-emerald-500/20">A</div>
                         <span className="text-sm font-bold text-slate-300">Side A Config</span>
                       </div>
                       <div className="space-y-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] text-slate-500 font-bold uppercase">Company Name</label>
-                          <input type="text" placeholder="Owner of Side A..." value={formData.sideACompany} onChange={(e) => setFormData({ ...formData, sideACompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-blue-500 outline-none" />
+                          <input type="text" placeholder="Owner of Side A..." value={formData.sideACompany} onChange={(e) => setFormData({ ...formData, sideACompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none" />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] text-slate-500 font-bold uppercase">Rack Selection</label>
-                          <select required value={formData.sideARackId} onChange={(e) => setFormData({ ...formData, sideARackId: e.target.value, sideAEquipmentId: "", sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-blue-500 outline-none">
+                          <select required value={formData.sideARackId} onChange={(e) => setFormData({ ...formData, sideARackId: e.target.value, sideAEquipmentId: "", sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none">
                             <option value="">Select Rack...</option>
                             {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                           </select>
@@ -378,14 +378,14 @@ export default function CrossConnectsPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-slate-500 font-bold uppercase">Equipment</label>
-                            <select required disabled={!formData.sideARackId} value={formData.sideAEquipmentId} onChange={(e) => setFormData({ ...formData, sideAEquipmentId: e.target.value, sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-blue-500 outline-none disabled:opacity-30">
+                            <select required disabled={!formData.sideARackId} value={formData.sideAEquipmentId} onChange={(e) => setFormData({ ...formData, sideAEquipmentId: e.target.value, sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-30">
                               <option value="">Select...</option>
                               {racks.find(r => r.id === parseInt(formData.sideARackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
                             </select>
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-slate-500 font-bold uppercase">Port</label>
-                            <select required disabled={!formData.sideAEquipmentId} value={formData.sideAPortId} onChange={(e) => setFormData({ ...formData, sideAPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-blue-500 outline-none disabled:opacity-30">
+                            <select required disabled={!formData.sideAEquipmentId} value={formData.sideAPortId} onChange={(e) => setFormData({ ...formData, sideAPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-30">
                               <option value="">Select...</option>
                               {racks.find(r => r.id === parseInt(formData.sideARackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.sideAEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
                             </select>
@@ -403,11 +403,11 @@ export default function CrossConnectsPage() {
                       <div className="space-y-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] text-slate-500 font-bold uppercase">Company Name</label>
-                          <input type="text" placeholder="Owner of Side Z..." value={formData.sideZCompany} onChange={(e) => setFormData({ ...formData, sideZCompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-blue-500 outline-none text-right" />
+                          <input type="text" placeholder="Owner of Side Z..." value={formData.sideZCompany} onChange={(e) => setFormData({ ...formData, sideZCompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none text-right" />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Rack Selection</label>
-                          <select required value={formData.sideZRackId} onChange={(e) => setFormData({ ...formData, sideZRackId: e.target.value, sideZEquipmentId: "", sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-blue-500 outline-none appearance-none text-right">
+                          <select required value={formData.sideZRackId} onChange={(e) => setFormData({ ...formData, sideZRackId: e.target.value, sideZEquipmentId: "", sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right">
                             <option value="">Select Rack...</option>
                             {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                           </select>
@@ -415,14 +415,14 @@ export default function CrossConnectsPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Equipment</label>
-                            <select required disabled={!formData.sideZRackId} value={formData.sideZEquipmentId} onChange={(e) => setFormData({ ...formData, sideZEquipmentId: e.target.value, sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-blue-500 outline-none appearance-none text-right disabled:opacity-30">
+                            <select required disabled={!formData.sideZRackId} value={formData.sideZEquipmentId} onChange={(e) => setFormData({ ...formData, sideZEquipmentId: e.target.value, sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
                               <option value="">Select...</option>
                               {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
                             </select>
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Port</label>
-                            <select required disabled={!formData.sideZEquipmentId} value={formData.sideZPortId} onChange={(e) => setFormData({ ...formData, sideZPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-blue-500 outline-none appearance-none text-right disabled:opacity-30">
+                            <select required disabled={!formData.sideZEquipmentId} value={formData.sideZPortId} onChange={(e) => setFormData({ ...formData, sideZPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
                               <option value="">Select...</option>
                               {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.sideZEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
                             </select>
@@ -439,7 +439,7 @@ export default function CrossConnectsPage() {
 
                 <div className="flex justify-end gap-4 pt-4">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-sm font-semibold text-slate-400 hover:text-white transition-colors">Discard</button>
-                  <button type="submit" className="px-10 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-95">
+                  <button type="submit" className="px-10 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all active:scale-95">
                     {formData.id ? "Apply Changes" : "Commit Pathway"}
                   </button>
                 </div>

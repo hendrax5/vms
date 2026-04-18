@@ -113,11 +113,11 @@ export default function GoodsPage() {
                         <Download className="w-4 h-4" /> Export Excel
                      </button>
                      {isCustomer ? (
-                         <button onClick={() => setIsMyQrOpen(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 text-sm font-semibold rounded-lg flex items-center gap-2 shadow-[0_0_20px_-3px_rgba(16,185,129,0.4)] transition-all">
+                         <button onClick={() => setIsMyQrOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest rounded-lg flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all">
                              <QrCode className="w-4 h-4" /> Show Delivery QR
                          </button>
                      ) : (
-                         <button onClick={() => setIsScannerOpen(true)} className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2.5 text-sm font-semibold rounded-lg flex items-center gap-2 shadow-[0_0_20px_-3px_rgba(99,102,241,0.4)] transition-all">
+                         <button onClick={() => setIsScannerOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest rounded-lg flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all">
                              <QrCode className="w-4 h-4" /> Scan Item QR
                          </button>
                      )}
@@ -132,7 +132,7 @@ export default function GoodsPage() {
                          <input 
                              type="text" 
                              placeholder="Search QR or name..." 
-                             className="w-full bg-slate-950/50 border border-white/10 text-sm text-slate-200 rounded-lg pl-10 pr-4 py-1.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                             className="w-full bg-slate-950/50 border border-white/10 text-sm text-slate-200 rounded-lg pl-10 pr-4 py-1.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                          />
                      </div>
                 </div>
@@ -140,7 +140,7 @@ export default function GoodsPage() {
                 <div className="divide-y divide-white/5">
                     {loading ? (
                          <div className="p-12 text-center text-slate-500 flex flex-col items-center">
-                             <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin mb-4" />
+                             <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mb-4" />
                              Loading goods data...
                          </div>
                     ) : goods.length === 0 ? (
@@ -165,7 +165,7 @@ export default function GoodsPage() {
                                          ) : item.status === 'Outbound' ? (
                                              <Upload className="w-5 h-5 text-amber-400" />
                                          ) : (
-                                             <Package className="w-5 h-5 text-indigo-400" />
+                                             <Package className="w-5 h-5 text-emerald-400" />
                                          )}
                                      </div>
                                      <div>
@@ -210,7 +210,7 @@ export default function GoodsPage() {
                             className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden"
                         >
                             <div className="p-6 text-center">
-                                <QrCode className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
+                                <QrCode className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
                                 <h3 className="text-lg font-bold text-white mb-2">QR Scanner Online</h3>
                                 <p className="text-sm text-slate-400 mb-6">Point your camera at the asset QR code to automatically check it into the datacenter log.</p>
                                 
@@ -222,7 +222,7 @@ export default function GoodsPage() {
                                     <button onClick={() => setIsScannerOpen(false)} className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors">
                                         Cancel
                                     </button>
-                                    <button onClick={handleMockScan} className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors shadow-lg">
+                                    <button onClick={handleMockScan} className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors shadow-lg">
                                         Manual Enter
                                     </button>
                                 </div>

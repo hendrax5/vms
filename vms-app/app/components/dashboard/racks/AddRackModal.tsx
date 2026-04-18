@@ -44,7 +44,7 @@ const AddRackModal: React.FC<AddRackModalProps> = ({ isOpen, onClose, onSubmit, 
                             required
                             value={formData.rowId}
                             onChange={e => setFormData({...formData, rowId: e.target.value})}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                         >
                             <option value="" disabled>Select a row...</option>
                             {rows.map(r => (
@@ -60,7 +60,7 @@ const AddRackModal: React.FC<AddRackModalProps> = ({ isOpen, onClose, onSubmit, 
                             placeholder="e.g. RK-A-01"
                             value={formData.name}
                             onChange={e => setFormData({...formData, name: e.target.value})}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                         />
                     </div>
                     <div>
@@ -72,7 +72,7 @@ const AddRackModal: React.FC<AddRackModalProps> = ({ isOpen, onClose, onSubmit, 
                             max="60"
                             value={formData.uCapacity}
                             onChange={e => setFormData({...formData, uCapacity: parseInt(e.target.value)})}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                         />
                     </div>
                     
@@ -87,7 +87,7 @@ const AddRackModal: React.FC<AddRackModalProps> = ({ isOpen, onClose, onSubmit, 
                          <button 
                              type="submit" 
                              disabled={saving || rows.length === 0}
-                             className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg transition-colors font-medium"
+                             className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg transition-colors font-medium"
                          >
                              {saving ? 'Creating...' : 'Create Rack'}
                          </button>

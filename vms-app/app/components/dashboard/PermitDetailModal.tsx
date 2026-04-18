@@ -62,8 +62,8 @@ const PermitDetailModal: React.FC<PermitDetailModalProps> = ({
                     </div>
 
                     {permit.visitorPhoto && (
-                        <div className="bg-slate-950 p-4 border border-indigo-500/30 rounded-lg">
-                             <p className="text-[10px] uppercase tracking-wider text-indigo-400 font-bold mb-3 flex items-center gap-2">
+                        <div className="bg-slate-950 p-4 border border-emerald-500/30 rounded-lg">
+                             <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-3 flex items-center gap-2">
                                  <Camera className="w-3 h-3" /> Kiosk Identity Verification Photos
                              </p>
                              <div className="grid grid-cols-2 gap-3">
@@ -113,7 +113,7 @@ const PermitDetailModal: React.FC<PermitDetailModalProps> = ({
                 <div className="p-6 border-t border-slate-800 bg-slate-900/50 flex justify-between items-center">
                      <div>
                          <span className="text-xs font-semibold text-slate-500 uppercase mr-3">Status:</span>
-                         <span className={`px-2 py-1 rounded text-xs font-bold ${permit.status === 'Pending' ? 'bg-amber-500/20 text-amber-500' : 'bg-blue-500/20 text-blue-400'}`}>
+                         <span className={`px-2 py-1 rounded text-xs font-bold ${permit.status === 'Pending' ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-500/20 text-emerald-400'}`}>
                              {permit.status}
                          </span>
                      </div>
@@ -123,7 +123,7 @@ const PermitDetailModal: React.FC<PermitDetailModalProps> = ({
                                  {permit.status === 'Pending' && (
                                      <>
                                          <button onClick={() => onUpdateStatus(permit.id, 'Rejected')} className="px-4 py-2 border border-red-900/50 text-red-500 hover:bg-red-900/20 rounded-lg text-sm font-semibold transition-colors">Reject</button>
-                                         <button onClick={() => onUpdateStatus(permit.id, 'Approved')} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20">Approve</button>
+                                         <button onClick={() => onUpdateStatus(permit.id, 'Approved')} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-emerald-500/20">Approve</button>
                                      </>
                                  )}
                                  {(permit.status === 'Approved' || permit.status === 'KioskVerified') && !assignedCard && (

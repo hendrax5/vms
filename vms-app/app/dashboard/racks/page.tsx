@@ -90,17 +90,17 @@ export default function RacksPage() {
                  <div className="flex items-center gap-3">
                      <div className="relative">
                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                         <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-blue-500" />
+                         <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-emerald-500" />
                      </div>
                      <select value={selectedLocation} onChange={e => setSelectedLocation(e.target.value)} className="px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200">
                          <option value="All Locations">All Locations</option>
                          {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                      </select>
                      <div className="flex bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
-                         <button onClick={() => { setViewMode('grid'); localStorage.setItem('rackViewMode', 'grid'); }} className={`p-2.5 ${viewMode === 'grid' ? 'bg-slate-800 text-blue-400' : 'text-slate-400'}`}><LayoutGrid className="w-4 h-4" /></button>
-                         <button onClick={() => { setViewMode('list'); localStorage.setItem('rackViewMode', 'list'); }} className={`p-2.5 ${viewMode === 'list' ? 'bg-slate-800 text-blue-400' : 'text-slate-400'}`}><List className="w-4 h-4" /></button>
+                         <button onClick={() => { setViewMode('grid'); localStorage.setItem('rackViewMode', 'grid'); }} className={`p-2.5 ${viewMode === 'grid' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400'}`}><LayoutGrid className="w-4 h-4" /></button>
+                         <button onClick={() => { setViewMode('list'); localStorage.setItem('rackViewMode', 'list'); }} className={`p-2.5 ${viewMode === 'list' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400'}`}><List className="w-4 h-4" /></button>
                      </div>
-                     <button onClick={() => setShowModal(true)} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/20"><Plus className="w-4 h-4" /> Add Rack</button>
+                     <button onClick={() => setShowModal(true)} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-lg shadow-emerald-500/20"><Plus className="w-4 h-4" /> Add Rack</button>
                  </div>
             </div>
 

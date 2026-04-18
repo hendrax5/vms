@@ -67,7 +67,7 @@ const RackCard: React.FC<RackCardProps> = ({ rack, index, onDelete }) => {
 
             <div className="flex justify-between items-center pt-4 border-t border-slate-800/50">
                 <span className="text-xs text-slate-400">{rack.powerCapacity || 5}kW Limit</span>
-                <a href={`/dashboard/racks/${rack.id}`} className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                <a href={`/dashboard/racks/${rack.id}`} className="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
                     Manage Units &rarr;
                 </a>
             </div>

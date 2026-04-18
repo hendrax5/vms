@@ -55,8 +55,8 @@ export default function SLAEnginePage() {
 
                  {/* Incidents logged */}
                  <div className="bg-card/40 border border-border/50 rounded-2xl p-8 backdrop-blur-xl flex flex-col items-center justify-center relative overflow-hidden group">
-                     <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
-                     <AlertTriangle className="w-12 h-12 text-blue-400 mb-4 opacity-80 group-hover:scale-110 transition-transform" />
+                     <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" />
+                     <AlertTriangle className="w-12 h-12 text-emerald-400 mb-4 opacity-80 group-hover:scale-110 transition-transform" />
                      <h2 className="text-5xl font-extrabold text-slate-100 mb-2">{slaData.incidents.length}</h2>
                      <p className="text-sm text-slate-400 uppercase tracking-widest font-semibold">Detected Incidents</p>
                  </div>

@@ -54,9 +54,9 @@ export default function DatacenterMailSettings() {
 
     return (
         <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-500/10 to-transparent border border-blue-500/20 rounded-2xl p-6 backdrop-blur-xl mb-6">
+            <div className="bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-2xl p-6 backdrop-blur-xl mb-6">
                 <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                    <Mail className="w-5 h-5 text-blue-400" /> NOC Shared Inbox Configuration
+                    <Mail className="w-5 h-5 text-emerald-400" /> NOC Shared Inbox Configuration
                 </h2>
                 <p className="text-slate-400 mt-2 text-sm max-w-2xl">
                     Configure the IMAP and SMTP endpoints for your Datacenter. The Mail Worker will actively sync incoming tickets and replies into the Dashboard. 
@@ -65,7 +65,7 @@ export default function DatacenterMailSettings() {
 
             {loading ? (
                 <div className="flex items-center justify-center p-12">
-                    <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
                 </div>
             ) : (
                 <div className="bg-card/30 border border-border/50 rounded-2xl p-6 space-y-6">
@@ -81,7 +81,7 @@ export default function DatacenterMailSettings() {
                                 checked={config.isActive} 
                                 onChange={e => setConfig({...config, isActive: e.target.checked})}
                             />
-                            <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                            <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                         </label>
                     </div>
 
@@ -144,7 +144,7 @@ export default function DatacenterMailSettings() {
                         <button 
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-emerald-500/20"
                         >
                             {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save Integration</>}
                         </button>

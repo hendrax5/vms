@@ -33,10 +33,10 @@ const PortModal: React.FC<PortModalProps> = ({ isOpen, onClose, selectedEquipmen
                 <div className="p-8 max-h-[60vh] overflow-y-auto grid grid-cols-4 md:grid-cols-6 gap-3">
                     {selectedEquipment.ports?.map((port: any) => (
                         <div key={port.id} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all hover:scale-105
-                            ${port.status === 'AVAILABLE' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-blue-500/5 border-blue-500/20 text-blue-400'}
+                            ${port.status === 'AVAILABLE' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'}
                         `}>
                             <span className="text-[10px] font-mono font-bold">P{port.portNumber}</span>
-                            <div className={`w-2 h-2 rounded-full ${port.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-blue-500'} shadow-[0_0_10px_currentColor]`}></div>
+                            <div className={`w-2 h-2 rounded-full ${port.status === 'AVAILABLE' ? 'bg-emerald-500' : 'bg-emerald-500'} shadow-[0_0_10px_currentColor]`}></div>
                         </div>
                     ))}
                 </div>

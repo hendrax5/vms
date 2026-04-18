@@ -59,10 +59,10 @@ export default function InterconnectionProviders() {
 
     return (
         <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-500/10 to-transparent border border-blue-500/20 rounded-2xl p-6 backdrop-blur-xl mb-6 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-2xl p-6 backdrop-blur-xl mb-6 flex justify-between items-center">
                 <div>
                     <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                        <Network className="w-5 h-5 text-blue-400" /> External Service Providers
+                        <Network className="w-5 h-5 text-emerald-400" /> External Service Providers
                     </h2>
                     <p className="text-slate-400 mt-2 text-sm max-w-2xl">
                         Manage Cloud On-Ramps, IXPs, and Carriers that Tenants can select as Target (Z) when requesting Cross-Connects. 
@@ -71,7 +71,7 @@ export default function InterconnectionProviders() {
                 </div>
                 <button 
                     onClick={() => setIsAddOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-2"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-2"
                 >
                     <Plus className="w-4 h-4" /> Add Target
                 </button>
@@ -87,14 +87,14 @@ export default function InterconnectionProviders() {
                                     required type="text"
                                     value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                                     placeholder="e.g. APJII, AWS"
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                                 />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Type</label>
                                 <select 
                                     required value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                                 >
                                     <option value="IXP">Public Peering / IXP</option>
                                     <option value="Carrier">Carrier / ISP</option>
@@ -106,7 +106,7 @@ export default function InterconnectionProviders() {
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Scope</label>
                                 <select 
                                     value={formData.datacenterId} onChange={(e) => setFormData({...formData, datacenterId: e.target.value})}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                                 >
                                     <option value="">Global (All Sites)</option>
                                     {datacenters.map(dc => (
@@ -117,14 +117,14 @@ export default function InterconnectionProviders() {
                         </div>
                         <div className="flex justify-end gap-3 pt-2">
                             <button type="button" onClick={() => setIsAddOpen(false)} className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors">Cancel</button>
-                            <button type="submit" disabled={isAdding} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-sm font-bold rounded-lg transition-colors">{isAdding ? 'Adding...' : 'Save Provider'}</button>
+                            <button type="submit" disabled={isAdding} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 text-sm font-bold rounded-lg transition-colors">{isAdding ? 'Adding...' : 'Save Provider'}</button>
                         </div>
                     </form>
                 </div>
             )}
 
             {loading ? (
-                <div className="flex justify-center py-12"><div className="w-8 h-8 rounded-full border-4 border-blue-500/30 border-t-blue-500 animate-spin" /></div>
+                <div className="flex justify-center py-12"><div className="w-8 h-8 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin" /></div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {providers.map(p => (
@@ -139,7 +139,7 @@ export default function InterconnectionProviders() {
                                         {p.datacenterId ? (
                                              <><Building2 className="w-3 h-3 text-emerald-500"/> SITE SPECIFIC</>
                                         ) : (
-                                             <><Globe className="w-3 h-3 text-blue-500"/> GLOBAL TARGET</>
+                                             <><Globe className="w-3 h-3 text-emerald-500"/> GLOBAL TARGET</>
                                         )}
                                     </div>
                                 </div>

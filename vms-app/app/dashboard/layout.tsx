@@ -284,7 +284,7 @@ export default function DashboardLayout({
                      <div className="flex items-center gap-4 ml-auto">
                         <div className="text-right hidden sm:block">
                             <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Session ID</span>
-                            <p className="text-xs text-indigo-400">VMS-{session?.user?.id?.slice(0, 6) || 'ONLINE'}</p>
+                            <p className="text-xs text-emerald-400">VMS-{session?.user?.id?.slice(0, 6) || 'ONLINE'}</p>
                         </div>
                      </div>
                 </header>

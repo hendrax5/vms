@@ -48,7 +48,7 @@ const RackList: React.FC<RackListProps> = ({ racks, onDelete }) => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-right space-x-4">
-                                    <a href={`/dashboard/racks/${rack.id}`} className="text-blue-400 hover:text-blue-300 font-medium">Manage</a>
+                                    <a href={`/dashboard/racks/${rack.id}`} className="text-emerald-400 hover:text-emerald-300 font-medium">Manage</a>
                                     <button onClick={() => onDelete(rack.id)} className="text-red-400/70 hover:text-red-400">Delete</button>
                                 </td>
                             </tr>

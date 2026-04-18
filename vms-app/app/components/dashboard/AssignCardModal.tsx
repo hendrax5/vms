@@ -53,7 +53,7 @@ const AssignCardModal: React.FC<AssignCardModalProps> = ({
                             required
                             value={selectedCardId}
                             onChange={(e) => setSelectedCardId(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                         >
                             <option value="">- Scan or Select Available Card -</option>
                             {accessCards.filter(c => c.status === 'Available').map(card => (
@@ -64,7 +64,7 @@ const AssignCardModal: React.FC<AssignCardModalProps> = ({
                     
                     <button 
                         type="submit"
-                        className="w-full mt-4 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg"
+                        className="w-full mt-4 px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg"
                     >
                         Confirm Assignment
                     </button>

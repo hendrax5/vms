@@ -55,7 +55,7 @@ const CreatePermitModal: React.FC<CreatePermitModalProps> = ({
                             required
                             value={formData.datacenterId}
                             onChange={(e) => setFormData({...formData, datacenterId: e.target.value})}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                         >
                             <option value="">Select a datacenter...</option>
                             {datacenters.map(dc => (
@@ -70,7 +70,7 @@ const CreatePermitModal: React.FC<CreatePermitModalProps> = ({
                                 <select 
                                     value={formData.customerId}
                                     onChange={(e) => setFormData({...formData, customerId: e.target.value, companyName: ''})}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                                 >
                                     <option value="">- Internal / Specify -</option>
                                     {customers.map(customer => (
@@ -85,7 +85,7 @@ const CreatePermitModal: React.FC<CreatePermitModalProps> = ({
                                     disabled={!!formData.customerId}
                                     value={formData.companyName}
                                     onChange={(e) => setFormData({...formData, companyName: e.target.value})}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none disabled:opacity-50"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none disabled:opacity-50"
                                     placeholder="e.g. Acme Corp"
                                 />
                             </div>
@@ -98,7 +98,7 @@ const CreatePermitModal: React.FC<CreatePermitModalProps> = ({
                             required
                             value={formData.visitorNames}
                             onChange={(e) => setFormData({...formData, visitorNames: e.target.value})}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                             placeholder="John Doe, Jane Smith"
                         />
                     </div>
@@ -109,7 +109,7 @@ const CreatePermitModal: React.FC<CreatePermitModalProps> = ({
                             required
                             value={formData.activity}
                             onChange={(e) => setFormData({...formData, activity: e.target.value})}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                             placeholder="e.g. Server Maintenance"
                         />
                     </div>
@@ -120,7 +120,7 @@ const CreatePermitModal: React.FC<CreatePermitModalProps> = ({
                             required
                             value={formData.scheduledAt}
                             onChange={(e) => setFormData({...formData, scheduledAt: e.target.value})}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                             style={{colorScheme: 'dark'}}
                         />
                     </div>
@@ -135,7 +135,7 @@ const CreatePermitModal: React.FC<CreatePermitModalProps> = ({
                         </button>
                         <button 
                             type="submit"
-                            className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-colors"
+                            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition-colors"
                         >
                             Create Permit
                         </button>

@@ -132,7 +132,7 @@ export default function CustomersPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <Building2 className="w-6 h-6 text-indigo-400" />
+                        <Building2 className="w-6 h-6 text-emerald-400" />
                         Tenant & Provider Management
                     </h1>
                     <p className="text-neutral-400">Manage all registered companies, carriers, and tenants in the facility.</p>
@@ -140,7 +140,7 @@ export default function CustomersPage() {
                 
                 <button 
                     onClick={() => handleOpenModal()} 
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap shadow-lg shadow-indigo-600/30"
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap shadow-lg shadow-emerald-600/30"
                 >
                     <Plus className="w-4 h-4" /> Add Tenant
                 </button>
@@ -183,7 +183,7 @@ export default function CustomersPage() {
                                 <tr key={c.id} className="hover:bg-neutral-900/50 transition-colors">
                                     <td className="p-4 text-neutral-500">{i + 1}</td>
                                     <td className="p-4 font-medium text-white">{c.name}</td>
-                                    <td className="p-4 text-indigo-400">{c.code || '-'}</td>
+                                    <td className="p-4 text-emerald-400">{c.code || '-'}</td>
                                     <td className="p-4 text-neutral-300">{c.contactEmail || '-'}</td>
                                     <td className="p-4 text-neutral-400 flex items-center gap-3">
                                         <div className="flex flex-col text-xs">
@@ -195,7 +195,7 @@ export default function CustomersPage() {
                                         <div className="flex items-center gap-2">
                                             <button 
                                                 onClick={() => { setMergingSource(c); setIsMergeModalOpen(true); setErrorMsg(''); setMergeTargetId(''); }}
-                                                className="p-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded transition-colors"
+                                                className="p-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded transition-colors"
                                                 title="Merge Tenant"
                                             >
                                                 <GitMerge className="w-4 h-4" />
@@ -235,7 +235,7 @@ export default function CustomersPage() {
                         
                         <div className="p-6 border-b border-neutral-800">
                             <h2 className="text-xl font-bold flex items-center gap-2">
-                                {editingCustomer ? <Edit2 className="w-5 h-5 text-indigo-400" /> : <Plus className="w-5 h-5 text-indigo-400" />}
+                                {editingCustomer ? <Edit2 className="w-5 h-5 text-emerald-400" /> : <Plus className="w-5 h-5 text-emerald-400" />}
                                 {editingCustomer ? 'Edit Tenant Profile' : 'Register New Tenant'}
                             </h2>
                         </div>
@@ -255,7 +255,7 @@ export default function CustomersPage() {
                                     required
                                     value={formData.name}
                                     onChange={e => setFormData({...formData, name: e.target.value})}
-                                    className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                    className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                                     placeholder="e.g. PT Jaringan Nusantara"
                                 />
                             </div>
@@ -266,7 +266,7 @@ export default function CustomersPage() {
                                     type="text" 
                                     value={formData.code}
                                     onChange={e => setFormData({...formData, code: e.target.value})}
-                                    className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                    className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                                     placeholder="e.g. JN-01"
                                 />
                             </div>
@@ -278,7 +278,7 @@ export default function CustomersPage() {
                                         type="email" 
                                         value={formData.contactEmail}
                                         onChange={e => setFormData({...formData, contactEmail: e.target.value})}
-                                        className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                        className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                                         placeholder="noc@example.com"
                                     />
                                 </div>
@@ -288,7 +288,7 @@ export default function CustomersPage() {
                                         type="text" 
                                         value={formData.contactPhone}
                                         onChange={e => setFormData({...formData, contactPhone: e.target.value})}
-                                        className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                        className="w-full bg-[#111] border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                                         placeholder="+62..."
                                     />
                                 </div>
@@ -304,7 +304,7 @@ export default function CustomersPage() {
                                 </button>
                                 <button 
                                     type="submit"
-                                    className="px-5 py-2 font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-600/20"
+                                    className="px-5 py-2 font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-lg shadow-emerald-600/20"
                                 >
                                     {editingCustomer ? 'Save Changes' : 'Create Tenant'}
                                 </button>

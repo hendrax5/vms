@@ -57,14 +57,14 @@ export default function TicketsPage() {
     const getPriorityColor = (p: string) => {
         if (p === 'Critical') return 'text-red-400 bg-red-500/10 border-red-500/20';
         if (p === 'High') return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
-        if (p === 'Medium') return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+        if (p === 'Medium') return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
         return 'text-slate-400 bg-slate-500/10 border-slate-500/20';
     };
 
     const getStatusIcon = (s: string) => {
         if (s === 'Resolved' || s === 'Closed') return <CheckCircle className="w-4 h-4 text-emerald-400" />;
         if (s === 'In Progress') return <Clock className="w-4 h-4 text-amber-400" />;
-        return <AlertCircle className="w-4 h-4 text-blue-400" />;
+        return <AlertCircle className="w-4 h-4 text-emerald-400" />;
     };
 
     return (
@@ -78,7 +78,7 @@ export default function TicketsPage() {
                      <button onClick={fetchTickets} className="px-5 py-2.5 bg-slate-800/50 hover:bg-slate-700/50 text-white rounded-lg text-sm font-semibold border border-white/5 transition-all">
                          Refresh
                      </button>
-                    <button onClick={() => setIsModalOpen(true)} className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-semibold shadow-[0_0_20px_-3px_rgba(99,102,241,0.4)] transition-all">
+                    <button onClick={() => setIsModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest rounded-lg flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all">
                         <Plus className="w-4 h-4" /> New Ticket
                     </button>
                 </div>
@@ -92,7 +92,7 @@ export default function TicketsPage() {
                          <input 
                              type="text" 
                              placeholder="Search subjects..." 
-                             className="w-full bg-slate-950/50 border border-white/10 text-sm text-slate-200 rounded-lg pl-10 pr-4 py-1.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                             className="w-full bg-slate-950/50 border border-white/10 text-sm text-slate-200 rounded-lg pl-10 pr-4 py-1.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                          />
                      </div>
                 </div>
@@ -100,7 +100,7 @@ export default function TicketsPage() {
                 <div className="divide-y divide-white/5">
                     {loading ? (
                          <div className="p-12 text-center text-slate-500 flex flex-col items-center">
-                             <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin mb-4" />
+                             <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mb-4" />
                              Loading tickets...
                          </div>
                     ) : tickets.length === 0 ? (
@@ -176,7 +176,7 @@ export default function TicketsPage() {
                                         type="text"
                                         value={formData.subject}
                                         onChange={e => setFormData({...formData, subject: e.target.value})}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                                         placeholder="Brief summary of the issue..."
                                     />
                                 </div>
@@ -185,7 +185,7 @@ export default function TicketsPage() {
                                     <select 
                                         value={formData.category}
                                         onChange={e => setFormData({...formData, category: e.target.value})}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                                     >
                                         <option value="General">General Inquiry</option>
                                         <option value="Cross-Connect">Cross-Connect</option>
@@ -199,7 +199,7 @@ export default function TicketsPage() {
                                     <select 
                                         value={formData.priority}
                                         onChange={e => setFormData({...formData, priority: e.target.value})}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none"
                                     >
                                         <option value="Low">Low (No immediate impact)</option>
                                         <option value="Medium">Medium (Partial disruption)</option>
@@ -213,7 +213,7 @@ export default function TicketsPage() {
                                         required
                                         value={formData.description}
                                         onChange={e => setFormData({...formData, description: e.target.value})}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-indigo-500 outline-none h-32 resize-none"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none h-32 resize-none"
                                         placeholder="Describe the issue in detail..."
                                     />
                                 </div>
@@ -227,7 +227,7 @@ export default function TicketsPage() {
                                     </button>
                                     <button 
                                         type="submit"
-                                        className="px-5 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg"
+                                        className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg"
                                     >
                                         Submit Ticket
                                     </button>

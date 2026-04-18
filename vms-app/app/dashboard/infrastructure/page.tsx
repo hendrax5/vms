@@ -178,7 +178,7 @@ export default function InfrastructureTopologyPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                  <div>
                      <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-                         <Network className="w-8 h-8 text-indigo-500" /> Infrastructure Topology
+                         <Network className="w-8 h-8 text-emerald-500" /> Infrastructure Topology
                      </h1>
                      <p className="text-slate-400 mt-1">Full hierarchical view of regions, datacenters, rooms, rows, and racks.</p>
                  </div>
@@ -202,7 +202,7 @@ export default function InfrastructureTopologyPage() {
                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                      <input 
                          type="text" 
-                         className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                         className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
                          placeholder="Search facility..."
                          value={searchQuery}
                          onChange={e => setSearchQuery(e.target.value)}
@@ -210,7 +210,7 @@ export default function InfrastructureTopologyPage() {
                  </div>
                  <div className="flex gap-3">
                      {canEdit && (
-                         <button onClick={() => { setEditEntityId(null); setIsAddModalOpen(true); }} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
+                         <button onClick={() => { setEditEntityId(null); setIsAddModalOpen(true); }} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
                              <Plus className="w-4 h-4" /> Add Facility
                          </button>
                      )}
@@ -233,14 +233,14 @@ export default function InfrastructureTopologyPage() {
                                  initial={{ opacity: 0, x: -20 }}
                                  animate={{ opacity: 1, x: 0 }}
                                  transition={{ delay: i * 0.05 }}
-                                 className={`bg-neutral-900 border transition-all rounded-2xl overflow-hidden ${currentDcId === dc.id ? 'border-indigo-500/50 shadow-lg shadow-indigo-500/10' : 'border-neutral-800 hover:border-neutral-700'}`}
+                                 className={`bg-neutral-900 border transition-all rounded-2xl overflow-hidden ${currentDcId === dc.id ? 'border-emerald-500/50 shadow-lg shadow-emerald-500/10' : 'border-neutral-800 hover:border-neutral-700'}`}
                              >
                                  <div 
                                      className="p-4 cursor-pointer flex items-center justify-between group"
                                      onClick={() => { setActiveDcId(dc.id); setActiveRoomId(null); }}
                                  >
                                      <div className="flex items-center gap-3">
-                                         <div className={`p-2 rounded-lg ${currentDcId === dc.id ? 'bg-indigo-500/20 text-indigo-400' : 'bg-neutral-800 text-neutral-500'}`}>
+                                         <div className={`p-2 rounded-lg ${currentDcId === dc.id ? 'bg-emerald-500/20 text-emerald-400' : 'bg-neutral-800 text-neutral-500'}`}>
                                             <Building2 className="w-4 h-4" />
                                          </div>
                                          <div>
@@ -250,7 +250,7 @@ export default function InfrastructureTopologyPage() {
                                      </div>
                                      {canEdit && (
                                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                             <button onClick={(e) => handleEditClick(e, 'datacenter', dc, dc.regionId?.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400"><Edit2 className="w-3 h-3" /></button>
+                                             <button onClick={(e) => handleEditClick(e, 'datacenter', dc, dc.regionId?.toString())} className="p-1.5 text-neutral-400 hover:text-emerald-400"><Edit2 className="w-3 h-3" /></button>
                                              <button onClick={(e) => triggerDelete(e, 'datacenter', dc.id)} className="p-1.5 text-neutral-400 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
                                          </div>
                                      )}
@@ -265,10 +265,10 @@ export default function InfrastructureTopologyPage() {
                                                      <div 
                                                          key={room.id}
                                                          onClick={(e) => { e.stopPropagation(); setActiveRoomId(room.id); }}
-                                                         className={`px-3 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer group/room transition-colors ${currentRoomId === room.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm' : 'text-neutral-400 hover:bg-neutral-900 border-transparent hover:text-neutral-300'}`}
+                                                         className={`px-3 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer group/room transition-colors ${currentRoomId === room.id ? 'bg-emerald-600 border-emerald-500 text-white shadow-sm' : 'text-neutral-400 hover:bg-neutral-900 border-transparent hover:text-neutral-300'}`}
                                                      >
                                                          <div className="flex items-center gap-2">
-                                                             <Layers className={`w-3.5 h-3.5 ${currentRoomId === room.id ? 'text-indigo-200' : 'text-neutral-500'}`} />
+                                                             <Layers className={`w-3.5 h-3.5 ${currentRoomId === room.id ? 'text-emerald-200' : 'text-neutral-500'}`} />
                                                              {room.name}
                                                          </div>
                                                          {canEdit && (
@@ -298,7 +298,7 @@ export default function InfrastructureTopologyPage() {
                              <div className="px-6 py-4 border-b border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex justify-between items-center z-10 sticky top-0">
                                  <div className="flex items-center gap-3">
                                      <div className="p-1.5 bg-neutral-800 rounded-md">
-                                         <MapPin className="w-4 h-4 text-indigo-400" />
+                                         <MapPin className="w-4 h-4 text-emerald-400" />
                                      </div>
                                      <div>
                                          <h2 className="text-sm font-bold text-white tracking-wide">
@@ -327,7 +327,7 @@ export default function InfrastructureTopologyPage() {
                                                  <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-neutral-900 px-2 py-1 rounded-full border border-neutral-800">
                                                      {canEdit && (
                                                          <>
-                                                             <button onClick={(e) => handleEditClick(e, 'row', row, currentRoom.id.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400 transition-colors" title="Edit Row"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                             <button onClick={(e) => handleEditClick(e, 'row', row, currentRoom.id.toString())} className="p-1.5 text-neutral-400 hover:text-emerald-400 transition-colors" title="Edit Row"><Edit2 className="w-3.5 h-3.5" /></button>
                                                              <button onClick={(e) => triggerDelete(e, 'row', row.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors" title="Delete Row"><Trash2 className="w-3.5 h-3.5" /></button>
                                                          </>
                                                      )}
@@ -345,7 +345,7 @@ export default function InfrastructureTopologyPage() {
                                                              {/* 2D Top-Down Rectangular Rack Simulation */}
                                                              <div className="bg-neutral-900 border border-neutral-800 w-20 h-28 sm:w-24 sm:h-32 rounded-sm flex flex-col items-center justify-between py-3 hover:border-emerald-500 hover:bg-neutral-800 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all overflow-hidden relative">
                                                                  {/* Intake indicator */}
-                                                                 <div className="w-full h-1 bg-blue-500/20 absolute top-0"></div>
+                                                                 <div className="w-full h-1 bg-emerald-500/20 absolute top-0"></div>
                                                                  
                                                                  <Server className="w-6 h-6 text-neutral-600 group-hover/rack:text-emerald-400 transition-colors mt-2" />
                                                                  
@@ -364,7 +364,7 @@ export default function InfrastructureTopologyPage() {
                                                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                                                      className="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover/rack:opacity-100 transition-opacity z-10"
                                                                  >
-                                                                     <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-neutral-300 hover:text-white hover:bg-indigo-600 transition-colors"><Edit2 className="w-3 h-3" /></button>
+                                                                     <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-neutral-300 hover:text-white hover:bg-emerald-600 transition-colors"><Edit2 className="w-3 h-3" /></button>
                                                                      <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-neutral-300 hover:text-white hover:bg-red-600 transition-colors"><Trash2 className="w-3 h-3" /></button>
                                                                  </div>
                                                              )}
@@ -384,7 +384,7 @@ export default function InfrastructureTopologyPage() {
                                                                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                                                          className="flex gap-2 opacity-0 group-hover/rack:opacity-100 transition-opacity"
                                                                      >
-                                                                         <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 text-neutral-400 hover:text-indigo-400 transition-colors"><Edit2 className="w-4 h-4" /></button>
+                                                                         <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 text-neutral-400 hover:text-emerald-400 transition-colors"><Edit2 className="w-4 h-4" /></button>
                                                                          <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                                                                      </div>
                                                                  )}
@@ -440,7 +440,7 @@ export default function InfrastructureTopologyPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-slate-400 mb-1">Entity Type</label>
                                     <select 
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
                                         value={addType}
                                         onChange={(e) => setAddType(e.target.value)}
                                     >
@@ -457,7 +457,7 @@ export default function InfrastructureTopologyPage() {
                                     <input 
                                         type="text" required
                                         placeholder="e.g. Jakarta East, JKT-01, Room A"
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                                         value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
                                     />
                                 </div>
@@ -468,13 +468,13 @@ export default function InfrastructureTopologyPage() {
                                             <label className="block text-sm font-medium text-slate-400 mb-1">Facility Code</label>
                                             <input 
                                                 type="text" required placeholder="e.g. JKT-1"
-                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
                                                 value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-slate-400 mb-1">Parent Region</label>
-                                            <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                            <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
                                                 value={formData.regionId} onChange={e => setFormData({...formData, regionId: e.target.value})}>
                                                 <option value="">Select Region</option>
                                                 {regions.map(r => <option key={r.id} value={r.id}>{r.name} ({r.code})</option>)}
@@ -486,7 +486,7 @@ export default function InfrastructureTopologyPage() {
                                 {addType === 'room' && (
                                     <div>
                                         <label className="block text-sm font-medium text-slate-400 mb-1">Parent Datacenter</label>
-                                        <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                        <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
                                             value={formData.datacenterId} onChange={e => setFormData({...formData, datacenterId: e.target.value})}>
                                             <option value="">Select Datacenter</option>
                                             {topology.map(dc => <option key={dc.id} value={dc.id}>{dc.name} [{dc.code}]</option>)}
@@ -497,7 +497,7 @@ export default function InfrastructureTopologyPage() {
                                 {addType === 'row' && (
                                     <div>
                                         <label className="block text-sm font-medium text-slate-400 mb-1">Parent Room</label>
-                                        <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                        <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
                                             value={formData.roomId} onChange={e => setFormData({...formData, roomId: e.target.value})}>
                                             <option value="">Select Room</option>
                                             {topology.flatMap(dc => dc.rooms || []).map((room:any) => 
@@ -511,7 +511,7 @@ export default function InfrastructureTopologyPage() {
                                     <>
                                         <div>
                                             <label className="block text-sm font-medium text-slate-400 mb-1">Parent Row</label>
-                                            <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                            <select required className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
                                                 value={formData.rowId} onChange={e => setFormData({...formData, rowId: e.target.value})}>
                                                 <option value="">Select Row</option>
                                                 {topology.flatMap(dc => dc.rooms || []).flatMap((r:any) => r.rows || []).map((row:any) => 
@@ -523,7 +523,7 @@ export default function InfrastructureTopologyPage() {
                                             <label className="block text-sm font-medium text-slate-400 mb-1">U Capacity</label>
                                             <input 
                                                 type="number" required placeholder="42"
-                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
                                                 value={formData.uCapacity} onChange={e => setFormData({...formData, uCapacity: e.target.value})}
                                             />
                                         </div>
@@ -534,7 +534,7 @@ export default function InfrastructureTopologyPage() {
                                     <button type="button" onClick={() => { setIsAddModalOpen(false); setEditEntityId(null); }} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
                                         Cancel
                                     </button>
-                                    <button type="submit" className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition-colors">
+                                    <button type="submit" className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-colors">
                                         {editEntityId ? 'Save Changes' : 'Create Entity'}
                                     </button>
                                 </div>

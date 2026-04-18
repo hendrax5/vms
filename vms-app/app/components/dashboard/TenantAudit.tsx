@@ -177,7 +177,7 @@ export default function TenantAudit({ permits, goods }: TenantAuditProps) {
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <span className={`inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-[10px] font-bold uppercase tracking-tight ${event.type === 'VISIT' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}`}>
+                                            <span className={`inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-[10px] font-bold uppercase tracking-tight ${event.type === 'VISIT' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-purple-500/10 text-purple-400'}`}>
                                                 {event.type === 'VISIT' ? <UserCheck className="w-3 h-3" /> : <Package className="w-3 h-3" />}
                                                 {event.type}
                                             </span>
