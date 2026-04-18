@@ -253,7 +253,7 @@ export default function CrossConnectsPage() {
         <div className="flex gap-3">
           <button onClick={fetchCrossConnects} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold border border-slate-700 transition-all">Refresh</button>
           <button onClick={() => openModal()} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">
-            <Plus className="w-4 h-4" /> Order Connection
+            <Plus className="w-4 h-4" /> Order Cross-Connect
           </button>
         </div>
       </div>

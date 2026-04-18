@@ -34,7 +34,7 @@ export default function TenantInterconnection({
                         onClick={() => window.location.href = '/dashboard/cross-connects'}
                         className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-sm transition-colors shadow-lg shadow-red-900/20"
                     >
-                        Order Interconnection
+                        Order Cross-Connect
                     </button>
                 </div>
 
