@@ -22,7 +22,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://vms_user:vmspassword@db:5432/vmsdb?schema=public
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
     depends_on:
@@ -36,7 +36,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://vms_user:vmspassword@db:5432/vmsdb?schema=public
       - IMAP_HOST=${IMAP_HOST:-imap.example.com}
       - IMAP_PORT=${IMAP_PORT:-993}
       - IMAP_USER=${IMAP_USER:-vms@example.com}
