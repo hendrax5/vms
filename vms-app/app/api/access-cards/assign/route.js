@@ -17,11 +17,11 @@ export async function POST(req) {
         }
 
         const permit = await prisma.visitPermit.findUnique({ where: { id: parseInt(permitId) } });
-        if (!permit || permit.status !== 'CheckIn') {
-            return NextResponse.json({ error: 'Visitor must be Checked-In to receive an access card' }, { status: 400 });
+        if (!permit || (permit.status !== 'CheckIn' && permit.status !== 'KioskVerified')) {
+            return NextResponse.json({ error: 'Visitor must be Verified at Kiosk or Checked-In to receive an access card' }, { status: 400 });
         }
 
-        // Atomic transaction: assign card and log
+        // Atomic transaction: assign card, update permit status if needed, and log
         await prisma.$transaction(async (tx) => {
             await tx.accessCard.update({
                 where: { id: parseInt(cardId) },
@@ -31,11 +31,18 @@ export async function POST(req) {
                 }
             });
 
+            if (permit.status === 'KioskVerified') {
+                await tx.visitPermit.update({
+                    where: { id: parseInt(permitId) },
+                    data: { status: 'CheckIn' }
+                });
+            }
+
             await tx.permitEventLog.create({
                 data: {
                     permitId: parseInt(permitId),
                     status: 'CardAssigned',
-                    message: `Visitor assigned Access Card: ${card.cardNumber}. ID Card retained at security desk.`
+                    message: `Visitor assigned Access Card: ${card.cardNumber}. ID Card retained at security desk. Permit status updated to CheckIn.`
                 }
             });
         });

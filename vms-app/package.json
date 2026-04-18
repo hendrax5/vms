@@ -12,6 +12,10 @@
     "db:seed:permissions": "node seed_permissions.js"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.73.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.215.0",
+    "@opentelemetry/sdk-node": "^0.215.0",
     "@prisma/client": "^5.22.0",
     "@types/pdfkit": "^0.17.5",
     "bcryptjs": "^3.0.3",
@@ -32,7 +36,8 @@
     "react-dom": "19.2.4",
     "react-hot-toast": "^2.6.0",
     "tailwind-merge": "^3.5.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
