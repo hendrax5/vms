@@ -222,6 +222,17 @@ export default function InfrastructureTopologyPage() {
                  
                  {/* Left Sidebar: Navigating Datacenters and Rooms */}
                  <div className="w-full xl:w-80 shrink-0 flex flex-col gap-4">
+                     {canEdit && (
+                         <div className="flex justify-between items-center px-1">
+                             <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                 <Building2 className="w-4 h-4" /> Datacenters
+                             </h2>
+                             <button onClick={() => { setEditEntityId(null); setAddType('datacenter'); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-md transition-colors" title="Add Datacenter">
+                                 <Plus className="w-3 h-3" /> Add
+                             </button>
+                         </div>
+                     )}
+                     
                      {filteredTopology.length === 0 ? (
                          <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl text-center text-neutral-500">
                              No mapping data available
@@ -249,7 +260,7 @@ export default function InfrastructureTopologyPage() {
                                          </div>
                                      </div>
                                      {canEdit && (
-                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                         <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                              <button onClick={(e) => handleEditClick(e, 'datacenter', dc, dc.regionId?.toString())} className="p-1.5 text-neutral-400 hover:text-emerald-400"><Edit2 className="w-3 h-3" /></button>
                                              <button onClick={(e) => triggerDelete(e, 'datacenter', dc.id)} className="p-1.5 text-neutral-400 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
                                          </div>
@@ -259,6 +270,14 @@ export default function InfrastructureTopologyPage() {
                                  {/* Expanded Rooms List */}
                                  {currentDcId === dc.id && (
                                      <div className="bg-[#0a0a0a] border-t border-neutral-800/50 p-2">
+                                         {canEdit && (
+                                             <div className="px-3 pb-2 pt-1 flex justify-between items-center">
+                                                 <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Rooms</span>
+                                                 <button onClick={(e) => { e.stopPropagation(); setEditEntityId(null); setAddType('room'); setFormData({...formData, datacenterId: dc.id.toString()}); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-md transition-colors">
+                                                     <Plus className="w-3 h-3" /> Add Room
+                                                 </button>
+                                             </div>
+                                         )}
                                          {dc.rooms?.length > 0 ? (
                                              <div className="space-y-1">
                                                  {dc.rooms.map((room:any) => (
@@ -272,9 +291,9 @@ export default function InfrastructureTopologyPage() {
                                                              {room.name}
                                                          </div>
                                                          {canEdit && (
-                                                             <div className="flex gap-1 opacity-0 group-hover/room:opacity-100 transition-opacity">
-                                                                 <button onClick={(e) => handleEditClick(e, 'room', room, dc.id.toString())} className="p-1 text-neutral-300 hover:text-white"><Edit2 className="w-3 h-3" /></button>
-                                                                 <button onClick={(e) => triggerDelete(e, 'room', room.id)} className="p-1 text-neutral-300 hover:text-red-200"><Trash2 className="w-3 h-3" /></button>
+                                                             <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover/room:opacity-100 transition-opacity">
+                                                                 <button onClick={(e) => handleEditClick(e, 'room', room, dc.id.toString())} className="p-1 text-neutral-400 hover:text-emerald-400"><Edit2 className="w-3 h-3" /></button>
+                                                                 <button onClick={(e) => triggerDelete(e, 'room', room.id)} className="p-1 text-neutral-400 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
                                                              </div>
                                                          )}
                                                      </div>
@@ -306,8 +325,15 @@ export default function InfrastructureTopologyPage() {
                                          </h2>
                                      </div>
                                  </div>
-                                 <div className="text-xs text-neutral-500 font-mono bg-black px-3 py-1 rounded-full border border-neutral-800">
-                                     {currentRoom.rows?.length || 0} ROWS ACTIVE
+                                 <div className="flex items-center gap-3">
+                                     <div className="text-xs text-neutral-500 font-mono bg-black px-3 py-1 rounded-full border border-neutral-800">
+                                         {currentRoom.rows?.length || 0} ROWS ACTIVE
+                                     </div>
+                                     {canEdit && (
+                                         <button onClick={() => { setEditEntityId(null); setAddType('row'); setFormData({...formData, roomId: currentRoom.id.toString()}); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-white hover:text-emerald-400 flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-full transition-colors shadow-lg shadow-emerald-600/20">
+                                             <Plus className="w-3 h-3" /> Add Row
+                                         </button>
+                                     )}
                                  </div>
                              </div>
                              
@@ -324,11 +350,14 @@ export default function InfrastructureTopologyPage() {
                                                  </h4>
                                                  <div className="h-px bg-gradient-to-r from-emerald-500/50 to-transparent flex-grow"></div>
                                                  
-                                                 <div className="absolute right-0 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-neutral-900 px-2 py-1 rounded-full border border-neutral-800">
+                                                 <div className="absolute right-0 flex items-center gap-2 bg-neutral-900 px-2 py-1 rounded-full border border-neutral-800">
                                                      {canEdit && (
                                                          <>
-                                                             <button onClick={(e) => handleEditClick(e, 'row', row, currentRoom.id.toString())} className="p-1.5 text-neutral-400 hover:text-emerald-400 transition-colors" title="Edit Row"><Edit2 className="w-3.5 h-3.5" /></button>
-                                                             <button onClick={(e) => triggerDelete(e, 'row', row.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors" title="Delete Row"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                             <button onClick={(e) => { e.stopPropagation(); setEditEntityId(null); setAddType('rack'); setFormData({...formData, rowId: row.id.toString(), uCapacity: '42'}); setIsAddModalOpen(true); }} className="text-[10px] uppercase font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 rounded-full transition-colors mr-2">
+                                                                 <Plus className="w-3 h-3" /> Add Rack
+                                                             </button>
+                                                             <button onClick={(e) => handleEditClick(e, 'row', row, currentRoom.id.toString())} className="p-1 text-neutral-400 hover:text-emerald-400 transition-colors" title="Edit Row"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                             <button onClick={(e) => triggerDelete(e, 'row', row.id)} className="p-1 text-neutral-400 hover:text-red-400 transition-colors" title="Delete Row"><Trash2 className="w-3.5 h-3.5" /></button>
                                                          </>
                                                      )}
                                                  </div>
@@ -362,10 +391,10 @@ export default function InfrastructureTopologyPage() {
                                                              {canEdit && (
                                                                  <div 
                                                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                                                     className="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover/rack:opacity-100 transition-opacity z-10"
+                                                                     className="absolute -top-3 -right-3 flex gap-1 opacity-100 md:opacity-0 md:group-hover/rack:opacity-100 transition-opacity z-10"
                                                                  >
-                                                                     <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-neutral-300 hover:text-white hover:bg-emerald-600 transition-colors"><Edit2 className="w-3 h-3" /></button>
-                                                                     <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-neutral-300 hover:text-white hover:bg-red-600 transition-colors"><Trash2 className="w-3 h-3" /></button>
+                                                                     <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-emerald-400 hover:text-white hover:bg-emerald-600 transition-colors"><Edit2 className="w-3 h-3" /></button>
+                                                                     <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 bg-neutral-800 shadow shadow-black border border-neutral-700 rounded-md text-red-400 hover:text-white hover:bg-red-600 transition-colors"><Trash2 className="w-3 h-3" /></button>
                                                                  </div>
                                                              )}
                                                          </Link>
@@ -382,10 +411,10 @@ export default function InfrastructureTopologyPage() {
                                                                  {canEdit && (
                                                                      <div 
                                                                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                                                         className="flex gap-2 opacity-0 group-hover/rack:opacity-100 transition-opacity"
+                                                                         className="flex gap-2 opacity-100 md:opacity-0 md:group-hover/rack:opacity-100 transition-opacity"
                                                                      >
-                                                                         <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 text-neutral-400 hover:text-emerald-400 transition-colors"><Edit2 className="w-4 h-4" /></button>
-                                                                         <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 text-neutral-400 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                                                         <button onClick={(e) => handleEditClick(e, 'rack', rack, row.id.toString())} className="p-1.5 text-emerald-500 hover:text-emerald-400 transition-colors"><Edit2 className="w-4 h-4" /></button>
+                                                                         <button onClick={(e) => triggerDelete(e, 'rack', rack.id)} className="p-1.5 text-red-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                                                                      </div>
                                                                  )}
                                                              </div>
