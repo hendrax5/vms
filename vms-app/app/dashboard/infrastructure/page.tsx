@@ -64,6 +64,7 @@ export default function InfrastructureTopologyPage() {
         };
         setFormData(newData);
         setIsAddModalOpen(true);
+        setSelectedAsset(null); // Tutup panel context
     };
 
     const handleFormSubmit = async (e: any) => {
@@ -127,6 +128,10 @@ export default function InfrastructureTopologyPage() {
         } else if (parentType === 'row') {
             childType = 'rack';
             initialData.rowId = parentData.id.toString();
+        } else if (parentType === 'rack') {
+            // Kita arahkan pengguna ke halaman Rack Management untuk add equipment
+            window.location.href = `/dashboard/racks/${parentData.id}`;
+            return;
         }
 
         if (childType) {
@@ -362,22 +367,43 @@ export default function InfrastructureTopologyPage() {
                                              </div>
                                              
                                              {/* Racks Grouping Area */}
-                                             <div className="flex flex-wrap gap-4">
+                                             <div className={viewMode === 'grid' 
+                                                 ? "flex flex-wrap gap-4" 
+                                                 : "flex flex-col gap-2 max-w-3xl"
+                                             }>
                                                  {row.racks?.map((rack: any) => (
-                                                    <div 
-                                                        key={rack.id} 
-                                                        className="w-24 h-32 bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-slate-700/50 rounded-xl relative group cursor-pointer hover:border-purple-500/50 transition-all flex flex-col overflow-hidden shadow-lg"
-                                                        onClick={() => setSelectedAsset({ type: 'rack', data: rack })}
-                                                    >
-                                                        <div className="bg-slate-950/80 p-1.5 text-center border-b border-white/5">
-                                                            <div className="text-[10px] font-bold text-white uppercase tracking-wider">{rack.name}</div>
+                                                    viewMode === 'grid' ? (
+                                                        <div 
+                                                            key={rack.id} 
+                                                            className="w-24 h-32 bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-slate-700/50 rounded-xl relative group cursor-pointer hover:border-purple-500/50 transition-all flex flex-col overflow-hidden shadow-lg"
+                                                            onClick={() => setSelectedAsset({ type: 'rack', data: rack })}
+                                                        >
+                                                            <div className="bg-slate-950/80 p-1.5 text-center border-b border-white/5">
+                                                                <div className="text-[10px] font-bold text-white uppercase tracking-wider">{rack.name}</div>
+                                                            </div>
+                                                            <div className="flex-1 p-2 grid grid-cols-2 gap-1 content-center">
+                                                                {Array.from({ length: 6 }).map((_, i) => (
+                                                                    <div key={i} className="h-1 bg-white/5 rounded-full" />
+                                                                ))}
+                                                            </div>
                                                         </div>
-                                                        <div className="flex-1 p-2 grid grid-cols-2 gap-1 content-center">
-                                                            {Array.from({ length: 6 }).map((_, i) => (
-                                                                <div key={i} className="h-1 bg-white/5 rounded-full" />
-                                                            ))}
+                                                    ) : (
+                                                        <div 
+                                                            key={rack.id} 
+                                                            className="bg-slate-900 border border-white/5 p-3 rounded-lg flex items-center justify-between hover:border-purple-500/50 hover:bg-slate-800/80 transition-all cursor-pointer"
+                                                            onClick={() => setSelectedAsset({ type: 'rack', data: rack })}
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="p-2 bg-purple-500/10 text-purple-400 rounded-lg">
+                                                                    <Box className="w-5 h-5" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm font-bold text-slate-200">{rack.name}</p>
+                                                                    <p className="text-xs text-slate-500 font-mono mt-0.5">{rack.uCapacity}U • {rack.equipments?.length || 0} Assets deployed</p>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )
                                                  ))}
                                                  {row.racks?.length === 0 && (
                                                      <div className="py-6 text-center border border-dashed border-neutral-800 rounded-lg text-neutral-600 text-xs tracking-wider uppercase font-bold w-full max-w-sm">No racks deployed</div>
