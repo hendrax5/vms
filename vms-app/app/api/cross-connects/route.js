@@ -29,16 +29,18 @@ export async function POST(req) {
         const pMmrSideA = mmrSideAPortId ? parseInt(mmrSideAPortId) : null;
         const pMmrSideZ = mmrSideZPortId ? parseInt(mmrSideZPortId) : null;
 
+        const requestedPorts = [pSideA, pSideZ, pMmrSideA, pMmrSideZ].filter(Boolean);
+
         const existingConnections = await prisma.crossConnect.findMany({
             where: {
                 AND: [
                     {
-                        OR: [
-                            { sideAPortId: pSideA },
-                            ...(pSideZ ? [{ sideZPortId: pSideA }] : []),
-                            ...(pSideZ ? [{ sideAPortId: pSideZ }] : []),
-                            ...(pSideZ ? [{ sideZPortId: pSideZ }] : [])
-                        ]
+                        OR: requestedPorts.flatMap(portId => [
+                            { sideAPortId: portId },
+                            { sideZPortId: portId },
+                            { mmrSideAPortId: portId },
+                            { mmrSideZPortId: portId }
+                        ])
                     },
                     {
                         status: {
@@ -221,7 +223,12 @@ export async function PUT(req) {
                 where: {
                     id: { not: parseInt(id) },
                     AND: [
-                        { OR: [{ sideAPortId: pSideZ }, { sideZPortId: pSideZ }] },
+                        { OR: [
+                            { sideAPortId: pSideZ }, 
+                            { sideZPortId: pSideZ },
+                            { mmrSideAPortId: pSideZ },
+                            { mmrSideZPortId: pSideZ }
+                        ] },
                         { status: { notIn: ['Terminated'] } }
                     ]
                 }
@@ -321,18 +328,20 @@ export async function PUT(req) {
         const pMmrSideA = mmrSideAPortId ? parseInt(mmrSideAPortId) : null;
         const pMmrSideZ = mmrSideZPortId ? parseInt(mmrSideZPortId) : null;
 
+        const requestedPorts = [pSideA, pSideZ, pMmrSideA, pMmrSideZ].filter(Boolean);
+
         // Port Anti-Collision Validation (excluding the current connection itself)
         const existingConnections = await prisma.crossConnect.findMany({
             where: {
                 id: { not: parseInt(id) },
                 AND: [
                     {
-                        OR: [
-                            { sideAPortId: pSideA },
-                            ...(pSideZ ? [{ sideZPortId: pSideA }] : []),
-                            ...(pSideZ ? [{ sideAPortId: pSideZ }] : []),
-                            ...(pSideZ ? [{ sideZPortId: pSideZ }] : [])
-                        ]
+                        OR: requestedPorts.flatMap(portId => [
+                            { sideAPortId: portId },
+                            { sideZPortId: portId },
+                            { mmrSideAPortId: portId },
+                            { mmrSideZPortId: portId }
+                        ])
                     },
                     {
                         status: {
