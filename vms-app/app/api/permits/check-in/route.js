@@ -26,17 +26,23 @@ export async function POST(req) {
         return NextResponse.json(result);
 
     } catch (error) {
-        console.error('Check-in Validation Error Details:', {
-            message: error.message,
+        const errorDetails = {
+            message: error.message || String(error),
             stack: error.stack,
             body: body
-        });
+        };
+        console.error('Check-in Validation Error Details:', errorDetails);
         
-        const isClientError = error.message.includes('Invalid') || error.message.includes('too early') || error.message.includes('expired') || error.message.includes('not ready');
+        const isClientError = error.message && (
+            error.message.includes('Invalid') || 
+            error.message.includes('too early') || 
+            error.message.includes('expired') || 
+            error.message.includes('not ready')
+        );
         
         return NextResponse.json({ 
             error: error.message || 'Server configuration error',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
         }, { status: isClientError ? 400 : 500 });
     }
 }

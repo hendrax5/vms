@@ -144,19 +144,22 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
                      name: existingEq.name,
                      uStart: existingEq.uStart,
                      uEnd: existingEq.uEnd,
-                     rackId: existingEq.rackId
+                     rackId: existingEq.rackId,
+                     status: existingEq.status
                  }),
-                 newState: null
+                 newState: JSON.stringify({ status: 'Decommissioned' })
              }
         });
 
-        await prisma.rackEquipment.delete({
-            where: { id: equipmentId }
+        // Use soft delete (decommission)
+        const updated = await prisma.rackEquipment.update({
+            where: { id: equipmentId },
+            data: { status: 'Decommissioned' }
         });
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, updated });
     } catch (error: any) {
-        console.error('Delete Equipment Error:', error);
+        console.error('Decommission Equipment Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

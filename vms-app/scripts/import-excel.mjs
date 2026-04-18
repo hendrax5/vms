@@ -128,9 +128,11 @@ async function runImport() {
                 const barang = secondCell;
                 const qtyRaw = isOtbSheet ? rowArr[4] : rowArr[2];
                 const tujuanRaw = isOtbSheet ? String(rowArr[3] || '').trim() : '';
+                const beratRaw = isOtbSheet ? rowArr[5] : rowArr[3];
                 const dimensiRaw = isOtbSheet ? rowArr[6] : rowArr[4];
                 const sn = isOtbSheet ? String(rowArr[7] || '-') : String(rowArr[5] || '-');
                 const keterangan = isOtbSheet ? String(rowArr[8] || '') : String(rowArr[6] || '');
+                const tglMasukRaw = isOtbSheet ? rowArr[10] : rowArr[7];
 
                 if(!barang) continue;
 
@@ -165,7 +167,10 @@ async function runImport() {
                                            barang.toLowerCase().includes('switch') ? 'SWITCH' : 
                                            barang.toLowerCase().includes('router') ? 'ROUTER' : 'SERVER',
                             uStart: currentU,
-                            uEnd: currentU + uSpace - 1
+                            uEnd: currentU + uSpace - 1,
+                            serialNumber: sn !== '-' ? sn : null,
+                            weight: beratRaw ? String(beratRaw) : null,
+                            arrivalDate: tglMasukRaw ? new Date(tglMasukRaw) : null
                         }
                     });
                     console.log(`   🗄️ Imported Equipment [${barang}] into ${currentRack.name} U${currentU}`);

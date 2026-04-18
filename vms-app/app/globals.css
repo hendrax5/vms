@@ -35,3 +35,13 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+@keyframes scanner-scan {
+  0% { top: 0; }
+  50% { top: 100%; }
+  100% { top: 0; }
+}
+
+.animate-scanner-scan {
+  animation: scanner-scan 3s ease-in-out infinite;
+}

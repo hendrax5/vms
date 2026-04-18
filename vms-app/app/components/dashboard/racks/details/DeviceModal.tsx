@@ -13,7 +13,7 @@ interface DeviceModalProps {
 }
 
 const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, initialData, perspective }) => {
-    const [formData, setFormData] = useState({ id: null, name: '', equipmentType: 'SERVER', uStart: 1, uEnd: 1, orientation: 'FRONT' });
+    const [formData, setFormData] = useState({ id: null, name: '', equipmentType: 'SERVER', uStart: 1, uEnd: 1, orientation: 'FRONT', status: 'Active' });
 
     useEffect(() => {
         if (initialData) {
@@ -23,7 +23,8 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                 equipmentType: initialData.equipmentType || 'SERVER',
                 uStart: initialData.uStart || 1,
                 uEnd: initialData.uEnd || 1,
-                orientation: initialData.orientation || (perspective === 'BOTH' ? 'FRONT' : perspective)
+                orientation: initialData.orientation || (perspective === 'BOTH' ? 'FRONT' : perspective),
+                status: initialData.status || 'Active'
             });
         }
     }, [initialData, perspective]);
@@ -70,6 +71,14 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">U-End</label>
                             <input type="number" value={formData.uEnd} onChange={e => setFormData({...formData, uEnd: parseInt(e.target.value)})} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none" />
                         </div>
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Operational Status</label>
+                        <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Decommissioned">Decommissioned</option>
+                        </select>
                     </div>
                     <button type="submit" className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-[0.2em] rounded-2xl shadow-lg shadow-emerald-500/20 transition-all mt-6">Commit Configuration</button>
                 </form>

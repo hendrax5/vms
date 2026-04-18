@@ -21,4 +21,25 @@ export class EquipmentRepository extends BaseRepository {
     async findManyEquipments(params: any) {
         return await this.prisma.rackEquipment.findMany(params);
     }
+
+    async updateEquipment(id: number, data: any) {
+        return await this.prisma.rackEquipment.update({
+            where: { id },
+            data,
+            include: { ports: true }
+        });
+    }
+
+    async deleteEquipment(id: number) {
+        return await this.prisma.rackEquipment.delete({
+            where: { id }
+        });
+    }
+
+    async findUniqueEquipment(id: number) {
+        return await this.prisma.rackEquipment.findUnique({
+            where: { id },
+            include: { customer: true, rack: true }
+        });
+    }
 }

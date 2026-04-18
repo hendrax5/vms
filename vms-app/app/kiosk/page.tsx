@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, ChevronRight, CheckCircle2, LogOut, UserX, AlertTriangle, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
@@ -22,10 +22,14 @@ export default function DatacenterKiosk() {
     const [currentVisitorIndex, setCurrentVisitorIndex] = useState(0);
     const [visitorPhotos, setVisitorPhotos] = useState<Record<string, string>>({});
     const [errorMessage, setErrorMessage] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (status === 'unauthenticated') router.push('/login?callbackUrl=/kiosk');
-    }, [status, router]);
+        if (status === 'authenticated' && step === 'IDLE') {
+            inputRef.current?.focus();
+        }
+    }, [status, router, step]);
 
     useEffect(() => {
         if (['SUCCESS_IN', 'SUCCESS_OUT', 'ERROR'].includes(step)) {
@@ -37,12 +41,24 @@ export default function DatacenterKiosk() {
     const resetKiosk = () => {
         setStep('IDLE');
         setScannedToken('');
+        setManualToken('');
         setVisitorName('');
         setAllVisitors([]);
         setCurrentVisitorIndex(0);
         setVisitorPhotos({});
         setErrorMessage('');
     };
+
+    // Global focus keeper for handheld scanners
+    useEffect(() => {
+        const handleKeyDown = () => {
+            if (step === 'IDLE' && document.activeElement?.tagName !== 'INPUT') {
+                inputRef.current?.focus();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [step]);
 
     const handleQRScanned = async (token: string) => {
         setScannedToken(token);
@@ -147,7 +163,14 @@ export default function DatacenterKiosk() {
                                 <h2 className="text-5xl font-black text-white leading-tight">Welcome.<br/><span className="text-blue-500">Scan QR.</span></h2>
                                 <p className="text-slate-400 text-lg">Position your permit or equipment QR code within the frame to begin verification.</p>
                                 <form onSubmit={(e) => { e.preventDefault(); handleQRScanned(manualToken); }} className="flex gap-2">
-                                    <input value={manualToken} onChange={(e) => setManualToken(e.target.value)} placeholder="Manual Code..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                                    <input 
+                                        ref={inputRef}
+                                        value={manualToken} 
+                                        onChange={(e) => setManualToken(e.target.value)} 
+                                        placeholder="Enter or Scan Code..." 
+                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner" 
+                                        autoComplete="off"
+                                    />
                                     <button className="bg-blue-600 hover:bg-blue-700 p-3 rounded-xl transition-all"><ChevronRight /></button>
                                 </form>
                             </div>

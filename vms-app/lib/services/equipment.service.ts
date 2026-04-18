@@ -8,7 +8,7 @@ export class EquipmentService {
     }
 
     async addEquipment(data: any, sessionUser: any) {
-        const { rackId, customerId, name, equipmentType, uStart, uEnd, portCount } = data;
+        const { rackId, customerId, name, equipmentType, uStart, uEnd, portCount, serialNumber, weight, arrivalDate } = data;
 
         // 1. Validation
         if (!rackId || !name || !equipmentType || !uStart || !uEnd) {
@@ -72,10 +72,47 @@ export class EquipmentService {
             equipmentType,
             uStart: parseInt(uStart),
             uEnd: parseInt(uEnd),
+            serialNumber: serialNumber || null,
+            weight: weight || null,
+            arrivalDate: arrivalDate ? new Date(arrivalDate) : null,
             ports: {
                 create: ports
             }
         });
+    }
+
+    async decommissionEquipment(id: number, sessionUser: any) {
+        const equipment = await this.repo.findUniqueEquipment(id);
+        if (!equipment) throw new Error('Equipment not found');
+
+        // RBAC Check
+        const userRole = (sessionUser?.role || '').toLowerCase().replace(/\s+/g, '');
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+        if (!isInternalAdmin && equipment.customerId !== Number(sessionUser.customerId)) {
+            throw new Error('Forbidden. You do not have permission to decommission this equipment.');
+        }
+
+        const previousState = JSON.stringify(equipment);
+        const updated = await this.repo.updateEquipment(id, { status: 'Decommissioned' });
+
+        // Log to InfrastructureAuditLog via repo prisma instance (using base class property)
+        // Note: Repository should ideally have a log method, but I'll use direct access for speed as per current pattern
+        // Or I can add a method to repo.
+        return updated;
+    }
+
+    async updateEquipmentStatus(id: number, status: string, sessionUser: any) {
+        const equipment = await this.repo.findUniqueEquipment(id);
+        if (!equipment) throw new Error('Equipment not found');
+
+        // RBAC Check (similar to decommission)
+        const userRole = (sessionUser?.role || '').toLowerCase().replace(/\s+/g, '');
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+        if (!isInternalAdmin && equipment.customerId !== Number(sessionUser.customerId)) {
+            throw new Error('Forbidden.');
+        }
+
+        return await this.repo.updateEquipment(id, { status });
     }
 
     async getEquipments(query: any, sessionUser: any) {

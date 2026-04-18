@@ -160,6 +160,9 @@ model RackEquipment {
   orientation            String                   @default("FRONT") // 'FRONT', 'BACK', 'BOTH'
   ports                  EquipmentPort[]
   status                 String                   @default("Active")
+  serialNumber           String?
+  weight                 String?
+  arrivalDate            DateTime?
   createdAt              DateTime                 @default(now())
   InfrastructureAuditLog InfrastructureAuditLog[]
 }
@@ -196,6 +199,9 @@ model GoodsItem {
   name         String
   description  String?
   status       String // Inbound, CheckedIn, Deployed, Outbound, Disposed
+  serialNumber String?
+  weight       String?
+  arrivalDate  DateTime?
   scannedAt    DateTime?
   createdAt    DateTime   @default(now())
 }
@@ -257,6 +263,10 @@ model CrossConnect {
 
   targetType     String? // 'Internal', 'IXP', 'Carrier', 'Cloud', 'Other'
   targetProvider String? // Exact name or note about destination
+  ewoCode        String?
+  apjiiCode      String?
+  labelNumber    String?
+  notes          String?
 
   status    String   @default("Requested")
   createdAt DateTime @default(now())

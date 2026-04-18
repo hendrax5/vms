@@ -106,6 +106,12 @@ export default function GoodsPage() {
                      <button onClick={fetchGoods} className="px-5 py-2.5 bg-slate-800/50 hover:bg-slate-700/50 text-white rounded-lg text-sm font-semibold border border-white/5 transition-all">
                          Refresh
                      </button>
+                     <button 
+                        onClick={() => window.open('/api/goods/export')}
+                        className="px-5 py-2.5 bg-slate-800/50 hover:bg-slate-700/50 text-white rounded-lg text-sm font-semibold border border-white/5 transition-all flex items-center gap-2"
+                     >
+                        <Download className="w-4 h-4" /> Export Excel
+                     </button>
                      {isCustomer ? (
                          <button onClick={() => setIsMyQrOpen(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 text-sm font-semibold rounded-lg flex items-center gap-2 shadow-[0_0_20px_-3px_rgba(16,185,129,0.4)] transition-all">
                              <QrCode className="w-4 h-4" /> Show Delivery QR

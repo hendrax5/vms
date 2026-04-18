@@ -47,16 +47,22 @@ async function runImport() {
         if (!customerName) continue; // Skip invalid row
 
         // Indices
-        const mediaType = String(row[8] || 'Fiberoptic').trim();
-        const srcRackName = String(row[9] || '').trim();
-        const srcEquipName = String(row[10] || '').trim();
-        const srcPortName = String(row[11] || '1').trim();
-
-        const dstRackName = String(row[12] || '').trim();
-        const dstEquipName = String(row[13] || '').trim();
-        const dstPortName = String(row[14] || '1').trim();
+        // Mapping based on "Data Interkoneksi" sheet headers
+        const ewoCode = String(row[1] || '').trim();
+        const apjiiCode = String(row[3] || '').trim();
+        const labelNumber = String(row[4] || '').trim();
+        const mediaType = String(row[5] || 'Fiberoptic').trim();
         
-        const statusRaw = String(row[15] || '').trim();
+        const srcRackName = String(row[6] || '').trim();
+        const srcEquipName = String(row[7] || '').trim();
+        const srcPortName = String(row[8] || '1').trim();
+
+        const dstRackName = String(row[9] || '').trim();
+        const dstEquipName = String(row[10] || '').trim();
+        const dstPortName = String(row[11] || '1').trim();
+        
+        const statusRaw = String(row[12] || '').trim();
+        const notes = String(row[13] || '').trim();
 
         if (!srcRackName && !dstRackName) continue;
 
@@ -126,7 +132,11 @@ async function runImport() {
                         sideAPortId: portA.id,
                         sideZPortId: portZ.id,
                         status: statusRaw || 'Active',
-                        targetProvider: String(row[17] || '') // Catatan -> targetProvider
+                        ewoCode: ewoCode || null,
+                        apjiiCode: apjiiCode || null,
+                        labelNumber: labelNumber || null,
+                        notes: notes || null,
+                        targetProvider: notes // backward compatibility
                     }
                 });
                 createdCount++;

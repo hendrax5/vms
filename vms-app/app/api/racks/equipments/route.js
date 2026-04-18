@@ -41,3 +41,43 @@ export async function GET(req) {
         return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: error.message.includes('Forbidden') ? 403 : 500 });
     }
 }
+
+export async function PATCH(req) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const body = await req.json();
+        const { id, status } = body;
+
+        if (!id || !status) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+
+        const equipmentService = new EquipmentService();
+        const updated = await equipmentService.updateEquipmentStatus(parseInt(id), status, session.user);
+
+        return NextResponse.json(updated);
+    } catch (error) {
+        console.error('Update Equipment Status Error:', error);
+        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: error.message.includes('Forbidden') ? 403 : 500 });
+    }
+}
+
+export async function DELETE(req) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get('id');
+
+        if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
+
+        const equipmentService = new EquipmentService();
+        const result = await equipmentService.decommissionEquipment(parseInt(id), session.user);
+
+        return NextResponse.json({ message: 'Equipment decommissioned successfully', result });
+    } catch (error) {
+        console.error('Decommission Equipment Error:', error);
+        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: error.message.includes('Forbidden') ? 403 : 500 });
+    }
+}

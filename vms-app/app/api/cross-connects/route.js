@@ -88,25 +88,43 @@ export async function GET(req) {
         const { searchParams } = new URL(req.url);
         const datacenterId = searchParams.get('datacenterId');
         const customerId = searchParams.get('customerId');
+        const search = searchParams.get('search');
 
         const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
         const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
 
-        const params = {};
-        if (datacenterId) params.datacenterId = parseInt(datacenterId);
+        let where = {};
+        if (datacenterId) where.datacenterId = parseInt(datacenterId);
         
         if (!isInternalAdmin) {
             const sessionCustomerId = session?.user?.customerId;
             if (!sessionCustomerId) {
                 return NextResponse.json({ error: 'Forbidden: No Customer ID' }, { status: 403 });
             }
-            params.customerId = sessionCustomerId;
+            where.customerId = sessionCustomerId;
         } else if (customerId) {
-            params.customerId = parseInt(customerId);
+            where.customerId = parseInt(customerId);
+        }
+
+        if (search) {
+            const searchLower = search.trim();
+            where = {
+                ...where,
+                OR: [
+                    { ewoCode: { contains: searchLower, mode: 'insensitive' } },
+                    { apjiiCode: { contains: searchLower, mode: 'insensitive' } },
+                    { labelNumber: { contains: searchLower, mode: 'insensitive' } },
+                    { notes: { contains: searchLower, mode: 'insensitive' } },
+                    { targetProvider: { contains: searchLower, mode: 'insensitive' } },
+                    { customer: { name: { contains: searchLower, mode: 'insensitive' } } },
+                    { sideAPort: { equipment: { name: { contains: searchLower, mode: 'insensitive' } } } },
+                    { sideZPort: { equipment: { name: { contains: searchLower, mode: 'insensitive' } } } }
+                ]
+            };
         }
 
         const connections = await prisma.crossConnect.findMany({
-            where: params,
+            where: where,
             include: { 
                 customer: true, 
                 sideAPort: {
