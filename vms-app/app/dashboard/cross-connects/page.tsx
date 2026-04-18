@@ -11,6 +11,8 @@ import {
   CheckCircle,
   Clock,
   Pencil,
+  Users,
+  Building2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -253,75 +255,142 @@ export default function CrossConnectsPage() {
                 No cross-connects found.
               </div>
             ) : (
-              crossConnects.map((cx, i) => (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  key={cx.id}
-                  className="flex flex-col sm:flex-row items-center justify-between p-4 border-b border-border/50 last:border-0 hover:bg-slate-800/30 transition-colors gap-4"
-                >
-                  <div className="flex items-center gap-4 w-full sm:w-1/4">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center border bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
-                      <Network className="w-5 h-5" />
+              <div className="divide-y divide-border/50">
+                {crossConnects.map((cx, i) => (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    key={cx.id}
+                    className="p-4 hover:bg-slate-800/30 transition-colors"
+                  >
+                    {/* Desktop View */}
+                    <div className="hidden lg:flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 w-1/4">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center border bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
+                          <Network className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-200">
+                            CX-{cx.id.toString().padStart(4, "0")}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {cx.mediaType}
+                          </p>
+                          {cx.customer && (
+                            <p className="text-[10px] text-blue-400 mt-1">
+                              {cx.customer.name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex items-center justify-center gap-6">
+                        <div className="text-right">
+                          <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">
+                            {cx.sideAPort?.equipment?.rack?.name || "Rack"} :{" "}
+                            {cx.sideAPort?.equipment?.name || "Eq"}
+                          </p>
+                          <p className="text-sm font-mono text-slate-200 bg-slate-950 px-3 py-1 rounded border border-slate-800">
+                            {cx.sideAPort?.portName || "Unknown Port"}
+                          </p>
+                          {cx.sideACompany && (
+                            <p className="mt-1 text-[10px] font-semibold uppercase text-indigo-400">
+                              {cx.sideACompany}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <ArrowRightLeft className="w-5 h-5 text-slate-600 mb-1" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">
+                            {cx.sideZPort?.equipment?.rack?.name || "Rack"} :{" "}
+                            {cx.sideZPort?.equipment?.name || "Eq"}
+                          </p>
+                          <p className="text-sm font-mono text-slate-200 bg-slate-950 px-3 py-1 rounded border border-slate-800">
+                            {cx.sideZPort?.portName || "Unknown Port"}
+                          </p>
+                          {cx.sideZCompany && (
+                            <p className="mt-1 text-[10px] font-semibold uppercase text-emerald-400">
+                              {cx.sideZCompany}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-1/4 flex justify-end gap-3">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {cx.status}
+                        </span>
+                        <button
+                          onClick={() => handleEditClick(cx)}
+                          className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cx.id)}
+                          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-200">
-                        CX-{cx.id.toString().padStart(4, "0")}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {cx.mediaType}
-                      </p>
+
+                    {/* Mobile/Tablet Card View */}
+                    <div className="lg:hidden space-y-4">
+                      <div className="flex justify-between items-start">
+                         <div className="flex gap-3">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center border bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
+                              <Network className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-slate-200 uppercase tracking-tighter">
+                                CX-{cx.id.toString().padStart(4, "0")}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">{cx.mediaType}</p>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-2">
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              {cx.status}
+                            </span>
+                            <button
+                              onClick={() => handleEditClick(cx)}
+                              className="p-1.5 text-slate-400 hover:text-white bg-slate-800 rounded-md"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(cx.id)}
+                              className="p-1.5 text-red-400 hover:text-red-300 bg-red-900/20 rounded-md"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/50 p-3 rounded-xl border border-slate-800/50">
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-slate-500 font-bold uppercase">Side A</p>
+                          <p className="text-xs text-slate-300 truncate">
+                            {cx.sideAPort?.equipment?.rack?.name || "Rack"} : {cx.sideAPort?.equipment?.name || "Eq"}
+                          </p>
+                          <p className="text-xs font-mono text-indigo-400">{cx.sideAPort?.portName || "N/A"}</p>
+                          {cx.sideACompany && <p className="text-[9px] text-indigo-500 font-bold uppercase">{cx.sideACompany}</p>}
+                        </div>
+                        <div className="space-y-1 md:text-right">
+                          <p className="text-[10px] text-slate-500 font-bold uppercase">Side Z</p>
+                          <p className="text-xs text-slate-300 truncate">
+                            {cx.sideZPort?.equipment?.rack?.name || "Rack"} : {cx.sideZPort?.equipment?.name || "Eq"}
+                          </p>
+                          <p className="text-xs font-mono text-emerald-400">{cx.sideZPort?.portName || "N/A"}</p>
+                          {cx.sideZCompany && <p className="text-[9px] text-emerald-500 font-bold uppercase">{cx.sideZCompany}</p>}
+                        </div>
+                      </div>
+                      
                       {cx.customer && (
-                        <p className="text-[10px] text-blue-400 mt-1">
-                          {cx.customer.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 flex items-center justify-center gap-6">
-                    <div className="text-right">
-                      <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">
-                        {cx.sideAPort?.equipment?.rack?.name || "Rack"} :{" "}
-                        {cx.sideAPort?.equipment?.name || "Eq"}
-                      </p>
-                      <p className="text-sm font-mono text-slate-200 bg-slate-950 px-3 py-1 rounded border border-slate-800">
-                        {cx.sideAPort?.portName || "Unknown Port"}
-                      </p>
-                      {cx.sideACompany && (
-                        <p className="mt-1 text-[10px] font-semibold uppercase text-indigo-400">
-                          {cx.sideACompany}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <ArrowRightLeft className="w-5 h-5 text-slate-600 mb-1" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">
-                        {cx.sideZPort?.equipment?.rack?.name || "Rack"} :{" "}
-                        {cx.sideZPort?.equipment?.name || "Eq"}
-                      </p>
-                      <p className="text-sm font-mono text-slate-200 bg-slate-950 px-3 py-1 rounded border border-slate-800">
-                        {cx.sideZPort?.portName || "Unknown Port"}
-                      </p>
-                      {cx.sideZCompany && (
-                        <p className="mt-1 text-[10px] font-semibold uppercase text-emerald-400">
-                          {cx.sideZCompany}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="w-full sm:w-1/4 flex justify-end items-center gap-4">
-                    {cx.status === "Active" && (
-                      <span className="py-1 px-3 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5 object-right">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />{" "}
-                        Active
-                      </span>
-                    )}
-                    {cx.status === "Requested" && (
                       <span className="py-1 px-3 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center gap-1.5">
                         <Clock className="w-3 h-3" /> Requested
                       </span>

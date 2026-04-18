@@ -124,11 +124,11 @@ export default function DashboardLayout({
     // If the user is a CUSTOMER, show them their specific allowed menus natively without granular NOC permission checks.
 
     return (
-        <div className="min-h-[100dvh] bg-background flex selection:bg-emerald-500/30 overflow-hidden relative">
+        <div className="min-h-[100dvh] bg-background flex selection:bg-emerald-500/30 overflow-x-hidden relative">
             {/* Mobile Overlay */}
             {isMobile && isMobileMenuOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity"
+                    className="fixed inset-0 bg-background/80 z-40 backdrop-blur-md transition-all duration-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
