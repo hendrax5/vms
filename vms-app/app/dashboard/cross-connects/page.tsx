@@ -444,7 +444,7 @@ export default function CrossConnectsPage() {
                           <label className="text-[10px] text-slate-500 font-bold uppercase">Rack Selection</label>
                           <select required disabled={isApprovalMode} value={formData.sideARackId} onChange={(e) => setFormData({ ...formData, sideARackId: e.target.value, sideAEquipmentId: "", sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-50">
                             <option value="">Select Rack...</option>
-                            {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                            {(isInternalAdmin ? racks : racks.filter(r => r.customerId === Number(sessionCustomerId) || r.equipments?.some((eq: any) => eq.customerId === Number(sessionCustomerId)))).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                           </select>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -452,7 +452,7 @@ export default function CrossConnectsPage() {
                             <label className="text-[10px] text-slate-500 font-bold uppercase">Equipment</label>
                             <select required disabled={!formData.sideARackId || isApprovalMode} value={formData.sideAEquipmentId} onChange={(e) => setFormData({ ...formData, sideAEquipmentId: e.target.value, sideAPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-50">
                               <option value="">Select...</option>
-                              {racks.find(r => r.id === parseInt(formData.sideARackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
+                              {racks.find(r => r.id === parseInt(formData.sideARackId))?.equipments?.filter((eq: any) => isInternalAdmin || eq.customerId === Number(sessionCustomerId)).map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
                             </select>
                           </div>
                           <div className="space-y-1.5">
@@ -572,7 +572,7 @@ export default function CrossConnectsPage() {
                                 <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Equipment</label>
                                 <select required disabled={!formData.sideZRackId} value={formData.sideZEquipmentId} onChange={(e) => setFormData({ ...formData, sideZEquipmentId: e.target.value, sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
                                   <option value="">Select...</option>
-                                  {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
+                                  {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.filter((eq: any) => isInternalAdmin || eq.customerId === null || eq.customerId === Number(sessionCustomerId)).map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
                                 </select>
                               </div>
                               <div className="space-y-1.5">
