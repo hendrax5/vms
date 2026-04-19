@@ -25,7 +25,7 @@ export async function GET(req) {
         if (!isInternalAdmin) {
             const sessionCustomerId = session?.user?.customerId;
             if (!sessionCustomerId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-            where.customerId = sessionCustomerId;
+            where.customerId = parseInt(sessionCustomerId, 10);
         }
 
         const items = await prisma.goodsItem.findMany({

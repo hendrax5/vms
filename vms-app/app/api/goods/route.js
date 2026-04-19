@@ -22,7 +22,7 @@ export async function GET(req) {
             if (!sessionCustomerId) {
                 return NextResponse.json({ error: 'Forbidden: No Customer ID' }, { status: 403 });
             }
-            where.customerId = sessionCustomerId;
+            where.customerId = parseInt(sessionCustomerId, 10);
         } else if (customerId) {
             where.customerId = parseInt(customerId);
         }
@@ -48,7 +48,7 @@ export async function POST(req) {
         
         let finalCustomerId = body.customerId ? parseInt(body.customerId) : null;
         if (sessionCustomerId) {
-            finalCustomerId = sessionCustomerId;
+            finalCustomerId = parseInt(sessionCustomerId, 10);
         }
 
         // Add customer ID to payload
