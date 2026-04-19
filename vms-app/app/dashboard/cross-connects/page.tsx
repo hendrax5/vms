@@ -30,6 +30,8 @@ export default function CrossConnectsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [tenantSearch, setTenantSearch] = useState("");
+  const [showTenantDropdown, setShowTenantDropdown] = useState(false);
 
   const [formData, setFormData] = useState({
     id: undefined as number | undefined,
@@ -186,6 +188,8 @@ export default function CrossConnectsPage() {
       status: "",
     });
     setIsApprovalMode(false);
+    setTenantSearch("");
+    setShowTenantDropdown(false);
   };
 
   const openModal = (cx?: any, approvalMode: boolean = false) => {
@@ -213,6 +217,14 @@ export default function CrossConnectsPage() {
         mmrSideZPortId: cx.mmrSideZPortId?.toString() || "",
         status: cx.status || "",
       });
+
+      let initTenantSearch = "";
+      if (cx.targetType === "tenant" && cx.targetProvider) {
+        // Will match when customers are loaded, otherwise may be empty until re-opened
+        // For an existing request, we can just use sideZCompany as fallback if name not found in list immediately
+        initTenantSearch = cx.sideZCompany || ""; 
+      }
+      setTenantSearch(initTenantSearch);
     } else {
       resetForm();
     }
@@ -499,12 +511,48 @@ export default function CrossConnectsPage() {
                             </div>
                           </>
                         ) : formData.targetType === "tenant" && !isApprovalMode ? (
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Select Destination Tenant</label>
-                            <select required value={formData.targetProvider} onChange={(e) => setFormData({ ...formData, targetProvider: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right">
-                              <option value="">Select Tenant...</option>
-                              {customers.filter(c => c.id !== sessionCustomerId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                          <div className="space-y-1.5 relative">
+                            <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Search Destination Tenant</label>
+                            <input 
+                              type="text" 
+                              value={tenantSearch} 
+                              onChange={(e) => {
+                                setTenantSearch(e.target.value);
+                                setShowTenantDropdown(true);
+                                if (!e.target.value) setFormData({...formData, targetProvider: ""});
+                              }}
+                              onFocus={() => setShowTenantDropdown(true)}
+                              onBlur={() => setTimeout(() => setShowTenantDropdown(false), 200)}
+                              placeholder="Type at least 2 chars..."
+                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none text-right"
+                            />
+                            {showTenantDropdown && tenantSearch.length >= 2 && (
+                              <div className="absolute z-10 w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                                {customers
+                                  .filter(c => c.id !== sessionCustomerId && c.name.toLowerCase().includes(tenantSearch.toLowerCase()))
+                                  .map(c => (
+                                    <div 
+                                      key={c.id} 
+                                      className="px-4 py-2 text-sm text-slate-300 hover:bg-emerald-600 hover:text-white cursor-pointer text-right"
+                                      onClick={() => {
+                                         setFormData({ ...formData, targetProvider: c.id.toString(), sideZCompany: c.name });
+                                         setTenantSearch(c.name);
+                                         setShowTenantDropdown(false);
+                                      }}
+                                    >
+                                      {c.name}
+                                    </div>
+                                  ))}
+                                {customers.filter(c => c.id !== sessionCustomerId && c.name.toLowerCase().includes(tenantSearch.toLowerCase())).length === 0 && (
+                                  <div className="px-4 py-2 text-sm text-slate-500 text-right">No tenants found</div>
+                                )}
+                              </div>
+                            )}
+                            {formData.targetProvider && (
+                                <div className="text-[10px] text-emerald-400 text-right flex items-center justify-end gap-1 mt-1">
+                                  <CheckCircle className="w-3 h-3" /> Selected
+                                </div>
+                            )}
                             <p className="text-[10px] text-slate-500 text-right mt-2">The destination tenant will receive an approval request to assign their ports.</p>
                           </div>
                         ) : isApprovalMode ? (
