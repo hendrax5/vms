@@ -58,8 +58,11 @@ export async function POST(req) {
         let finalProvider = targetProvider;
         if (targetProvider === 'Other' || targetType === 'Custom') finalProvider = targetNotes;
 
+        const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+
         let finalCustomerId = customerId ? parseInt(customerId) : null;
-        if (sessionCustomerId) {
+        if (!isInternalAdmin && sessionCustomerId) {
             finalCustomerId = sessionCustomerId;
         }
 
@@ -407,7 +410,10 @@ export async function DELETE(req) {
         const existingConnection = await prisma.crossConnect.findUnique({ where: { id: parseInt(id) } });
         if (!existingConnection) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-        if (sessionCustomerId && existingConnection.customerId !== sessionCustomerId) {
+        const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+
+        if (!isInternalAdmin && sessionCustomerId && existingConnection.customerId !== sessionCustomerId) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

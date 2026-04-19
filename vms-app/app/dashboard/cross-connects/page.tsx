@@ -19,7 +19,7 @@ import { useSession } from "next-auth/react";
 
 export default function CrossConnectsPage() {
   const { data: session } = useSession();
-  const userRole = (session?.user as any)?.role?.toLowerCase() || "";
+  const userRole = (session?.user as any)?.role?.toLowerCase().replace(/\s+/g, "") || "";
   const isInternalAdmin = ["superadmin", "nocadmin", "nocstaff"].includes(userRole);
   const sessionCustomerId = (session?.user as any)?.customerId;
 
