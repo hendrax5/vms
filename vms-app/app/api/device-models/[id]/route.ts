@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const model = await prisma.deviceModel.findUnique({
-      where: { id: parseInt(params.id, 10) }
+      where: { id: parseInt(id, 10) }
     });
 
     if (!model) {
@@ -18,13 +19,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { brand, modelName, equipmentType, uSize, portCount, requiresSerialNumber, powerDrawW } = body;
 
     const updatedModel = await prisma.deviceModel.update({
-      where: { id: parseInt(params.id, 10) },
+      where: { id: parseInt(id, 10) },
       data: {
         brand,
         modelName,
@@ -49,11 +51,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     // Check if any equipment is currently using this model
     const usageCount = await prisma.rackEquipment.count({
-      where: { deviceModelId: parseInt(params.id, 10) }
+      where: { deviceModelId: parseInt(id, 10) }
     });
 
     if (usageCount > 0) {
@@ -64,7 +67,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     }
 
     await prisma.deviceModel.delete({
-      where: { id: parseInt(params.id, 10) }
+      where: { id: parseInt(id, 10) }
     });
 
     return NextResponse.json({ success: true });
