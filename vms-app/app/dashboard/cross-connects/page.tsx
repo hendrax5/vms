@@ -31,7 +31,9 @@ export default function CrossConnectsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [tenantSearch, setTenantSearch] = useState("");
+  const [sideASearch, setSideASearch] = useState("");
   const [showTenantDropdown, setShowTenantDropdown] = useState(false);
+  const [showSideADropdown, setShowSideADropdown] = useState(false);
 
   const [formData, setFormData] = useState({
     id: undefined as number | undefined,
@@ -189,7 +191,9 @@ export default function CrossConnectsPage() {
     });
     setIsApprovalMode(false);
     setTenantSearch("");
+    setSideASearch("");
     setShowTenantDropdown(false);
+    setShowSideADropdown(false);
   };
 
   const openModal = (cx?: any, approvalMode: boolean = false) => {
@@ -218,10 +222,10 @@ export default function CrossConnectsPage() {
         status: cx.status || "",
       });
 
+      setSideASearch(cx.sideACompany || cx.customer?.name || "");
+      
       let initTenantSearch = "";
       if (cx.targetType === "tenant" && cx.targetProvider) {
-        // Will match when customers are loaded, otherwise may be empty until re-opened
-        // For an existing request, we can just use sideZCompany as fallback if name not found in list immediately
         initTenantSearch = cx.sideZCompany || ""; 
       }
       setTenantSearch(initTenantSearch);
@@ -278,7 +282,7 @@ export default function CrossConnectsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input 
                 type="text" 
-                placeholder="Search pathways..." 
+                placeholder="Search by PT, Equipment, or ID..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 rounded-lg pl-9 pr-4 py-2 focus:border-emerald-500 outline-none transition-all" 
@@ -436,9 +440,46 @@ export default function CrossConnectsPage() {
                         <span className="text-sm font-bold text-slate-300">Side A Config</span>
                       </div>
                       <div className="space-y-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] text-slate-500 font-bold uppercase">Company Name</label>
-                          <input type="text" placeholder="Owner of Side A..." disabled={!isInternalAdmin || isApprovalMode} value={formData.sideACompany} onChange={(e) => setFormData({ ...formData, sideACompany: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-50" />
+                        <div className="space-y-1.5 relative">
+                          <label className="text-[10px] text-slate-500 font-bold uppercase">Company Name (Side A)</label>
+                          <input 
+                            type="text" 
+                            placeholder="Type to search or enter manual PT..." 
+                            disabled={!isInternalAdmin || isApprovalMode} 
+                            value={sideASearch} 
+                            onChange={(e) => {
+                              setSideASearch(e.target.value);
+                              setFormData({ ...formData, sideACompany: e.target.value });
+                              setShowSideADropdown(true);
+                            }}
+                            onFocus={() => setShowSideADropdown(true)}
+                            onBlur={() => setTimeout(() => setShowSideADropdown(false), 200)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none disabled:opacity-50" 
+                          />
+                          {showSideADropdown && sideASearch.length >= 2 && isInternalAdmin && (
+                            <div className="absolute z-10 w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                              {customers
+                                .filter(c => c.name.toLowerCase().includes(sideASearch.toLowerCase()))
+                                .map(c => (
+                                  <div 
+                                    key={c.id} 
+                                    className="px-4 py-2 text-sm text-slate-300 hover:bg-emerald-600 hover:text-white cursor-pointer"
+                                    onClick={() => {
+                                      setFormData({ ...formData, customerId: c.id.toString(), sideACompany: c.name });
+                                      setSideASearch(c.name);
+                                      setShowSideADropdown(false);
+                                    }}
+                                  >
+                                    {c.name}
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+                          {formData.customerId && isInternalAdmin && (
+                             <div className="text-[10px] text-emerald-400 flex items-center gap-1 mt-1">
+                               <CheckCircle className="w-3 h-3" /> Linked to Tenant
+                             </div>
+                          )}
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] text-slate-500 font-bold uppercase">Rack Selection</label>
@@ -511,49 +552,71 @@ export default function CrossConnectsPage() {
                             </div>
                           </>
                         ) : formData.targetType === "tenant" && !isApprovalMode ? (
-                          <div className="space-y-1.5 relative">
-                            <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Search Destination Tenant</label>
-                            <input 
-                              type="text" 
-                              value={tenantSearch} 
-                              onChange={(e) => {
-                                setTenantSearch(e.target.value);
-                                setShowTenantDropdown(true);
-                                if (!e.target.value) setFormData({...formData, targetProvider: ""});
-                              }}
-                              onFocus={() => setShowTenantDropdown(true)}
-                              onBlur={() => setTimeout(() => setShowTenantDropdown(false), 200)}
-                              placeholder="Type at least 2 chars..."
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none text-right"
-                            />
-                            {showTenantDropdown && tenantSearch.length >= 2 && (
-                              <div className="absolute z-10 w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
-                                {customers
-                                  .filter(c => c.id !== sessionCustomerId && c.name.toLowerCase().includes(tenantSearch.toLowerCase()))
-                                  .map(c => (
-                                    <div 
-                                      key={c.id} 
-                                      className="px-4 py-2 text-sm text-slate-300 hover:bg-emerald-600 hover:text-white cursor-pointer text-right"
-                                      onClick={() => {
-                                         setFormData({ ...formData, targetProvider: c.id.toString(), sideZCompany: c.name });
-                                         setTenantSearch(c.name);
-                                         setShowTenantDropdown(false);
-                                      }}
-                                    >
-                                      {c.name}
-                                    </div>
-                                  ))}
-                                {customers.filter(c => c.id !== sessionCustomerId && c.name.toLowerCase().includes(tenantSearch.toLowerCase())).length === 0 && (
-                                  <div className="px-4 py-2 text-sm text-slate-500 text-right">No tenants found</div>
-                                )}
+                          <div className="space-y-4">
+                            <div className="space-y-1.5 relative">
+                              <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Search Destination Tenant</label>
+                              <input 
+                                type="text" 
+                                value={tenantSearch} 
+                                onChange={(e) => {
+                                  setTenantSearch(e.target.value);
+                                  setShowTenantDropdown(true);
+                                  if (!e.target.value) setFormData({...formData, targetProvider: ""});
+                                }}
+                                onFocus={() => setShowTenantDropdown(true)}
+                                onBlur={() => setTimeout(() => setShowTenantDropdown(false), 200)}
+                                placeholder="Type at least 2 chars..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none text-right"
+                              />
+                              {showTenantDropdown && tenantSearch.length >= 2 && (
+                                <div className="absolute z-10 w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                                  {customers
+                                    .filter(c => c.id !== Number(formData.customerId) && c.name.toLowerCase().includes(tenantSearch.toLowerCase()))
+                                    .map(c => (
+                                      <div 
+                                        key={c.id} 
+                                        className="px-4 py-2 text-sm text-slate-300 hover:bg-emerald-600 hover:text-white cursor-pointer text-right"
+                                        onClick={() => {
+                                          setFormData({ ...formData, targetProvider: c.id.toString(), sideZCompany: c.name });
+                                          setTenantSearch(c.name);
+                                          setShowTenantDropdown(false);
+                                        }}
+                                      >
+                                        {c.name}
+                                      </div>
+                                    ))}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {isInternalAdmin && (
+                              <div className="pt-4 border-t border-slate-800 space-y-4">
+                                <p className="text-[10px] text-amber-400 font-bold uppercase text-right">NOC Override: Assign Ports</p>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Rack Selection</label>
+                                  <select value={formData.sideZRackId} onChange={(e) => setFormData({ ...formData, sideZRackId: e.target.value, sideZEquipmentId: "", sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right">
+                                    <option value="">Select Rack...</option>
+                                    {racks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                  </select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-1.5">
+                                    <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Equipment</label>
+                                    <select disabled={!formData.sideZRackId} value={formData.sideZEquipmentId} onChange={(e) => setFormData({ ...formData, sideZEquipmentId: e.target.value, sideZPortId: "" })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
+                                      <option value="">Select...</option>
+                                      {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.map((eq: any) => <option key={eq.id} value={eq.id}>{eq.name}</option>)}
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="text-[10px] text-slate-500 font-bold uppercase text-right block">Port</label>
+                                    <select disabled={!formData.sideZEquipmentId} value={formData.sideZPortId} onChange={(e) => setFormData({ ...formData, sideZPortId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 outline-none appearance-none text-right disabled:opacity-30">
+                                      <option value="">Select...</option>
+                                      {racks.find(r => r.id === parseInt(formData.sideZRackId))?.equipments?.find((eq: any) => eq.id === parseInt(formData.sideZEquipmentId))?.ports?.map((p: any) => <option key={p.id} value={p.id}>{p.portName}</option>)}
+                                    </select>
+                                  </div>
+                                </div>
                               </div>
                             )}
-                            {formData.targetProvider && (
-                                <div className="text-[10px] text-emerald-400 text-right flex items-center justify-end gap-1 mt-1">
-                                  <CheckCircle className="w-3 h-3" /> Selected
-                                </div>
-                            )}
-                            <p className="text-[10px] text-slate-500 text-right mt-2">The destination tenant will receive an approval request to assign their ports.</p>
                           </div>
                         ) : isApprovalMode ? (
                           <>

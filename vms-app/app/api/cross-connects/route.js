@@ -359,8 +359,11 @@ export async function PUT(req) {
         let finalProvider = targetProvider;
         if (targetProvider === 'Other' || targetType === 'Custom') finalProvider = targetNotes;
 
+        const userRole = session?.user?.role?.toLowerCase().replace(/\s+/g, '') || '';
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+
         let finalCustomerId = customerId ? parseInt(customerId) : null;
-        if (sessionCustomerId) {
+        if (!isInternalAdmin && sessionCustomerId) {
             finalCustomerId = sessionCustomerId;
         }
 
