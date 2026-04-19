@@ -36,7 +36,12 @@ export async function GET(req) {
                     ]
                 };
             } else {
-                whereClause = { customerId: cId };
+                whereClause = {
+                    OR: [
+                        { customerId: cId },
+                        { equipments: { some: { customerId: cId } } }
+                    ]
+                };
             }
         }
 
