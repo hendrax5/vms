@@ -100,7 +100,7 @@ export default function CrossConnectsPage() {
 
   const fetchRacks = async () => {
     try {
-      const res = await fetch("/api/racks");
+      const res = await fetch("/api/racks?crossconnect=true");
       const data = await res.json();
       setRacks(data);
     } catch (error) {

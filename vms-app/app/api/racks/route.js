@@ -16,6 +16,9 @@ export async function GET(req) {
         const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
         const sessionCustomerId = session?.user?.customerId;
 
+        const { searchParams } = new URL(req.url);
+        const isCrossConnect = searchParams.get('crossconnect') === 'true';
+
         let whereClause = {};
 
         if (!isInternalAdmin) {
@@ -23,13 +26,18 @@ export async function GET(req) {
                 return NextResponse.json({ error: 'Forbidden: No Customer ID assigned to this tenant admin' }, { status: 403 });
             }
             const cId = parseInt(sessionCustomerId, 10);
-            whereClause = {
-                OR: [
-                    { customerId: cId },
-                    { customerId: null },
-                    { equipments: { some: { customerId: cId } } }
-                ]
-            };
+            
+            if (isCrossConnect) {
+                whereClause = {
+                    OR: [
+                        { customerId: cId },
+                        { customerId: null },
+                        { equipments: { some: { customerId: cId } } }
+                    ]
+                };
+            } else {
+                whereClause = { customerId: cId };
+            }
         }
 
         const racks = await prisma.rack.findMany({
