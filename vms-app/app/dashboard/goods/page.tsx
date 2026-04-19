@@ -45,7 +45,12 @@ export default function GoodsPage() {
         try {
             const res = await fetch('/api/goods');
             const data = await res.json();
-            setGoods(data);
+            if (Array.isArray(data)) {
+                setGoods(data);
+            } else {
+                console.error("API returned error or non-array:", data);
+                setGoods([]);
+            }
         } catch (error) {
             console.error(error);
         } finally {
@@ -62,15 +67,21 @@ export default function GoodsPage() {
                 qrCode: `QR-${Math.random().toString(36).substring(7).toUpperCase()}`,
                 datacenterId: 1
             };
-            await fetch('/api/goods', {
+            const res = await fetch('/api/goods', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dummyItem)
             });
+            if (!res.ok) {
+                const errData = await res.json();
+                console.error("Failed to create dummy item:", errData);
+                alert(`Failed to add asset: ${errData.error || 'Unknown error'}`);
+            }
             setIsScannerOpen(false);
             fetchGoods();
         } catch (error) {
-            console.error(error);
+            console.error("Mock scan error:", error);
+            alert("Error adding asset");
         }
     };
 
@@ -83,15 +94,21 @@ export default function GoodsPage() {
                 qrCode: scannedText,
                 datacenterId: 1
             };
-            await fetch('/api/goods', {
+            const res = await fetch('/api/goods', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(item)
             });
+            if (!res.ok) {
+                const errData = await res.json();
+                console.error("Failed to create real scanned item:", errData);
+                alert(`Failed to check-in asset: ${errData.error || 'Unknown error'}`);
+            }
             setIsScannerOpen(false);
             fetchGoods();
         } catch (error) {
-            console.error(error);
+            console.error("Real scan error:", error);
+            alert("Error scanning asset");
         }
     };
 

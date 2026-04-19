@@ -51,10 +51,16 @@ export async function POST(req) {
             finalCustomerId = parseInt(sessionCustomerId, 10);
         }
 
+        let finalDatacenterId = body.datacenterId ? parseInt(body.datacenterId) : 1;
+        if (session?.user?.datacenterId) {
+            finalDatacenterId = parseInt(session.user.datacenterId, 10);
+        }
+
         // Add customer ID to payload
         const payload = {
             ...body,
             customerId: finalCustomerId,
+            datacenterId: finalDatacenterId,
             qrCode: body.qrCode || `GDS-${Math.random().toString(36).substring(7).toUpperCase()}`,
             status: body.status || 'Inbound'
         };
