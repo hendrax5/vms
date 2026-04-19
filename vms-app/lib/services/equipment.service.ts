@@ -68,7 +68,10 @@ export class EquipmentService {
 
         // 5. Port Generation
         const ports = [];
-        const numPorts = portCount ? parseInt(portCount) : (['PATCH_PANEL', 'OTB'].includes(equipmentType) ? 24 : 0);
+        const numPorts = portCount !== undefined && portCount !== null 
+            ? parseInt(portCount) 
+            : (['PATCH_PANEL', 'OTB'].includes(equipmentType) ? 24 : 0);
+            
         for (let i = 1; i <= numPorts; i++) {
             ports.push({ portName: `Port ${i}` });
         }

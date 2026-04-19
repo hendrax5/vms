@@ -78,10 +78,19 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                             </select>
                         </div>
                     )}
-                    {['PATCH_PANEL', 'OTB'].includes(formData.equipmentType) && !formData.id && (
+                    {!formData.id && (
                         <div>
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Port Capacity</label>
-                            <input type="number" min="1" max="1000" value={formData.portCount} onChange={e => setFormData({...formData, portCount: parseInt(e.target.value) || 0})} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none" />
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Port Capacity (Initial Setup)</label>
+                            <input type="number" min="0" max="1000" value={formData.portCount} onChange={e => setFormData({...formData, portCount: parseInt(e.target.value) || 0})} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none" />
+                        </div>
+                    )}
+                    {formData.id && (
+                        <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Current Port Capacity</label>
+                            <div className="flex items-center gap-2">
+                                <input type="number" readOnly value={formData.portCount} className="w-full bg-slate-900 border border-white/10 rounded-xl p-3 text-slate-400 outline-none opacity-70 cursor-not-allowed" />
+                                <span className="text-xs text-slate-500 w-full">Ports are generated at provisioning.</span>
+                            </div>
                         </div>
                     )}
                     <div className="grid grid-cols-2 gap-4">
