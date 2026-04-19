@@ -8,7 +8,7 @@ export class EquipmentService {
     }
 
     async addEquipment(data: any, sessionUser: any) {
-        const { rackId, customerId, name, equipmentType, uStart, uEnd, portCount, serialNumber, weight, arrivalDate } = data;
+        const { rackId, customerId, name, equipmentType, uStart, uEnd, portCount, serialNumber, weight, arrivalDate, deviceModelId, assetTag } = data;
 
         // 1. Validation
         if (!rackId || !name || !equipmentType || !uStart || !uEnd) {
@@ -76,15 +76,23 @@ export class EquipmentService {
             ports.push({ portName: `Port ${i}` });
         }
 
+        // Auto-generate Asset Tag if blank
+        let finalAssetTag = assetTag;
+        if (!finalAssetTag || finalAssetTag.trim() === '') {
+            finalAssetTag = `VMS-ASSET-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+        }
+
         // 6. Create
         return await this.repo.createEquipment({
             rackId: parseInt(rackId),
             customerId: finalCustomerId,
+            deviceModelId: deviceModelId ? parseInt(deviceModelId, 10) : null,
             name,
             equipmentType,
             uStart: parseInt(uStart),
             uEnd: parseInt(uEnd),
             serialNumber: serialNumber || null,
+            assetTag: finalAssetTag,
             weight: weight || null,
             arrivalDate: arrivalDate ? new Date(arrivalDate) : null,
             ports: {
@@ -136,6 +144,7 @@ export class EquipmentService {
         const includeRelations = { 
             customer: true, 
             ports: true, 
+            deviceModel: true,
             rack: { include: { row: { include: { room: true } } } } 
         };
 

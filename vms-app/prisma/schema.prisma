@@ -148,11 +148,26 @@ model RackEquipment {
   createdAt              DateTime                 @default(now())
   arrivalDate            DateTime?
   serialNumber           String?
+  assetTag               String?                  @unique
   weight                 String?
+  deviceModelId          Int?
   ports                  EquipmentPort[]
   InfrastructureAuditLog InfrastructureAuditLog[]
   customer               Customer?                @relation(fields: [customerId], references: [id])
   rack                   Rack                     @relation(fields: [rackId], references: [id], onDelete: Cascade)
+  deviceModel            DeviceModel?             @relation(fields: [deviceModelId], references: [id])
+}
+
+model DeviceModel {
+  id                   Int             @id @default(autoincrement())
+  brand                String
+  modelName            String          @unique
+  equipmentType        String
+  uSize                Int             @default(1)
+  portCount            Int             @default(0)
+  requiresSerialNumber Boolean         @default(true)
+  powerDrawW           Int?
+  equipments           RackEquipment[]
 }
 
 model InfrastructureAuditLog {
@@ -168,14 +183,14 @@ model InfrastructureAuditLog {
 }
 
 model EquipmentPort {
-  id            Int            @id @default(autoincrement())
-  equipmentId   Int
-  portName      String
-  crossConnectA CrossConnect[] @relation("CrossConnectSideAPort")
-  crossConnectZ CrossConnect[] @relation("CrossConnectSideZPort")
+  id               Int            @id @default(autoincrement())
+  equipmentId      Int
+  portName         String
+  crossConnectA    CrossConnect[] @relation("CrossConnectSideAPort")
+  crossConnectZ    CrossConnect[] @relation("CrossConnectSideZPort")
   crossConnectMmrA CrossConnect[] @relation("CrossConnectMmrSideAPort")
   crossConnectMmrZ CrossConnect[] @relation("CrossConnectMmrSideZPort")
-  equipment     RackEquipment  @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  equipment        RackEquipment  @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 }
 
 model GoodsItem {

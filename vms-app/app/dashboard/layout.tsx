@@ -32,6 +32,7 @@ const navCategories = [
             { label: 'Infrastructure Map', href: '/dashboard/infrastructure', icon: Building2, permission: 'infrastructure:view' },
             { label: 'Rack Management', href: '/dashboard/racks', icon: Package, permission: 'racks:manage' },
             { label: 'Asset Inventory', href: '/dashboard/assets', icon: Server, permission: 'infrastructure:view' },
+            { label: 'Device Catalog', href: '/dashboard/device-models', icon: Server, permission: 'racks:manage' },
             { label: 'Cross Connects', href: '/dashboard/cross-connects', icon: Network, permission: 'infrastructure:view' }
         ]
     },
