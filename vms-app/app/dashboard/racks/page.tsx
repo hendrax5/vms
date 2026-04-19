@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import RackCard from '../../components/dashboard/racks/RackCard';
 import RackList from '../../components/dashboard/racks/RackList';
 import AddRackModal from '../../components/dashboard/racks/AddRackModal';
+import EditRackModal from '../../components/dashboard/racks/EditRackModal';
 import DeleteRackModal from '../../components/dashboard/racks/DeleteRackModal';
 
 export default function RacksPage() {
@@ -13,6 +14,7 @@ export default function RacksPage() {
     const [rows, setRows] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editTarget, setEditTarget] = useState<any>(null);
     const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +54,26 @@ export default function RacksPage() {
                 fetchData();
                 toast.success('Rack provisioned successfully');
             } else toast.error('Failed to add rack');
+        } catch (e) { toast.error('An error occurred.'); }
+        setSaving(false);
+    };
+
+    const handleEditRack = async (formData: any) => {
+        setSaving(true);
+        try {
+            const res = await fetch('/api/racks', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            if (res.ok) {
+                setEditTarget(null);
+                fetchData();
+                toast.success('Rack updated successfully');
+            } else {
+                const err = await res.json();
+                toast.error(err.error || 'Failed to update rack');
+            }
         } catch (e) { toast.error('An error occurred.'); }
         setSaving(false);
     };
@@ -110,10 +132,10 @@ export default function RacksPage() {
                 <div className="p-8 text-center text-slate-500">No racks match your search criteria.</div>
             ) : viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                     {paginatedRacks.map((rack, i) => <RackCard key={rack.id} rack={rack} index={i} onDelete={setDeleteTarget} />)}
+                     {paginatedRacks.map((rack, i) => <RackCard key={rack.id} rack={rack} index={i} onDelete={setDeleteTarget} onEdit={setEditTarget} />)}
                 </div>
             ) : (
-                <RackList racks={paginatedRacks} onDelete={setDeleteTarget} />
+                <RackList racks={paginatedRacks} onDelete={setDeleteTarget} onEdit={setEditTarget} />
             )}
 
             {totalPages > 1 && (
@@ -127,6 +149,7 @@ export default function RacksPage() {
             )}
 
             <AddRackModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={handleAddRack} rows={rows} saving={saving} />
+            <EditRackModal isOpen={!!editTarget} onClose={() => setEditTarget(null)} onSubmit={handleEditRack} rack={editTarget} saving={saving} />
             <DeleteRackModal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteRack} />
         </div>
     );

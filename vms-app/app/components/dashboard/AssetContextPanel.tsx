@@ -1,4 +1,4 @@
-import { Building2, Layers, Server, Box, MapPin, X, Pencil, Trash2, Plus, ArrowRight } from 'lucide-react';
+import { Building2, Layers, Server, Box, MapPin, X, Pencil, Trash2, Plus, ArrowRight, Printer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AssetContextPanelProps {
@@ -101,6 +101,18 @@ export default function AssetContextPanel({ isOpen, asset, onClose, onEdit, onDe
                                             <span className="text-sm font-medium text-slate-200">{asset.data.status}</span>
                                         </div>
                                     )}
+                                    {asset.data.assetTag && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm text-slate-400">Asset Tag</span>
+                                            <span className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">{asset.data.assetTag}</span>
+                                        </div>
+                                    )}
+                                    {asset.data.serialNumber && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm text-slate-400">Serial Number</span>
+                                            <span className="text-sm font-mono text-slate-300">{asset.data.serialNumber}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -149,6 +161,11 @@ export default function AssetContextPanel({ isOpen, asset, onClose, onEdit, onDe
                                         <Trash2 className="w-4 h-4" /> Delete
                                     </button>
                                 </div>
+                                {asset.type === 'equipment' && (
+                                    <button onClick={() => window.open(`/dashboard/assets/print/${asset.data.id}`, '_blank', 'width=800,height=600')} className="w-full mt-3 flex items-center justify-center gap-2 p-3 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-xl text-emerald-400 hover:text-emerald-300 transition-all text-sm font-bold">
+                                        <Printer className="w-4 h-4" /> Print Asset Label
+                                    </button>
+                                )}
                             </div>
                         )}
                     </motion.div>

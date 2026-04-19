@@ -135,8 +135,43 @@ export class EquipmentService {
         return await this.repo.updateEquipment(id, { status });
     }
 
+    async updateEquipmentDetails(id: number, data: any, sessionUser: any) {
+        const equipment = await this.repo.findUniqueEquipment(id);
+        if (!equipment) throw new Error('Equipment not found');
+
+        // RBAC Check (similar to decommission)
+        const userRole = (sessionUser?.role || '').toLowerCase().replace(/\s+/g, '');
+        const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
+        if (!isInternalAdmin && equipment.customerId !== Number(sessionUser.customerId)) {
+            throw new Error('Forbidden.');
+        }
+
+        const { deviceModelId, assetTag, serialNumber, name } = data;
+
+        // Auto-generate asset tag if missing
+        let finalAssetTag = assetTag;
+        if (!finalAssetTag || finalAssetTag.trim() === '') {
+            finalAssetTag = `VMS-ASSET-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+        }
+
+        // Validate Asset Tag collision if it changed
+        if (finalAssetTag !== equipment.assetTag) {
+            const existingTag = await this.repo.findEquipmentByAssetTag(finalAssetTag);
+            if (existingTag && existingTag.id !== id) {
+                throw new Error('Asset Tag Collision. Please use a different tag.');
+            }
+        }
+
+        return await this.repo.updateEquipment(id, {
+            name: name || equipment.name,
+            deviceModelId: deviceModelId ? parseInt(deviceModelId, 10) : null,
+            serialNumber: serialNumber || null,
+            assetTag: finalAssetTag
+        });
+    }
+
     async getEquipments(query: any, sessionUser: any) {
-        const { rackId, customerId } = query;
+        const { rackId, customerId, equipmentType } = query;
         const userRole = (sessionUser?.role || '').toLowerCase().replace(/\s+/g, '');
         const isInternalAdmin = ['superadmin', 'nocadmin', 'nocstaff'].includes(userRole);
         const sessionCustomerId = sessionUser?.customerId;
@@ -151,8 +186,11 @@ export class EquipmentService {
         if (!isInternalAdmin) {
             if (!sessionCustomerId) throw new Error('Forbidden: No Customer ID');
             
+            const whereCustomer: any = { customerId: parseInt(sessionCustomerId.toString(), 10) };
+            if (equipmentType) whereCustomer.equipmentType = equipmentType;
+
             const customerEqs = await this.repo.findManyEquipments({
-                where: { customerId: parseInt(sessionCustomerId.toString(), 10) },
+                where: whereCustomer,
                 include: includeRelations
             });
             
@@ -168,6 +206,10 @@ export class EquipmentService {
                     include: includeRelations
                 });
             }
+            // If filtering by equipmentType, make sure facilityPanels match
+            if (equipmentType && equipmentType !== 'PATCH_PANEL') {
+                return customerEqs;
+            }
             return [...customerEqs, ...facilityPanels];
         }
 
@@ -175,6 +217,10 @@ export class EquipmentService {
         const where: any = {};
         if (customerId) where.customerId = parseInt(customerId);
         else if (rackId) where.rackId = parseInt(rackId);
+        
+        if (equipmentType) {
+            where.equipmentType = equipmentType;
+        }
 
         return await this.repo.findManyEquipments({
             where,

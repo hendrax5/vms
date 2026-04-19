@@ -150,9 +150,59 @@ export async function DELETE(req) {
             where: { id: parseInt(id) }
         });
 
-        return NextResponse.json({ success: true }, { status: 200 });
+        return NextResponse.json({ message: 'Rack deleted successfully' });
     } catch (error) {
         console.error('Delete Rack Error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+
+export async function PUT(req) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const sessionCustomerId = session?.user?.customerId;
+        const body = await req.json();
+        const { id, name, uCapacity } = body;
+
+        if (!id || !name || !uCapacity) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        const existingRack = await prisma.rack.findUnique({
+            where: { id: parseInt(id) },
+            include: { equipments: true }
+        });
+
+        if (!existingRack) {
+            return NextResponse.json({ error: 'Rack not found' }, { status: 404 });
+        }
+
+        // Security
+        if (sessionCustomerId && existingRack.customerId !== sessionCustomerId) {
+            return NextResponse.json({ error: 'Forbidden: You do not have permission to edit this rack' }, { status: 403 });
+        }
+
+        // Validate uCapacity
+        const usedCapacity = existingRack.equipments.reduce((sum, eq) => sum + ((eq.uEnd - eq.uStart) + 1), 0);
+        const maxUEnd = existingRack.equipments.reduce((max, eq) => Math.max(max, eq.uEnd), 0);
+
+        if (parseInt(uCapacity) < maxUEnd) {
+            return NextResponse.json({ error: `Cannot reduce capacity below U${maxUEnd} as equipment is installed there.` }, { status: 400 });
+        }
+
+        const updatedRack = await prisma.rack.update({
+            where: { id: parseInt(id) },
+            data: {
+                name,
+                uCapacity: parseInt(uCapacity)
+            }
+        });
+
+        return NextResponse.json(updatedRack);
+    } catch (error) {
+        console.error('Update Rack Error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

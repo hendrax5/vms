@@ -9,6 +9,7 @@ import EquipmentInventory from '../../../components/dashboard/racks/details/Equi
 import RackAuditTrail from '../../../components/dashboard/racks/details/RackAuditTrail';
 import PortModal from '../../../components/dashboard/racks/details/PortModal';
 import DeviceModal from '../../../components/dashboard/racks/details/DeviceModal';
+import CreateCrossConnectModal from '../../../components/dashboard/racks/details/CreateCrossConnectModal';
 
 export default function RackElevationPage() {
     const params = useParams();
@@ -25,6 +26,7 @@ export default function RackElevationPage() {
     const [modalData, setModalData] = useState<any>(null);
     const [draggedEq, setDraggedEq] = useState<any>(null);
     const [customers, setCustomers] = useState<any[]>([]);
+    const [bindPortTarget, setBindPortTarget] = useState<any>(null);
 
     const userRole = ((session?.user as any)?.role?.name || (session?.user as any)?.role || '').toLowerCase().replace(/\s+/g, '');
     const userCustomerId = (session?.user as any)?.customerId || null;
@@ -146,7 +148,12 @@ export default function RackElevationPage() {
                 </div>
             </div>
 
-            <PortModal isOpen={!!selectedEquipment} onClose={() => setSelectedEquipment(null)} selectedEquipment={selectedEquipment} />
+            <PortModal 
+                isOpen={!!selectedEquipment} 
+                onClose={() => setSelectedEquipment(null)} 
+                selectedEquipment={selectedEquipment} 
+                onBindPort={setBindPortTarget}
+            />
             <DeviceModal 
                 isOpen={isEqModalOpen} 
                 onClose={() => setIsEqModalOpen(false)} 
@@ -156,6 +163,16 @@ export default function RackElevationPage() {
                 isMmrRack={rack?.customerId === null}
                 isInternalAdmin={isInternalAdmin}
                 customers={customers}
+            />
+            <CreateCrossConnectModal
+                isOpen={!!bindPortTarget}
+                onClose={() => setBindPortTarget(null)}
+                sourceEquipment={selectedEquipment}
+                sourcePort={bindPortTarget}
+                onSuccess={() => {
+                    setBindPortTarget(null);
+                    fetchData(); // Refresh to show active connection
+                }}
             />
         </div>
     );

@@ -116,7 +116,6 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                             <select 
                                 value={formData.deviceModelId} 
                                 onChange={handleModelSelect}
-                                disabled={!!formData.id} // Cannot change template after creation for now
                                 className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none"
                             >
                                 <option value="">-- Custom / Manual Configuration --</option>
@@ -153,7 +152,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Orientation / Side</label>
-                                <select value={formData.orientation} onChange={e => setFormData({...formData, orientation: e.target.value})} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none">
+                                <select value={formData.orientation} onChange={e => setFormData({...formData, orientation: e.target.value})} disabled={!!formData.id} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed">
                                     <option value="FRONT">FRONT</option>
                                     <option value="BACK">REAR</option>
                                     <option value="BOTH">BOTH</option>
@@ -208,11 +207,11 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
 
                             <div>
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">U-Start</label>
-                                <input type="number" value={formData.uStart} onChange={handleUStartChange} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none" />
+                                <input type="number" value={formData.uStart} onChange={handleUStartChange} disabled={!!formData.id} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" />
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">U-End</label>
-                                <input type="number" value={formData.uEnd} onChange={e => setFormData({...formData, uEnd: parseInt(e.target.value)})} disabled={!!selectedModel} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" />
+                                <input type="number" value={formData.uEnd} onChange={e => setFormData({...formData, uEnd: parseInt(e.target.value)})} disabled={!!selectedModel || !!formData.id} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" />
                             </div>
                         </div>
 
@@ -242,7 +241,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                 </div>
 
                 <div className="p-8 border-t border-white/10 shrink-0 bg-slate-900">
-                    <button form="deviceForm" type="submit" className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-[0.2em] rounded-2xl shadow-lg shadow-emerald-500/20 transition-all">Commit Configuration</button>
+                    <button form="deviceForm" type="submit" className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-[0.2em] rounded-2xl shadow-lg shadow-emerald-500/20 transition-all">{formData.id ? 'Update Configuration' : 'Commit Configuration'}</button>
                 </div>
             </motion.div>
         </div>

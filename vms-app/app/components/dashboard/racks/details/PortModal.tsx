@@ -8,9 +8,10 @@ interface PortModalProps {
     isOpen: boolean;
     onClose: () => void;
     selectedEquipment: any;
+    onBindPort?: (port: any) => void;
 }
 
-const PortModal: React.FC<PortModalProps> = ({ isOpen, onClose, selectedEquipment }) => {
+const PortModal: React.FC<PortModalProps> = ({ isOpen, onClose, selectedEquipment, onBindPort }) => {
     if (!isOpen || !selectedEquipment) return null;
 
     return (
@@ -55,7 +56,7 @@ const PortModal: React.FC<PortModalProps> = ({ isOpen, onClose, selectedEquipmen
                                 <span className="text-[10px] font-mono font-bold">P{port.portNumber}</span>
                                 <div className={`w-2 h-2 rounded-full ${dotColor} shadow-[0_0_10px_currentColor]`}></div>
                                 
-                                {activeConnection && (
+                                {activeConnection ? (
                                     <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-white/10 rounded-xl p-3 shadow-2xl z-50 text-left w-max min-w-[200px] pointer-events-none -top-full left-1/2 -translate-x-1/2 mt-2">
                                         <div className="text-[10px] text-white font-bold mb-1 border-b border-white/10 pb-1">Connection Details</div>
                                         <div className="text-[10px] text-slate-400 mb-1">CX ID: <span className="text-white">CX-{activeConnection.id}</span></div>
@@ -63,6 +64,20 @@ const PortModal: React.FC<PortModalProps> = ({ isOpen, onClose, selectedEquipmen
                                         {activeConnection.customer && <div className="text-[10px] text-slate-400 mb-1">Tenant: <span className="text-white">{activeConnection.customer.name}</span></div>}
                                         {activeConnection.targetProvider && <div className="text-[10px] text-slate-400">Target: <span className="text-white">{activeConnection.targetProvider}</span></div>}
                                     </div>
+                                ) : (
+                                    !activeConnection && port.status === 'AVAILABLE' && onBindPort && (
+                                        <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-auto -top-10 left-1/2 -translate-x-1/2">
+                                            <button 
+                                                onClick={() => {
+                                                    onClose();
+                                                    onBindPort(port);
+                                                }}
+                                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg shadow-lg whitespace-nowrap transition-colors"
+                                            >
+                                                Bind Port
+                                            </button>
+                                        </div>
+                                    )
                                 )}
                             </div>
                         );

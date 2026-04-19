@@ -50,11 +50,11 @@ const EquipmentInventory: React.FC<EquipmentInventoryProps> = ({
                                         </div>
                                     </div>
                                     {isMine && canEdit && (
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => onEdit(eq)} className="p-2 bg-white/5 hover:bg-emerald-600 hover:text-white rounded-lg transition-colors text-slate-400">
+                                        <div className="flex gap-1 transition-opacity">
+                                            <button onClick={() => onEdit(eq)} className="p-2 bg-white/10 hover:bg-emerald-600 text-slate-300 hover:text-white rounded-lg transition-colors">
                                                 <Edit2 className="w-3.5 h-3.5" />
                                             </button>
-                                            <button onClick={() => onDelete(eq.id)} className="p-2 bg-white/5 hover:bg-red-600 hover:text-white rounded-lg transition-colors text-slate-400">
+                                            <button onClick={() => onDelete(eq.id)} className="p-2 bg-white/10 hover:bg-red-600 text-slate-300 hover:text-white rounded-lg transition-colors">
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
                                         </div>

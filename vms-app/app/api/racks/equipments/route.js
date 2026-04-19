@@ -31,9 +31,10 @@ export async function GET(req) {
         const { searchParams } = new URL(req.url);
         const rackId = searchParams.get('rackId');
         const customerId = searchParams.get('customerId');
+        const equipmentType = searchParams.get('equipmentType');
 
         const equipmentService = new EquipmentService();
-        const equipments = await equipmentService.getEquipments({ rackId, customerId }, session?.user);
+        const equipments = await equipmentService.getEquipments({ rackId, customerId, equipmentType }, session?.user);
 
         return NextResponse.json(equipments);
     } catch (error) {
@@ -58,6 +59,26 @@ export async function PATCH(req) {
         return NextResponse.json(updated);
     } catch (error) {
         console.error('Update Equipment Status Error:', error);
+        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: error.message.includes('Forbidden') ? 403 : 500 });
+    }
+}
+
+export async function PUT(req) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const body = await req.json();
+        const { id, deviceModelId, assetTag, serialNumber, name } = body;
+
+        if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
+
+        const equipmentService = new EquipmentService();
+        const updated = await equipmentService.updateEquipmentDetails(parseInt(id), body, session.user);
+
+        return NextResponse.json(updated);
+    } catch (error) {
+        console.error('Update Equipment Details Error:', error);
         return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: error.message.includes('Forbidden') ? 403 : 500 });
     }
 }

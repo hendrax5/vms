@@ -6,9 +6,10 @@ import { Server } from 'lucide-react';
 interface RackListProps {
     racks: any[];
     onDelete: (id: number) => void;
+    onEdit: (rack: any) => void;
 }
 
-const RackList: React.FC<RackListProps> = ({ racks, onDelete }) => {
+const RackList: React.FC<RackListProps> = ({ racks, onDelete, onEdit }) => {
     return (
         <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm">
             <table className="w-full text-sm text-left">
@@ -48,6 +49,7 @@ const RackList: React.FC<RackListProps> = ({ racks, onDelete }) => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-right space-x-4">
+                                    <button onClick={() => onEdit(rack)} className="text-emerald-400/70 hover:text-emerald-400">Edit</button>
                                     <a href={`/dashboard/racks/${rack.id}`} className="text-emerald-400 hover:text-emerald-300 font-medium">Manage</a>
                                     <button onClick={() => onDelete(rack.id)} className="text-red-400/70 hover:text-red-400">Delete</button>
                                 </td>

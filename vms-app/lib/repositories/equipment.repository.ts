@@ -42,4 +42,10 @@ export class EquipmentRepository extends BaseRepository {
             include: { customer: true, rack: true }
         });
     }
+
+    async findEquipmentByAssetTag(assetTag: string) {
+        return await this.prisma.rackEquipment.findUnique({
+            where: { assetTag }
+        });
+    }
 }

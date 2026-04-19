@@ -2,15 +2,16 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Server, Zap, Trash2 } from 'lucide-react';
+import { Server, Zap, Trash2, Edit2 } from 'lucide-react';
 
 interface RackCardProps {
     rack: any;
     index: number;
     onDelete: (id: number) => void;
+    onEdit: (rack: any) => void;
 }
 
-const RackCard: React.FC<RackCardProps> = ({ rack, index, onDelete }) => {
+const RackCard: React.FC<RackCardProps> = ({ rack, index, onDelete, onEdit }) => {
     const used = rack.used || 0;
     const capacity = rack.uCapacity || 42;
     const usagePercent = capacity > 0 ? Math.round((used / capacity) * 100) : 0;
@@ -36,9 +37,14 @@ const RackCard: React.FC<RackCardProps> = ({ rack, index, onDelete }) => {
                 <div className="flex-1">
                     <div className="flex justify-between items-start">
                         <h3 className="text-xl font-bold text-slate-100">{rack.name}</h3>
-                        <button onClick={() => onDelete(rack.id)} className="text-red-400/50 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex gap-2">
+                            <button onClick={() => onEdit(rack)} className="text-emerald-400/50 hover:text-emerald-400 transition-colors">
+                                <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => onDelete(rack.id)} className="text-red-400/50 hover:text-red-400 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">DC: <span className="text-slate-300 font-medium">{rack.siteName || 'N/A'}</span></p>
                     <p className="text-xs text-muted-foreground mt-0.5">Room: <span className="text-slate-300 font-medium">{rack.roomName || 'N/A'}</span> | Row: <span className="text-slate-300">{rack.rowName || 'N/A'}</span></p>

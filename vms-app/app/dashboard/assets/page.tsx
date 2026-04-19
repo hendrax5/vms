@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { Server, Search, Building2, Layers, MapPin, Box, Filter, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AssetContextPanel from '../../components/dashboard/AssetContextPanel';
+import DeviceModal from '../../components/dashboard/racks/details/DeviceModal';
 
 export default function AssetInventoryPage() {
     const { data: session } = useSession();
@@ -21,7 +22,11 @@ export default function AssetInventoryPage() {
     // Context Panel State
     const [selectedAsset, setSelectedAsset] = useState<{ type: string; data: any } | null>(null);
 
-    useEffect(() => {
+    // Edit Modal State
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [assetToEdit, setAssetToEdit] = useState<any>(null);
+
+    const fetchAssets = () => {
         setLoading(true);
         fetch('/api/topology')
             .then(res => res.json())
@@ -52,9 +57,13 @@ export default function AssetInventoryPage() {
                     });
                     setEquipments(flattened);
                 }
-                setLoading(false);
             })
-            .catch(() => setLoading(false));
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        fetchAssets();
     }, []);
 
     // Extract unique DCs and Rooms for filters
@@ -230,9 +239,41 @@ export default function AssetInventoryPage() {
                 isOpen={!!selectedAsset} 
                 asset={selectedAsset} 
                 onClose={() => setSelectedAsset(null)} 
-                onEdit={() => { /* In future, open edit equipment modal */ }} 
+                onEdit={(type, data) => {
+                    if (type === 'equipment') {
+                        setAssetToEdit(data);
+                        setShowEditModal(true);
+                        setSelectedAsset(null);
+                    } else {
+                        alert('Edit for ' + type + ' is under construction');
+                    }
+                }} 
                 onDelete={triggerDelete}
                 canEdit={isSuperAdmin}
+            />
+
+            <DeviceModal
+                isOpen={showEditModal}
+                onClose={() => { setShowEditModal(false); setAssetToEdit(null); }}
+                onSubmit={(data) => {
+                    fetch('/api/racks/equipments', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            fetchAssets();
+                            setShowEditModal(false);
+                            setAssetToEdit(null);
+                        } else {
+                            res.json().then(d => alert(d.error));
+                        }
+                    });
+                }}
+                initialData={assetToEdit}
+                perspective="FRONT"
+                isInternalAdmin={isSuperAdmin}
             />
         </div>
     );
