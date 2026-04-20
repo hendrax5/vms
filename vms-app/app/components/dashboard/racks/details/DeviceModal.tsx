@@ -40,7 +40,8 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
         customerId: '',
         deviceModelId: '',
         serialNumber: '',
-        assetTag: ''
+        assetTag: '',
+        rackId: ''
     });
 
     useEffect(() => {
