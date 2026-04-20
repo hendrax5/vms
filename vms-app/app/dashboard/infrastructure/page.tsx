@@ -8,7 +8,6 @@ import { useSession } from 'next-auth/react';
 import AssetContextPanel from '../../components/dashboard/AssetContextPanel';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
-import AssetContextPanel from '../../components/dashboard/AssetContextPanel';
 
 export default function InfrastructureTopologyPage() {
     const { data: session } = useSession();
