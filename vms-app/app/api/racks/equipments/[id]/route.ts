@@ -14,7 +14,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
         const resolvedParams = await params;
         const equipmentId = parseInt(resolvedParams.id);
-        const { uStart, uEnd, orientation, rackId, name, equipmentType } = await req.json();
+        const { uStart, uEnd, orientation, rackId, name, equipmentType, deviceModelId, portCount, assetTag, serialNumber } = await req.json();
 
         // Fetch existing configuration for Audit Logs
         const existingEq = await prisma.rackEquipment.findUnique({
@@ -59,6 +59,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         if (rackId !== undefined) updateData.rackId = rackId;
         if (name !== undefined) updateData.name = name;
         if (equipmentType !== undefined) updateData.equipmentType = equipmentType;
+
+        if (deviceModelId !== undefined) updateData.deviceModelId = deviceModelId ? parseInt(deviceModelId) : null;
+        if (assetTag !== undefined) updateData.assetTag = assetTag;
+        if (serialNumber !== undefined) updateData.serialNumber = serialNumber;
+
+        const existingPortsCount = await prisma.equipmentPort.count({ where: { equipmentId: equipmentId } });
+        const newPortCount = portCount !== undefined ? parseInt(portCount) : existingPortsCount;
+        const portsToAdd: any[] = [];
+        if (newPortCount > existingPortsCount) {
+             for (let i = existingPortsCount + 1; i <= newPortCount; i++) {
+                 portsToAdd.push({ portName: `Port ${i}` });
+             }
+        }
+        if (portsToAdd.length > 0) {
+            updateData.ports = { create: portsToAdd };
+        }
         
         // Automatically assign to Tenant Admin if they edit their legacy equipment
         if (!isInternalAdmin && isTenantAdmin) {
