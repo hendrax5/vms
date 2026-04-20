@@ -146,7 +146,19 @@ export class EquipmentService {
             throw new Error('Forbidden.');
         }
 
-        const { deviceModelId, assetTag, serialNumber, name } = data;
+        const { deviceModelId, assetTag, serialNumber, name, equipmentType, uEnd, portCount } = data;
+
+        // collision check
+        if (uEnd && parseInt(uEnd) !== equipment.uEnd) {
+            const existingEquipments = await this.repo.findEquipmentsInRack(equipment.rackId);
+            const collision = existingEquipments.find((eq: any) => {
+                if (eq.id === id) return false;
+                return Math.max(eq.uStart, equipment.uStart) <= Math.min(eq.uEnd, parseInt(uEnd));
+            });
+            if (collision) {
+                throw new Error(`U-Space Collision! Equipment '${collision.name}' already occupies U${collision.uStart}-U${collision.uEnd}`);
+            }
+        }
 
         // Auto-generate asset tag if missing
         let finalAssetTag = assetTag;
@@ -162,12 +174,35 @@ export class EquipmentService {
             }
         }
 
-        return await this.repo.updateEquipment(id, {
+        // Handle Port Generation
+        const currentPorts = (equipment as any).ports || [];
+        const existingPortCount = currentPorts.length;
+        const newPortCount = portCount !== undefined ? parseInt(portCount) : existingPortCount;
+
+        const portsToAdd: any[] = [];
+        if (newPortCount > existingPortCount) {
+             for (let i = existingPortCount + 1; i <= newPortCount; i++) {
+                 portsToAdd.push({ portName: `Port ${i}` });
+             }
+        }
+
+        const updateData: any = {
             name: name || equipment.name,
             deviceModelId: deviceModelId ? parseInt(deviceModelId, 10) : null,
             serialNumber: serialNumber || null,
             assetTag: finalAssetTag
-        });
+        };
+
+        if (equipmentType) updateData.equipmentType = equipmentType;
+        if (uEnd) updateData.uEnd = parseInt(uEnd);
+
+        if (portsToAdd.length > 0) {
+            updateData.ports = {
+                create: portsToAdd
+            };
+        }
+
+        return await this.repo.updateEquipment(id, updateData);
     }
 
     async getEquipments(query: any, sessionUser: any) {

@@ -39,7 +39,7 @@ export class EquipmentRepository extends BaseRepository {
     async findUniqueEquipment(id: number) {
         return await this.prisma.rackEquipment.findUnique({
             where: { id },
-            include: { customer: true, rack: true }
+            include: { customer: true, rack: true, ports: true }
         });
     }
 
