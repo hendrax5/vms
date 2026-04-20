@@ -121,9 +121,9 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
     // Location Picker Dependency Effects
     useEffect(() => {
         if (!showLocationPicker) return;
-        const dc = topology.find(d => d.id.toString() === selectedDcId);
-        const room = dc?.rooms?.find(r => r.id.toString() === selectedRoomId);
-        const row = room?.rows?.find(rw => rw.id.toString() === selectedRowId);
+        const dc = topology.find((d: any) => d.id.toString() === selectedDcId);
+        const room = dc?.rooms?.find((r: any) => r.id.toString() === selectedRoomId);
+        const row = room?.rows?.find((rw: any) => rw.id.toString() === selectedRowId);
         setRacks(row?.racks || []);
     }, [topology, selectedDcId, selectedRoomId, selectedRowId, showLocationPicker]);
 
@@ -135,7 +135,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
             for (let dc of topology) {
                 for (let room of dc.rooms || []) {
                     for (let row of room.rows || []) {
-                        let rack = row.racks?.find(r => r.id.toString() === formData.rackId);
+                        let rack = row.racks?.find((r: any) => r.id.toString() === formData.rackId);
                         if (rack) {
                             matchDc = dc; matchRoom = room; matchRow = row; matchRack = rack;
                             break;
