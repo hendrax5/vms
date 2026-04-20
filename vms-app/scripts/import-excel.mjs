@@ -150,6 +150,12 @@ async function runImport() {
 
                 const isOut = keterangan.toLowerCase().includes('out');
 
+                let validDate = null;
+                if (tglMasukRaw && tglMasukRaw !== '-') {
+                    const parsed = new Date(tglMasukRaw);
+                    if (!isNaN(parsed.getTime())) validDate = parsed;
+                }
+
                 if(!isOut) {
                     let finalName = barang;
                     if (tujuanRaw && tujuanRaw !== '-' && tujuanRaw.toLowerCase() !== 'tujuan rack') {
@@ -170,7 +176,7 @@ async function runImport() {
                             uEnd: currentU + uSpace - 1,
                             serialNumber: sn !== '-' ? sn : null,
                             weight: beratRaw ? String(beratRaw) : null,
-                            arrivalDate: tglMasukRaw ? new Date(tglMasukRaw) : null
+                            arrivalDate: validDate
                         }
                     });
                     console.log(`   🗄️ Imported Equipment [${barang}] into ${currentRack.name} U${currentU}`);
