@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Server, Search, Building2, Layers, MapPin, Box, Filter, AlertCircle, Plus } from 'lucide-react';
+import { Server, Search, Building2, Layers, MapPin, Box, Filter, AlertCircle, Plus, Download, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
+import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 import AssetContextPanel from '../../components/dashboard/AssetContextPanel';
 import DeviceModal from '../../components/dashboard/racks/details/DeviceModal';
 
@@ -12,8 +14,11 @@ export default function AssetInventoryPage() {
     const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
 
     const [equipments, setEquipments] = useState<any[]>([]);
+    const [rawTopology, setRawTopology] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [isImporting, setIsImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
     // Filters
     const [selectedDc, setSelectedDc] = useState('All');
@@ -32,6 +37,7 @@ export default function AssetInventoryPage() {
             .then(res => res.json())
             .then(data => {
                 if (!data.error) {
+                    setRawTopology(data);
                     const flattened: any[] = [];
                     data.forEach((dc: any) => {
                         dc.rooms?.forEach((room: any) => {
@@ -100,6 +106,116 @@ export default function AssetInventoryPage() {
         }
     };
 
+    const handleExport = () => {
+        const dataToExport = filteredEquipments.map(eq => ({
+            "ID (Optional)": eq.id,
+            "Hardware Label / Name": eq.name,
+            Type: eq.type,
+            Datacenter: eq.location.datacenter,
+            Room: eq.location.room,
+            Row: eq.location.row,
+            Rack: eq.location.rack,
+            "U Start": eq.uStart,
+            "U End / Size": eq.uEnd || eq.uSize,
+            "Serial Number": eq.serialNumber || '',
+            "Asset Tag": eq.assetTag || '',
+            Status: eq.status || 'Active',
+            Orientation: eq.orientation || 'FRONT',
+            "Port Count": eq.portCount || 24,
+            Brand: eq.vendor || '',
+            Model: eq.model || ''
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Assets");
+        XLSX.writeFile(wb, `VMS_Assets_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsImporting(true);
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws);
+                
+                const payloads = data.map((row: any) => {
+                    const dcName = row['Datacenter'];
+                    const roomName = row['Room'];
+                    const rowName = row['Row'];
+                    const rackName = row['Rack'];
+
+                    let mappedRackId = null;
+                    if (rawTopology.length) {
+                        for (const dc of rawTopology) {
+                            if (dcName && dc.name !== dcName) continue;
+                            for (const room of (dc.rooms || [])) {
+                                if (roomName && room.name !== roomName) continue;
+                                for (const rw of (room.rows || [])) {
+                                    if (rowName && rw.name !== rowName) continue;
+                                    for (const rk of (rw.racks || [])) {
+                                        if (rk.name === rackName) {
+                                            mappedRackId = rk.id;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return {
+                        id: row['ID (Optional)'] || undefined,
+                        name: row['Hardware Label / Name'],
+                        equipmentType: row['Type'] || 'SERVER',
+                        rackId: mappedRackId, 
+                        uStart: parseInt(row['U Start']) || 1,
+                        uEnd: parseInt(row['U End / Size']) || 1, 
+                        serialNumber: row['Serial Number'] || '',
+                        assetTag: row['Asset Tag'] || '',
+                        status: row['Status'] || 'Active',
+                        orientation: row['Orientation'] || 'FRONT',
+                        portCount: parseInt(row['Port Count']) || 24,
+                    };
+                });
+
+                if (payloads.length === 0) throw new Error("No data found in excel");
+
+                const res = await fetch('/api/racks/equipments/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloads)
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    toast.success(`Import finished! Success: ${result.successCount}, Failed: ${result.failedCount}`);
+                    if (result.errors?.length) {
+                        console.warn("Import errors:", result.errors);
+                        toast.error(`Some imports failed. Example: ${result.errors[0]?.message}`);
+                    }
+                    fetchAssets();
+                } else {
+                    toast.error(result.error || 'Import failed');
+                }
+            } catch (err: any) {
+                console.error(err);
+                toast.error(err.message || 'Error processing excel file');
+            } finally {
+                setIsImporting(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+
     return (
         <div className="p-4 md:p-8 space-y-8 relative max-w-7xl mx-auto min-h-[calc(100vh-4rem)]">
             {/* Header Area */}
@@ -112,12 +228,28 @@ export default function AssetInventoryPage() {
                     <p className="text-sm text-slate-400 mt-2 font-medium">Comprehensive view of all provisioned IT equipment across facilities.</p>
                 </div>
                 {isSuperAdmin && (
-                    <button 
-                        onClick={() => { setAssetToEdit(null); setShowEditModal(true); }}
-                        className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg hover:shadow-emerald-500/25 active:scale-95 whitespace-nowrap"
-                    >
-                        <Plus className="w-5 h-5" /> Add Asset
-                    </button>
+                    <div className="flex bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+                        <button 
+                            onClick={handleExport}
+                            className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-3 text-sm font-bold flex items-center gap-2 transition-colors border-r border-slate-800 whitespace-nowrap"
+                        >
+                            <Download className="w-4 h-4" /> Export XLS
+                        </button>
+                        <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isImporting}
+                            className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-3 text-sm font-bold flex items-center gap-2 transition-colors border-r border-slate-800 whitespace-nowrap"
+                        >
+                            <Upload className="w-4 h-4" /> {isImporting ? 'Importing...' : 'Import XLS'}
+                        </button>
+                        <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleImport} />
+                        <button 
+                            onClick={() => { setAssetToEdit(null); setShowEditModal(true); }}
+                            className="bg-emerald-500 hover:bg-emerald-400 text-black px-4 md:px-6 py-3 text-sm font-bold flex items-center gap-2 transition-colors whitespace-nowrap"
+                        >
+                            <Plus className="w-5 h-5" /> Add Asset
+                        </button>
+                    </div>
                 )}
             </div>
 
