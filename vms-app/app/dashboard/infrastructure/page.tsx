@@ -200,6 +200,8 @@ export default function InfrastructureTopologyPage() {
             return { ...dc, rooms: matchedRooms };
         }
         return null;
+    }).filter((dc: any) => dc !== null);
+
     const handleExport = () => {
         const dataToExport: any[] = [];
         topology.forEach(dc => {
