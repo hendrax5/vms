@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Trash2, Search, AlertTriangle, X, Building2, GitMerge } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Users, Plus, Edit2, Trash2, Search, AlertTriangle, X, Building2, GitMerge, Download, Upload } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [isImporting, setIsImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -127,6 +131,73 @@ export default function CustomersPage() {
         (c.code && c.code.toLowerCase().includes(search.toLowerCase()))
     );
 
+    const handleExport = () => {
+        const dataToExport = customers.map(c => ({
+            "ID (Optional)": c.id,
+            "Company Name": c.name,
+            "Identifier Code": c.code || '',
+            "Contact Email": c.contactEmail || '',
+            "Contact Phone": c.contactPhone || ''
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Tenants");
+        XLSX.writeFile(wb, `Tenants_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsImporting(true);
+        setErrorMsg('');
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws);
+                
+                const payloads = data.map((row: any) => ({
+                    id: row['ID (Optional)'] || undefined,
+                    name: row['Company Name'],
+                    code: row['Identifier Code']?.toString() || null,
+                    contactEmail: row['Contact Email']?.toString() || null,
+                    contactPhone: row['Contact Phone']?.toString() || null
+                }));
+
+                if (payloads.length === 0) throw new Error("No data found");
+
+                const res = await fetch('/api/customers/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloads)
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    toast.success(`Import finished! Success: ${result.successCount}, Failed: ${result.failedCount}`);
+                    if (result.errors?.length) {
+                        toast.error(`Some imports failed. Example: ${result.errors[0]?.message}`);
+                    }
+                    fetchCustomers();
+                } else {
+                    toast.error(result.error || 'Import failed');
+                }
+            } catch (err: any) {
+                console.error(err);
+                toast.error(err.message || 'Error processing excel file');
+            } finally {
+                setIsImporting(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -138,12 +209,28 @@ export default function CustomersPage() {
                     <p className="text-neutral-400">Manage all registered companies, carriers, and tenants in the facility.</p>
                 </div>
                 
-                <button 
-                    onClick={() => handleOpenModal()} 
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap shadow-lg shadow-emerald-600/30"
-                >
-                    <Plus className="w-4 h-4" /> Add Tenant
-                </button>
+                <div className="flex bg-[#111] border border-neutral-800 rounded-xl overflow-hidden shadow-lg">
+                    <button 
+                        onClick={handleExport}
+                        className="bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-4 py-2.5 text-sm font-medium flex items-center gap-2 transition-colors border-r border-neutral-800"
+                    >
+                        <Download className="w-4 h-4" /> Export
+                    </button>
+                    <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isImporting}
+                        className="bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-4 py-2.5 text-sm font-medium flex items-center gap-2 transition-colors border-r border-neutral-800"
+                    >
+                        <Upload className="w-4 h-4" /> {isImporting ? 'Importing...' : 'Import'}
+                    </button>
+                    <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleImport} />
+                    <button 
+                        onClick={() => handleOpenModal()} 
+                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 font-medium transition-colors whitespace-nowrap"
+                    >
+                        <Plus className="w-4 h-4" /> Add Tenant
+                    </button>
+                </div>
             </div>
 
             <div className="bg-[#111] border border-neutral-800 rounded-xl overflow-hidden shadow-2xl">

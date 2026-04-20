@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, ShieldAlert } from 'lucide-react';
+import { Plus, Edit2, Trash2, ShieldAlert, Download, Upload } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 interface DeviceModel {
     id: number;
@@ -19,6 +21,8 @@ export default function DeviceModelsPage() {
     const [models, setModels] = useState<DeviceModel[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -131,6 +135,76 @@ export default function DeviceModelsPage() {
         }
     };
 
+    const handleExport = () => {
+        const dataToExport = models.map(m => ({
+            "ID (Optional)": m.id,
+            "Brand": m.brand,
+            "Model Name": m.modelName,
+            "Type": m.equipmentType,
+            "Size (U)": m.uSize,
+            "Ports": m.portCount,
+            "Requires SN": m.requiresSerialNumber ? 'YES' : 'NO'
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Templates");
+        XLSX.writeFile(wb, `Device_Templates_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsImporting(true);
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws);
+                
+                const payloads = data.map((row: any) => ({
+                    id: row['ID (Optional)'] || undefined,
+                    brand: row['Brand'],
+                    modelName: row['Model Name'],
+                    equipmentType: row['Type'] || 'SERVER',
+                    uSize: parseInt(row['Size (U)']) || 1,
+                    portCount: parseInt(row['Ports']) || 0,
+                    requiresSerialNumber: row['Requires SN']?.toString().toUpperCase() !== 'NO'
+                }));
+
+                if (payloads.length === 0) throw new Error("No data found");
+
+                const res = await fetch('/api/device-models/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloads)
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    toast.success(`Import finished! Success: ${result.successCount}, Failed: ${result.failedCount}`);
+                    if (result.errors?.length) {
+                        toast.error(`Some imports failed. Example: ${result.errors[0]?.message}`);
+                    }
+                    fetchModels();
+                } else {
+                    toast.error(result.error || 'Import failed');
+                }
+            } catch (err: any) {
+                console.error(err);
+                toast.error(err.message || 'Error processing excel file');
+            } finally {
+                setIsImporting(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+
     if (loading) return <div className="p-8 text-emerald-500">Loading master catalog...</div>;
 
     return (
@@ -140,9 +214,25 @@ export default function DeviceModelsPage() {
                     <h1 className="text-3xl font-extrabold text-white tracking-tight">Master Device Catalog</h1>
                     <p className="text-slate-400 mt-2">Manage standardized hardware templates for datacenter provisioning.</p>
                 </div>
-                <button onClick={() => openModal()} className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-                    <Plus className="w-5 h-5" /> Add Template
-                </button>
+                <div className="flex bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+                    <button 
+                        onClick={handleExport}
+                        className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-3 text-sm font-bold flex items-center gap-2 transition-colors border-r border-slate-800"
+                    >
+                        <Download className="w-4 h-4" /> Export
+                    </button>
+                    <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isImporting}
+                        className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-3 text-sm font-bold flex items-center gap-2 transition-colors border-r border-slate-800"
+                    >
+                        <Upload className="w-4 h-4" /> {isImporting ? 'Importing...' : 'Import'}
+                    </button>
+                    <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleImport} />
+                    <button onClick={() => openModal()} className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-2 transition-all">
+                        <Plus className="w-5 h-5" /> Add Template
+                    </button>
+                </div>
             </div>
 
             <div className="bg-slate-900 border border-white/5 rounded-3xl overflow-hidden">

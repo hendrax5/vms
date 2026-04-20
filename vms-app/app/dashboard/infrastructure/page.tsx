@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Network, Server, Box, Layers, Building2, MapPin, Plus, X, Trash2, Edit2, Search, LayoutGrid, List } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Network, Server, Box, Layers, Building2, MapPin, Plus, X, Trash2, Edit2, Search, LayoutGrid, List, Download, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import AssetContextPanel from '../../components/dashboard/AssetContextPanel';
+import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 import AssetContextPanel from '../../components/dashboard/AssetContextPanel';
 
 export default function InfrastructureTopologyPage() {
@@ -16,6 +19,8 @@ export default function InfrastructureTopologyPage() {
     // View and search states
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [isImporting, setIsImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Track selected node in the master-detail Floor Plan view
     const [activeDcId, setActiveDcId] = useState<number | null>(null);
@@ -195,7 +200,128 @@ export default function InfrastructureTopologyPage() {
             return { ...dc, rooms: matchedRooms };
         }
         return null;
-    }).filter(dc => dc !== null);
+    const handleExport = () => {
+        const dataToExport: any[] = [];
+        topology.forEach(dc => {
+            if (!dc.rooms || dc.rooms.length === 0) {
+                dataToExport.push({
+                    "Region Name": dc.region.name,
+                    "Datacenter Code": dc.code,
+                    "Datacenter Name": dc.name,
+                    "Room Name": "",
+                    "Row Name": "",
+                    "Rack Name": "",
+                    "U Capacity": "",
+                    "Tenant Code": ""
+                });
+            } else {
+                dc.rooms.forEach((room: any) => {
+                    if (!room.rows || room.rows.length === 0) {
+                        dataToExport.push({
+                            "Region Name": dc.region.name,
+                            "Datacenter Code": dc.code,
+                            "Datacenter Name": dc.name,
+                            "Room Name": room.name,
+                            "Row Name": "",
+                            "Rack Name": "",
+                            "U Capacity": "",
+                            "Tenant Code": ""
+                        });
+                    } else {
+                        room.rows.forEach((row: any) => {
+                            if (!row.racks || row.racks.length === 0) {
+                                dataToExport.push({
+                                    "Region Name": dc.region.name,
+                                    "Datacenter Code": dc.code,
+                                    "Datacenter Name": dc.name,
+                                    "Room Name": room.name,
+                                    "Row Name": row.name,
+                                    "Rack Name": "",
+                                    "U Capacity": "",
+                                    "Tenant Code": ""
+                                });
+                            } else {
+                                row.racks.forEach((rack: any) => {
+                                    dataToExport.push({
+                                        "Region Name": dc.region.name,
+                                        "Datacenter Code": dc.code,
+                                        "Datacenter Name": dc.name,
+                                        "Room Name": room.name,
+                                        "Row Name": row.name,
+                                        "Rack Name": rack.name,
+                                        "U Capacity": rack.uCapacity || 42,
+                                        "Tenant Code": rack.customer?.code || ""
+                                    });
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Topology");
+        XLSX.writeFile(wb, `Topology_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsImporting(true);
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws);
+                
+                const payloads = data.map((row: any) => ({
+                    regionName: row['Region Name'],
+                    dcCode: row['Datacenter Code']?.toString(),
+                    dcName: row['Datacenter Name'],
+                    roomName: row['Room Name'],
+                    rowName: row['Row Name'],
+                    rackName: row['Rack Name']?.toString(),
+                    uCapacity: row['U Capacity'] ? parseInt(row['U Capacity']) : 42,
+                    tenantCode: row['Tenant Code']?.toString()
+                })).filter((p:any) => p.rackName && p.dcName && p.roomName && p.rowName);
+
+                if (payloads.length === 0) {
+                    toast.error("No valid hierarchy found. Needs at least Region, DC, Room, Row, Rack Names.");
+                    return;
+                }
+
+                const res = await fetch('/api/topology/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloads)
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    toast.success(`Import finished! Success: ${result.successCount}, Failed: ${result.failedCount}`);
+                    if (result.errors?.length) {
+                        toast.error(`Some failed: ${result.errors[0]?.message}`);
+                    }
+                    loadData();
+                } else {
+                    toast.error(result.error || 'Import failed');
+                }
+            } catch (err: any) {
+                console.error(err);
+                toast.error(err.message || 'Error processing excel file');
+            } finally {
+                setIsImporting(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
 
     // Derive selected entities for Floor Plan Map
     const currentDcId = activeDcId || (filteredTopology[0]?.id || null);
@@ -238,12 +364,29 @@ export default function InfrastructureTopologyPage() {
                          onChange={e => setSearchQuery(e.target.value)}
                      />
                  </div>
-                 <div className="flex gap-3">
-                     {canEdit && (
-                         <button onClick={() => { setEditEntityId(null); setIsAddModalOpen(true); }} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
-                             <Plus className="w-4 h-4" /> Add Facility
-                         </button>
-                     )}
+                 </div>
+                 <div className="flex bg-[#111] border border-neutral-800 rounded-lg overflow-hidden shadow-lg ml-auto">
+                    {canEdit && (
+                        <>
+                            <button 
+                                onClick={handleExport}
+                                className="bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-4 py-2.5 text-sm font-medium flex items-center gap-2 transition-colors border-r border-neutral-800"
+                            >
+                                <Download className="w-4 h-4" /> Export
+                            </button>
+                            <button 
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isImporting}
+                                className="bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-4 py-2.5 text-sm font-medium flex items-center gap-2 transition-colors border-r border-neutral-800"
+                            >
+                                <Upload className="w-4 h-4" /> {isImporting ? 'Importing...' : 'Import'}
+                            </button>
+                            <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleImport} />
+                            <button onClick={() => { setEditEntityId(null); setIsAddModalOpen(true); }} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all flex items-center gap-2">
+                                <Plus className="w-4 h-4" /> Add Facility
+                            </button>
+                        </>
+                    )}
                  </div>
             </div>
 
