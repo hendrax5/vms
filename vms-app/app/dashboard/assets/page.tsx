@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Server, Search, Building2, Layers, MapPin, Box, Filter, AlertCircle } from 'lucide-react';
+import { Server, Search, Building2, Layers, MapPin, Box, Filter, AlertCircle, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AssetContextPanel from '../../components/dashboard/AssetContextPanel';
 import DeviceModal from '../../components/dashboard/racks/details/DeviceModal';
@@ -111,6 +111,14 @@ export default function AssetInventoryPage() {
                     </h1>
                     <p className="text-sm text-slate-400 mt-2 font-medium">Comprehensive view of all provisioned IT equipment across facilities.</p>
                 </div>
+                {isSuperAdmin && (
+                    <button 
+                        onClick={() => { setAssetToEdit(null); setShowEditModal(true); }}
+                        className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg hover:shadow-emerald-500/25 active:scale-95 whitespace-nowrap"
+                    >
+                        <Plus className="w-5 h-5" /> Add Asset
+                    </button>
+                )}
             </div>
 
             {/* Toolbar */}
@@ -256,8 +264,11 @@ export default function AssetInventoryPage() {
                 isOpen={showEditModal}
                 onClose={() => { setShowEditModal(false); setAssetToEdit(null); }}
                 onSubmit={(data) => {
-                    fetch('/api/racks/equipments', {
-                        method: 'PUT',
+                    const method = data.id ? 'PUT' : 'POST';
+                    const url = data.id ? `/api/racks/equipments/${data.id}` : '/api/racks/equipments';
+                    
+                    fetch(url, {
+                        method: method,
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
                     })
@@ -274,6 +285,7 @@ export default function AssetInventoryPage() {
                 initialData={assetToEdit}
                 perspective="FRONT"
                 isInternalAdmin={isSuperAdmin}
+                showLocationPicker={true}
             />
         </div>
     );

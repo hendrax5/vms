@@ -13,11 +13,20 @@ interface DeviceModalProps {
     isMmrRack?: boolean;
     isInternalAdmin?: boolean;
     customers?: any[];
+    showLocationPicker?: boolean;
 }
 
-const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, initialData, perspective, isMmrRack, isInternalAdmin, customers = [] }) => {
+const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, initialData, perspective, isMmrRack, isInternalAdmin, customers = [], showLocationPicker }) => {
     const [deviceModels, setDeviceModels] = useState<any[]>([]);
     const [selectedModel, setSelectedModel] = useState<any>(null);
+    
+    // Topology and Location Picker State
+    const [topology, setTopology] = useState<any[]>([]);
+    const [selectedDcId, setSelectedDcId] = useState<string>('');
+    const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+    const [selectedRowId, setSelectedRowId] = useState<string>('');
+    const [selectedRackId, setSelectedRackId] = useState<string>('');
+    const [racks, setRacks] = useState<any[]>([]);
     
     const [formData, setFormData] = useState({ 
         id: null, 
@@ -42,7 +51,16 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                 if(Array.isArray(data)) setDeviceModels(data);
             })
             .catch(err => console.error("Error fetching device models:", err));
-    }, []);
+
+        if (showLocationPicker) {
+            fetch('/api/topology')
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setTopology(data);
+                })
+                .catch(err => console.error("Error fetching topology:", err));
+        }
+    }, [showLocationPicker]);
 
     useEffect(() => {
         if (initialData) {
@@ -58,7 +76,8 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                 customerId: initialData.customerId ? initialData.customerId.toString() : '',
                 deviceModelId: initialData.deviceModelId ? initialData.deviceModelId.toString() : '',
                 serialNumber: initialData.serialNumber || '',
-                assetTag: initialData.assetTag || ''
+                assetTag: initialData.assetTag || '',
+                rackId: initialData.rackId ? initialData.rackId.toString() : ''
             });
 
             if (initialData.deviceModelId) {
@@ -98,6 +117,48 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
         }
     };
 
+    // Location Picker Dependency Effects
+    useEffect(() => {
+        if (!showLocationPicker) return;
+        const dc = topology.find(d => d.id.toString() === selectedDcId);
+        const room = dc?.rooms?.find(r => r.id.toString() === selectedRoomId);
+        const row = room?.rows?.find(rw => rw.id.toString() === selectedRowId);
+        setRacks(row?.racks || []);
+    }, [topology, selectedDcId, selectedRoomId, selectedRowId, showLocationPicker]);
+
+    // Initialize Picker if Initial Data provided
+    useEffect(() => {
+        if (showLocationPicker && initialData && formData.rackId && topology.length > 0) {
+            // Find rack in topology
+            let matchDc, matchRoom, matchRow, matchRack;
+            for (let dc of topology) {
+                for (let room of dc.rooms || []) {
+                    for (let row of room.rows || []) {
+                        let rack = row.racks?.find(r => r.id.toString() === formData.rackId);
+                        if (rack) {
+                            matchDc = dc; matchRoom = room; matchRow = row; matchRack = rack;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (matchRack) {
+                setSelectedDcId(matchDc.id.toString());
+                setSelectedRoomId(matchRoom.id.toString());
+                setSelectedRowId(matchRow.id.toString());
+                setSelectedRackId(matchRack.id.toString());
+            }
+        }
+    }, [showLocationPicker, initialData, topology, formData.rackId]);
+
+    const submitHandler = () => {
+        const finalData = { ...formData };
+        if (showLocationPicker && selectedRackId) {
+            finalData.rackId = selectedRackId;
+        }
+        onSubmit(finalData);
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -109,7 +170,45 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                 </div>
                 
                 <div className="overflow-y-auto p-8 flex-1">
-                    <form id="deviceForm" onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="space-y-6">
+                    <form id="deviceForm" onSubmit={(e) => { e.preventDefault(); submitHandler(); }} className="space-y-6">
+                        
+                        {/* 0. Location Picker (Optional) */}
+                        {showLocationPicker && (
+                            <div className="bg-slate-950 p-4 rounded-2xl border border-white/5 space-y-4">
+                                <label className="text-[10px] font-bold text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 rounded inline-block uppercase tracking-widest mb-2">Location Mapping</label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Datacenter</label>
+                                        <select value={selectedDcId} onChange={(e) => { setSelectedDcId(e.target.value); setSelectedRoomId(''); setSelectedRowId(''); setSelectedRackId(''); }} className="w-full bg-black border border-white/10 rounded-xl p-2 text-white focus:border-emerald-500 text-sm">
+                                            <option value="">-- Choose DC --</option>
+                                            {topology.map(dc => <option key={dc.id} value={dc.id}>{dc.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Room</label>
+                                        <select value={selectedRoomId} onChange={(e) => { setSelectedRoomId(e.target.value); setSelectedRowId(''); setSelectedRackId(''); }} disabled={!selectedDcId} className="w-full bg-black border border-white/10 rounded-xl p-2 text-white focus:border-emerald-500 text-sm disabled:opacity-50">
+                                            <option value="">-- Choose Room --</option>
+                                            {topology.find(d => d.id.toString() === selectedDcId)?.rooms?.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Row</label>
+                                        <select value={selectedRowId} onChange={(e) => { setSelectedRowId(e.target.value); setSelectedRackId(''); }} disabled={!selectedRoomId} className="w-full bg-black border border-white/10 rounded-xl p-2 text-white focus:border-emerald-500 text-sm disabled:opacity-50">
+                                            <option value="">-- Choose Row --</option>
+                                            {topology.find(d => d.id.toString() === selectedDcId)?.rooms?.find(r => r.id.toString() === selectedRoomId)?.rows?.map(rw => <option key={rw.id} value={rw.id}>{rw.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Rack</label>
+                                        <select required={showLocationPicker} value={selectedRackId} onChange={(e) => setSelectedRackId(e.target.value)} disabled={!selectedRowId} className="w-full bg-black border border-emerald-900 rounded-xl p-2 text-white focus:border-emerald-500 text-sm disabled:opacity-50">
+                                            <option value="">-- Choose Rack --</option>
+                                            {racks.map(rack => <option key={rack.id} value={rack.id}>{rack.name} ({rack.uCapacity}U)</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* 1. Device Template Selection */}
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
                             <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2 block">1. Select Device Template (Master Catalog)</label>
