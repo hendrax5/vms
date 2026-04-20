@@ -82,7 +82,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
             });
 
             if (initialData.deviceModelId) {
-                const found = deviceModels.find(m => m.id.toString() === initialData.deviceModelId.toString());
+                const found = deviceModels.find((m: any) => m.id.toString() === initialData.deviceModelId.toString());
                 if (found) setSelectedModel(found);
             }
         }
@@ -96,7 +96,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
             return;
         }
 
-        const model = deviceModels.find(m => m.id.toString() === val);
+        const model = deviceModels.find((m: any) => m.id.toString() === val);
         if (model) {
             setSelectedModel(model);
             setFormData({
@@ -182,28 +182,28 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Datacenter</label>
                                         <select value={selectedDcId} onChange={(e) => { setSelectedDcId(e.target.value); setSelectedRoomId(''); setSelectedRowId(''); setSelectedRackId(''); }} className="w-full bg-black border border-white/10 rounded-xl p-2 text-white focus:border-emerald-500 text-sm">
                                             <option value="">-- Choose DC --</option>
-                                            {topology.map(dc => <option key={dc.id} value={dc.id}>{dc.name}</option>)}
+                                            {topology.map((dc: any) => <option key={dc.id} value={dc.id}>{dc.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Room</label>
                                         <select value={selectedRoomId} onChange={(e) => { setSelectedRoomId(e.target.value); setSelectedRowId(''); setSelectedRackId(''); }} disabled={!selectedDcId} className="w-full bg-black border border-white/10 rounded-xl p-2 text-white focus:border-emerald-500 text-sm disabled:opacity-50">
                                             <option value="">-- Choose Room --</option>
-                                            {topology.find(d => d.id.toString() === selectedDcId)?.rooms?.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                            {topology.find((d: any) => d.id.toString() === selectedDcId)?.rooms?.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Row</label>
                                         <select value={selectedRowId} onChange={(e) => { setSelectedRowId(e.target.value); setSelectedRackId(''); }} disabled={!selectedRoomId} className="w-full bg-black border border-white/10 rounded-xl p-2 text-white focus:border-emerald-500 text-sm disabled:opacity-50">
                                             <option value="">-- Choose Row --</option>
-                                            {topology.find(d => d.id.toString() === selectedDcId)?.rooms?.find(r => r.id.toString() === selectedRoomId)?.rows?.map(rw => <option key={rw.id} value={rw.id}>{rw.name}</option>)}
+                                            {topology.find((d: any) => d.id.toString() === selectedDcId)?.rooms?.find((r: any) => r.id.toString() === selectedRoomId)?.rows?.map((rw: any) => <option key={rw.id} value={rw.id}>{rw.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Rack</label>
                                         <select required={showLocationPicker} value={selectedRackId} onChange={(e) => setSelectedRackId(e.target.value)} disabled={!selectedRowId} className="w-full bg-black border border-emerald-900 rounded-xl p-2 text-white focus:border-emerald-500 text-sm disabled:opacity-50">
                                             <option value="">-- Choose Rack --</option>
-                                            {racks.map(rack => <option key={rack.id} value={rack.id}>{rack.name} ({rack.uCapacity}U)</option>)}
+                                            {racks.map((rack: any) => <option key={rack.id} value={rack.id}>{rack.name} ({rack.uCapacity}U)</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -219,7 +219,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                                 className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none"
                             >
                                 <option value="">-- Custom / Manual Configuration --</option>
-                                {deviceModels.map(m => (
+                                {deviceModels.map((m: any) => (
                                     <option key={m.id} value={m.id}>{m.brand} - {m.modelName} ({m.equipmentType}, {m.portCount} Ports, {m.uSize}U)</option>
                                 ))}
                             </select>
@@ -321,7 +321,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({ isOpen, onClose, onSubmit, in
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Assign to Customer (Optional)</label>
                                 <select value={formData.customerId} onChange={e => setFormData({...formData, customerId: e.target.value})} className="w-full bg-black border border-white/10 rounded-xl p-3 text-white focus:border-emerald-500 outline-none">
                                     <option value="">-- Datacenter / Internal --</option>
-                                    {customers.map(c => (
+                                    {customers.map((c: any) => (
                                         <option key={c.id} value={c.id}>{c.name}</option>
                                     ))}
                                 </select>
