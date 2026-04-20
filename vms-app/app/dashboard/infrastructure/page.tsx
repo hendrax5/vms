@@ -364,7 +364,6 @@ export default function InfrastructureTopologyPage() {
                          onChange={e => setSearchQuery(e.target.value)}
                      />
                  </div>
-                 </div>
                  <div className="flex bg-[#111] border border-neutral-800 rounded-lg overflow-hidden shadow-lg ml-auto">
                     {canEdit && (
                         <>
