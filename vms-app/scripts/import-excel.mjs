@@ -186,9 +186,9 @@ async function runImport() {
         // await parseSheet('RACK CUSTOMER LT. 8 (P1)', rooms['RACK CUSTOMER LT. 8 (P1)']);
         // await parseSheet('RACK CUSTOMER LT.9 (P2) DataHal', rooms['RACK CUSTOMER LT.9 (P2) DataHal']);
         // await parseSheet('RACK HSP', rooms['RACK HSP'], 'ION Network');
-        // await parseSheet('MMR OPEN RACK LT. 8 (P1)', rooms['MMR OPEN RACK LT. 8 (P1)'], 'Provider MMR Layer 8');
+        await parseSheet('MMR OPEN RACK LT. 8 (P1)', rooms['MMR OPEN RACK LT. 8 (P1)'], 'Provider MMR Layer 8');
         // await parseSheet('MMR OPEN RACK LT.9 (P2)', rooms['MMR OPEN RACK LT.9 (P2)'], 'Provider MMR Layer 9');
-        await parseSheet('RACK MMR OTB', rooms['RACK MMR OTB'], 'Provider OTB Layer');
+        // await parseSheet('RACK MMR OTB', rooms['RACK MMR OTB'], 'Provider OTB Layer');
 
         console.log('✅ Excel Importer Completed Successfully!');
     } catch(err) {
