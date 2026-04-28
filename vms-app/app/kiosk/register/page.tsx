@@ -166,8 +166,8 @@ export default function DatacenterKioskRegister() {
                                                     exit={{ opacity: 0, y: -5 }} 
                                                     className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto"
                                                 >
-                                                    {customers.filter(c => c.name.toLowerCase().includes(companyName.toLowerCase())).length > 0 ? (
-                                                        customers.filter(c => c.name.toLowerCase().includes(companyName.toLowerCase())).map(customer => (
+                                                    {customers.filter(c => (c.name || '').toLowerCase().includes((companyName || '').toLowerCase())).length > 0 ? (
+                                                        customers.filter(c => (c.name || '').toLowerCase().includes((companyName || '').toLowerCase())).map(customer => (
                                                             <div 
                                                                 key={customer.id} 
                                                                 onClick={() => {
