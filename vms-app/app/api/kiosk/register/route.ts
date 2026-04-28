@@ -50,17 +50,16 @@ export async function POST(request: NextRequest) {
         });
 
         // Add to logbook
-        await prisma.permitLog.create({
+        await prisma.permitEventLog.create({
             data: {
                 permitId: newPermit.id,
-                action: 'KioskVerified',
-                notes: 'Walk-in visitor registered and checked-in via Kiosk.',
-                timestamp: new Date()
+                status: 'KioskVerified',
+                message: 'Walk-in visitor registered and checked-in via Kiosk.'
             }
         });
 
         // System Audit
-        await prisma.systemAudit.create({
+        await prisma.systemAuditLog.create({
             data: {
                 userId: operatorId,
                 action: 'KIOSK_WALKIN_REGISTER',
