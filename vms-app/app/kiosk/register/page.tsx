@@ -18,6 +18,7 @@ export default function DatacenterKioskRegister() {
     const [companyName, setCompanyName] = useState('');
     const [activity, setActivity] = useState('');
     const [customerId, setCustomerId] = useState('');
+    const [showSuggestions, setShowSuggestions] = useState(false);
     
     const [customers, setCustomers] = useState<any[]>([]);
     const [errorMessage, setErrorMessage] = useState('');
@@ -138,35 +139,54 @@ export default function DatacenterKioskRegister() {
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div className="relative">
                                         <label className="block text-xs font-bold tracking-widest uppercase text-slate-400 mb-2">Company / Organization</label>
                                         <div className="relative">
                                             <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                             <input 
                                                 type="text" 
                                                 value={companyName} 
-                                                onChange={(e) => setCompanyName(e.target.value)} 
+                                                onChange={(e) => {
+                                                    setCompanyName(e.target.value);
+                                                    setCustomerId('');
+                                                    setShowSuggestions(true);
+                                                }}
+                                                onFocus={() => setShowSuggestions(true)}
+                                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                                 className="w-full bg-slate-950/50 border border-slate-800 rounded-xl pl-12 pr-4 py-3.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600" 
-                                                placeholder="Enter your company name (Optional)"
+                                                placeholder="Enter or search company / tenant name"
                                             />
                                         </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold tracking-widest uppercase text-slate-400 mb-2">Visiting Tenant</label>
-                                        <div className="relative">
-                                            <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                                            <select 
-                                                value={customerId} 
-                                                onChange={(e) => setCustomerId(e.target.value)} 
-                                                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl pl-12 pr-4 py-3.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none"
-                                            >
-                                                <option value="" className="text-slate-500">-- Select Tenant (Optional) --</option>
-                                                {customers.map(c => (
-                                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                        {/* Dropdown Suggestions */}
+                                        <AnimatePresence>
+                                            {showSuggestions && companyName.length > 0 && (
+                                                <motion.div 
+                                                    initial={{ opacity: 0, y: -5 }} 
+                                                    animate={{ opacity: 1, y: 0 }} 
+                                                    exit={{ opacity: 0, y: -5 }} 
+                                                    className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto"
+                                                >
+                                                    {customers.filter(c => c.name.toLowerCase().includes(companyName.toLowerCase())).length > 0 ? (
+                                                        customers.filter(c => c.name.toLowerCase().includes(companyName.toLowerCase())).map(customer => (
+                                                            <div 
+                                                                key={customer.id} 
+                                                                onClick={() => {
+                                                                    setCompanyName(customer.name);
+                                                                    setCustomerId(customer.id);
+                                                                    setShowSuggestions(false);
+                                                                }}
+                                                                className="px-4 py-3 hover:bg-blue-600 cursor-pointer text-sm text-slate-200 transition-colors flex items-center gap-3"
+                                                            >
+                                                                <Users className="w-4 h-4 opacity-50" />
+                                                                {customer.name}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="px-4 py-3 text-sm text-slate-500 italic">No registered tenant found. Will register as a new external company.</div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
 
                                     <div>

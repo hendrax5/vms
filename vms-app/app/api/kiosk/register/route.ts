@@ -14,7 +14,13 @@ export async function POST(request: NextRequest) {
         }
 
         const operatorId = session.user?.id ? parseInt(session.user.id) : null;
-        const sessionDcId = (session.user as any)?.datacenterId;
+        let sessionDcId = (session.user as any)?.datacenterId;
+
+        // Fallback for Super Admins who might not have a specific datacenter tied to their session
+        if (!sessionDcId) {
+            const firstDc = await prisma.datacenter.findFirst();
+            if (firstDc) sessionDcId = firstDc.id;
+        }
 
         const body = await request.json();
         const { visitorName, companyName, activity, customerId, visitorPhoto } = body;
