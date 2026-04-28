@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import QRScanner from '../components/kiosk/QRScanner';
 import CameraCapture from '../components/kiosk/CameraCapture';
 
-type KioskStep = 'IDLE' | 'CAMERA' | 'PROCESSING' | 'SUCCESS_IN' | 'SUCCESS_OUT' | 'ERROR';
+type KioskStep = 'IDLE' | 'CAMERA' | 'PROCESSING' | 'SUCCESS_IN' | 'SUCCESS_OUT' | 'ERROR' | 'ACTIVE_VISITORS';
 
 export default function DatacenterKiosk() {
     const { data: session, status } = useSession();
@@ -22,6 +22,7 @@ export default function DatacenterKiosk() {
     const [currentVisitorIndex, setCurrentVisitorIndex] = useState(0);
     const [visitorPhotos, setVisitorPhotos] = useState<Record<string, string>>({});
     const [errorMessage, setErrorMessage] = useState('');
+    const [activeVisitors, setActiveVisitors] = useState<any[]>([]);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -47,6 +48,23 @@ export default function DatacenterKiosk() {
         setCurrentVisitorIndex(0);
         setVisitorPhotos({});
         setErrorMessage('');
+    };
+
+    const loadActiveVisitors = async () => {
+        try {
+            const res = await fetch('/api/kiosk/active');
+            const data = await res.json();
+            if (res.ok && Array.isArray(data)) {
+                setActiveVisitors(data);
+                setStep('ACTIVE_VISITORS');
+            } else {
+                setErrorMessage(data.error || 'Failed to load active visitors');
+                setStep('ERROR');
+            }
+        } catch (err) {
+            setErrorMessage('Network error');
+            setStep('ERROR');
+        }
     };
 
     // Global focus keeper for handheld scanners
@@ -173,12 +191,46 @@ export default function DatacenterKiosk() {
                                     />
                                     <button className="bg-blue-600 hover:bg-blue-700 p-3 rounded-xl transition-all"><ChevronRight /></button>
                                 </form>
-                                <div className="pt-4 border-t border-white/10 text-center">
-                                    <p className="text-sm text-slate-500 mb-3">No QR code yet?</p>
+                                <div className="pt-4 border-t border-white/10 text-center grid grid-cols-2 gap-4">
                                     <button onClick={() => router.push('/kiosk/register')} className="w-full bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-xl transition-all font-semibold uppercase tracking-wider text-sm border border-slate-700">Walk-In Registration</button>
+                                    <button onClick={loadActiveVisitors} className="w-full bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-xl transition-all font-semibold uppercase tracking-wider text-sm border border-slate-700">Active Visitors</button>
                                 </div>
                             </div>
                             <QRScanner onScanSuccess={handleQRScanned} />
+                        </motion.div>
+                    )}
+
+                    {step === 'ACTIVE_VISITORS' && (
+                        <motion.div key="active_visitors" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-slate-900/50 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-2xl space-y-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 className="text-3xl font-black text-white uppercase">Active Visitors</h2>
+                                    <p className="text-slate-400">Select a visitor or company to check out.</p>
+                                </div>
+                                <button onClick={resetKiosk} className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 font-bold uppercase tracking-widest text-xs">Cancel</button>
+                            </div>
+                            
+                            <div className="grid gap-4 max-h-96 overflow-y-auto pr-2">
+                                {activeVisitors.length === 0 ? (
+                                    <div className="text-center py-10 text-slate-500 italic">No active visitors found in this datacenter.</div>
+                                ) : (
+                                    activeVisitors.map(visitor => (
+                                        <div key={visitor.id} className="bg-slate-800/80 border border-slate-700 p-4 rounded-xl flex justify-between items-center hover:bg-slate-800 transition-colors">
+                                            <div>
+                                                <h3 className="font-bold text-lg text-white">{visitor.companyName}</h3>
+                                                <p className="text-slate-400 text-sm">{visitor.visitorNames}</p>
+                                                <p className="text-xs text-blue-400 mt-1 font-mono">Checked In: {new Date(visitor.checkInAt).toLocaleTimeString()}</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => processCheckOut(visitor.qrToken)}
+                                                className="px-6 py-3 bg-red-600/90 hover:bg-red-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-900/20"
+                                            >
+                                                Check Out
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </motion.div>
                     )}
 
