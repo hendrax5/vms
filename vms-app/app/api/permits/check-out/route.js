@@ -26,7 +26,7 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Invalid or Expired QR Token' }, { status: 404 });
         }
 
-        if (permit.status !== 'CheckIn') {
+        if (!['CheckIn', 'KioskVerified'].includes(permit.status)) {
             return NextResponse.json({ error: 'Cannot Check-Out. Visitor is not currently Checked-In.' }, { status: 400 });
         }
 

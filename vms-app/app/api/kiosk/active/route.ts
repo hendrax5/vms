@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
             where: {
                 datacenterId: parseInt(sessionDcId),
                 status: {
-                    in: ['CheckedIn', 'KioskVerified']
+                    in: ['CheckIn', 'KioskVerified']
                 }
             },
             include: {
