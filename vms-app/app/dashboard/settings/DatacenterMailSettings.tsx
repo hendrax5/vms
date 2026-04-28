@@ -7,7 +7,8 @@ export default function DatacenterMailSettings() {
     const [config, setConfig] = useState<any>({
         isActive: true,
         imapHost: '', imapPort: 993, imapUser: '', imapPass: '',
-        smtpHost: '', smtpPort: 465, smtpUser: '', smtpPass: ''
+        smtpHost: '', smtpPort: 465, smtpUser: '', smtpPass: '',
+        notificationTriggers: []
     });
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -130,6 +131,32 @@ export default function DatacenterMailSettings() {
                                 <label className="text-xs text-slate-400 font-medium">SMTP Password</label>
                                 <input type="password" value={config.smtpPass} onChange={e => setConfig({...config, smtpPass: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200" placeholder="••••••••" />
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-border/50 space-y-4">
+                        <h4 className="text-sm font-bold uppercase tracking-widest text-slate-500">Email Notification Triggers</h4>
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-slate-800">
+                            <div>
+                                <p className="text-sm font-medium text-slate-200">Send QR Code when Permit is Approved</p>
+                                <p className="text-xs text-slate-500">Automatically emails a copy of the QR code token to the requesting user's contact email.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    className="sr-only peer" 
+                                    checked={config.notificationTriggers?.includes('permit_approved')} 
+                                    onChange={e => {
+                                        const triggers = config.notificationTriggers || [];
+                                        if (e.target.checked) {
+                                            setConfig({...config, notificationTriggers: [...triggers, 'permit_approved']});
+                                        } else {
+                                            setConfig({...config, notificationTriggers: triggers.filter((t: string) => t !== 'permit_approved')});
+                                        }
+                                    }}
+                                />
+                                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                            </label>
                         </div>
                     </div>
 

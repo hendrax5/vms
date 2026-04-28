@@ -82,8 +82,50 @@ export async function PUT(req) {
 
         const updatedPermit = await prisma.visitPermit.update({
             where: { id: parseInt(id) },
-            data: dataToUpdate
+            data: dataToUpdate,
+            include: { customer: true }
         });
+
+        if (status === 'Approved' && updatedPermit.qrCodeToken) {
+            const mailConfig = await prisma.datacenterMailConfig.findUnique({
+                where: { datacenterId: updatedPermit.datacenterId }
+            });
+
+            if (mailConfig?.isActive && mailConfig.notificationTriggers?.includes('permit_approved')) {
+                const targetEmail = updatedPermit.customer?.contactEmail;
+                if (targetEmail) {
+                    try {
+                        const { sendEmail } = await import('../../../lib/mailer');
+                        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${updatedPermit.qrCodeToken}`;
+                        const html = `
+                            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <h2>Datacenter Visit Permit Approved</h2>
+                                <p>Hello,</p>
+                                <p>Your visit permit for <strong>${updatedPermit.visitorNames}</strong> has been approved for the scheduled activity: ${updatedPermit.activity}.</p>
+                                <p>Please present the following QR Code at the Datacenter security desk upon arrival:</p>
+                                <div style="margin: 20px 0; text-align: center;">
+                                    <img src="${qrUrl}" alt="Permit QR Code" style="border-radius: 8px; border: 1px solid #ccc; padding: 10px;" />
+                                </div>
+                                <p style="font-size: 14px; font-weight: bold; text-align: center;">Token: ${updatedPermit.qrCodeToken}</p>
+                                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                                <p style="font-size: 12px; color: #888;">This is an automated message from the PRODC VMS System.</p>
+                            </div>
+                        `;
+                        await sendEmail({
+                            smtpHost: mailConfig.smtpHost,
+                            smtpPort: mailConfig.smtpPort,
+                            smtpUser: mailConfig.smtpUser,
+                            smtpPass: mailConfig.smtpPass,
+                            to: targetEmail,
+                            subject: 'Datacenter Visit Permit - Approved',
+                            html
+                        });
+                    } catch (err) {
+                        console.error('Failed to send permit approval email:', err);
+                    }
+                }
+            }
+        }
 
         return NextResponse.json(updatedPermit);
     } catch (error) {

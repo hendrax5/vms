@@ -173,6 +173,10 @@ export default function DatacenterKiosk() {
                                     />
                                     <button className="bg-blue-600 hover:bg-blue-700 p-3 rounded-xl transition-all"><ChevronRight /></button>
                                 </form>
+                                <div className="pt-4 border-t border-white/10 text-center">
+                                    <p className="text-sm text-slate-500 mb-3">No QR code yet?</p>
+                                    <button onClick={() => router.push('/kiosk/register')} className="w-full bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-xl transition-all font-semibold uppercase tracking-wider text-sm border border-slate-700">Walk-In Registration</button>
+                                </div>
                             </div>
                             <QRScanner onScanSuccess={handleQRScanned} />
                         </motion.div>

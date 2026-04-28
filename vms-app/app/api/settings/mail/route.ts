@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { datacenterId, imapHost, imapPort, imapUser, imapPass, smtpHost, smtpPort, smtpUser, smtpPass, isActive } = body;
+        const { datacenterId, imapHost, imapPort, imapUser, imapPass, smtpHost, smtpPort, smtpUser, smtpPass, isActive, notificationTriggers } = body;
 
         let targetDcId = (session.user as any)?.datacenterId; 
         if (userRole === 'Super Admin' && datacenterId) targetDcId = parseInt(datacenterId);
@@ -69,13 +69,15 @@ export async function GET(request: NextRequest) {
             update: {
                 imapHost, imapPort: parseInt(imapPort.toString()), imapUser, imapPass: actualImapPass,
                 smtpHost, smtpPort: parseInt(smtpPort.toString()), smtpUser, smtpPass: actualSmtpPass,
-                isActive: Boolean(isActive)
+                isActive: Boolean(isActive),
+                notificationTriggers: notificationTriggers || []
             },
             create: {
                 datacenterId: targetDcId,
                 imapHost, imapPort: parseInt(imapPort.toString()), imapUser, imapPass: actualImapPass,
                 smtpHost, smtpPort: parseInt(smtpPort.toString()), smtpUser, smtpPass: actualSmtpPass,
-                isActive: Boolean(isActive)
+                isActive: Boolean(isActive),
+                notificationTriggers: notificationTriggers || []
             }
         });
 

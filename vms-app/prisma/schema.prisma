@@ -368,10 +368,11 @@ model DatacenterMailConfig {
   smtpPort     Int        @default(465)
   smtpUser     String
   smtpPass     String
-  isActive     Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  datacenter   Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
+  isActive             Boolean    @default(true)
+  notificationTriggers String[]   @default([])
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  datacenter           Datacenter @relation(fields: [datacenterId], references: [id], onDelete: Cascade)
 }
 
 model InboxMessage {
