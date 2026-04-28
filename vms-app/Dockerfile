@@ -4,7 +4,7 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+RUN npm config set fetch-retries 5 && npm config set fetch-retry-mintimeout 20000 && npm ci --legacy-peer-deps
 
 FROM base AS builder
 WORKDIR /app
